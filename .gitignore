@@ -1,0 +1,9 @@
+#Env
+.env
+
+#Agents
+.agents/
+.claude/
+
+#Tmp
+tmp/
