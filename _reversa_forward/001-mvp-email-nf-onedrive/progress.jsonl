@@ -1,0 +1,45 @@
+{"ts": "2026-09-18T19:42:31Z", "action": "T001", "status": "done", "files": ["pyproject.toml"]}
+{"ts": "2026-09-18T19:42:31Z", "action": "T002", "status": "done", "files": ["src/email_nf_onedrive/__init__.py", "src/email_nf_onedrive/__main__.py", "src/email_nf_onedrive/configuracao/__init__.py", "src/email_nf_onedrive/registro/__init__.py", "src/email_nf_onedrive/coleta/__init__.py", "src/email_nf_onedrive/envio/__init__.py", "src/email_nf_onedrive/execucao/__init__.py"]}
+{"ts": "2026-09-18T19:42:31Z", "action": "T003", "status": "done", "files": [".env.example"]}
+{"ts": "2026-09-18T19:42:32Z", "action": "T004", "status": "done", "files": ["tests/conftest.py"]}
+{"ts": "2026-09-18T19:42:32Z", "action": "T005", "status": "done", "files": ["tests/dados/", "tests/dados/LEIAME.md", ".gitignore"]}
+{"ts": "2026-09-18T19:45:12Z", "action": "T006", "status": "done", "files": ["tests/unidade/test_configuracao.py"]}
+{"ts": "2026-09-18T19:45:12Z", "action": "T007", "status": "done", "files": ["tests/unidade/test_segredos.py"]}
+{"ts": "2026-09-18T19:45:12Z", "action": "T008", "status": "done", "files": ["tests/unidade/test_classificacao.py"]}
+{"ts": "2026-09-18T19:45:12Z", "action": "T009", "status": "done", "files": ["tests/unidade/test_mime.py"]}
+{"ts": "2026-09-18T19:45:12Z", "action": "T010", "status": "done", "files": ["tests/unidade/test_janela.py"]}
+{"ts": "2026-09-18T19:45:12Z", "action": "T011", "status": "done", "files": ["tests/unidade/test_nomeacao.py"]}
+{"ts": "2026-09-18T19:45:12Z", "action": "T012", "status": "done", "files": ["tests/unidade/test_registro.py"]}
+{"ts": "2026-09-18T19:45:12Z", "action": "T013", "status": "done", "files": ["tests/unidade/test_trava.py"]}
+{"ts": "2026-09-18T19:45:12Z", "action": "T014", "status": "done", "files": ["tests/unidade/test_avisos.py"]}
+{"ts": "2026-09-18T19:48:56Z", "action": "T015", "status": "done", "files": ["src/email_nf_onedrive/segredos.py"]}
+{"ts": "2026-09-18T19:48:56Z", "action": "T016", "status": "done", "files": ["src/email_nf_onedrive/configuracao/modelo.py"]}
+{"ts": "2026-09-18T19:48:56Z", "action": "T018", "status": "done", "files": ["src/email_nf_onedrive/registro/esquema.sql"]}
+{"ts": "2026-09-18T19:48:56Z", "action": "T020", "status": "done", "files": ["src/email_nf_onedrive/coleta/utf7.py"]}
+{"ts": "2026-09-18T19:48:56Z", "action": "T021", "status": "done", "files": ["src/email_nf_onedrive/coleta/classificacao.py"]}
+{"ts": "2026-09-18T19:48:56Z", "action": "T022", "status": "done", "files": ["src/email_nf_onedrive/coleta/mime.py"]}
+{"ts": "2026-09-18T19:48:56Z", "action": "T024", "status": "done", "files": ["src/email_nf_onedrive/envio/nomeacao.py"]}
+{"ts": "2026-09-18T19:48:56Z", "action": "T025", "status": "done", "files": ["src/email_nf_onedrive/execucao/trava.py"]}
+{"ts": "2026-09-18T19:48:56Z", "action": "T028", "status": "done", "files": ["src/email_nf_onedrive/execucao/resumo.py"]}
+{"ts": "2026-09-18T19:50:35Z", "action": "T017", "status": "done", "files": ["src/email_nf_onedrive/configuracao/carregar.py"]}
+{"ts": "2026-09-18T19:50:35Z", "action": "T019", "status": "done", "files": ["src/email_nf_onedrive/registro/banco.py"]}
+{"ts": "2026-09-18T19:50:35Z", "action": "T023", "status": "done", "files": ["src/email_nf_onedrive/coleta/janela.py"]}
+{"ts": "2026-09-18T19:50:35Z", "action": "T026", "status": "done", "files": ["src/email_nf_onedrive/execucao/logs.py"]}
+{"ts": "2026-09-18T19:50:35Z", "action": "T027", "status": "done", "files": ["src/email_nf_onedrive/execucao/avisos.py"]}
+{"ts": "2026-09-18T19:50:35Z", "action": "T021", "status": "corrected", "files": ["src/email_nf_onedrive/coleta/classificacao.py"]}
+{"ts": "2026-09-18T19:54:18Z", "action": "T029", "status": "done", "files": ["src/email_nf_onedrive/coleta/imap.py"]}
+{"ts": "2026-09-18T19:54:18Z", "action": "T030", "status": "done", "files": ["src/email_nf_onedrive/envio/rclone.py"]}
+{"ts": "2026-09-18T19:54:18Z", "action": "T031", "status": "done", "files": ["src/email_nf_onedrive/execucao/telegram.py"]}
+{"ts": "2026-09-18T19:54:18Z", "action": "T034", "status": "done", "files": ["tests/integracao/test_rclone.py", "tests/integracao/dubles.py"]}
+{"ts": "2026-09-18T19:55:48Z", "action": "T032", "status": "done", "files": ["src/email_nf_onedrive/coleta/coleta.py", "src/email_nf_onedrive/registro/banco.py"]}
+{"ts": "2026-09-18T19:55:48Z", "action": "T033", "status": "done", "files": ["tests/integracao/test_coleta.py", "tests/__init__.py", "tests/integracao/__init__.py", "tests/unidade/__init__.py"]}
+{"ts": "2026-09-18T19:56:56Z", "action": "T035", "status": "done", "files": ["src/email_nf_onedrive/envio/envio.py"]}
+{"ts": "2026-09-18T19:56:56Z", "action": "T036", "status": "done", "files": ["tests/integracao/test_envio.py"]}
+{"ts": "2026-09-18T19:56:56Z", "action": "T037", "status": "done", "files": ["src/email_nf_onedrive/envio/teste_onedrive.py"]}
+{"ts": "2026-09-18T20:00:42Z", "action": "T038", "status": "done", "files": ["src/email_nf_onedrive/execucao/ciclo.py"]}
+{"ts": "2026-09-18T20:00:42Z", "action": "T039", "status": "done", "files": ["src/email_nf_onedrive/cli.py"]}
+{"ts": "2026-09-18T20:01:58Z", "action": "T040", "status": "done", "files": ["tests/integracao/test_ciclo_arquivamento.py", "tests/integracao/conftest.py"]}
+{"ts": "2026-09-18T20:01:58Z", "action": "T041", "status": "done", "files": ["tests/integracao/test_ciclo_falhas.py"]}
+{"ts": "2026-09-18T20:09:39Z", "action": "T043", "status": "done", "files": ["docs/instalacao-e-operacao.md"]}
+{"ts": "2026-09-18T20:09:39Z", "action": "T044", "status": "done", "files": ["README.md"]}
+{"ts": "2026-09-18T20:09:39Z", "action": "T045", "status": "done", "files": ["tests/RASTREABILIDADE.md", "tests/unidade/test_logs.py", "tests/integracao/test_ciclo_falhas.py"]}
