@@ -1,0 +1,46 @@
+From: Colega <colega@empresa.example>
+To: financeiro@empresa.example
+Subject: Fwd: Boleto original
+Date: Fri, 18 Sep 2026 12:00:00 -0300
+Message-ID: <encaminhada@empresa.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="===============3274220283146034574=="
+
+--===============3274220283146034574==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Segue em anexo.
+
+--===============3274220283146034574==
+Content-Type: message/rfc822
+Content-Transfer-Encoding: 8bit
+MIME-Version: 1.0
+Content-Disposition: attachment
+
+From: =?utf-8?q?Cobran=C3=A7a?= <cobranca@fornecedor.example>
+To: financeiro@empresa.example
+Subject: Boleto original
+Date: Fri, 18 Sep 2026 12:00:00 -0300
+Message-ID: <original@fornecedor.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="===============7124319200613618134=="
+
+--===============7124319200613618134==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Segue em anexo.
+
+--===============7124319200613618134==
+Content-Type: application/pdf
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="boleto_encaminhado.pdf"
+MIME-Version: 1.0
+
+JVBERi0xLjQKMSAwIG9iaiA8PCAvVHlwZSAvQ2F0YWxvZyA+PiBlbmRvYmoKdHJhaWxlciA8PCAv
+Um9vdCAxIDAgUiA+PgolJUVPRgo=
+
+--===============7124319200613618134==--
+
+--===============3274220283146034574==--

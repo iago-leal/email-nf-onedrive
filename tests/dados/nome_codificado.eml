@@ -1,0 +1,19 @@
+From: Cobranca <cobranca@fornecedor.example>
+To: financeiro@empresa.example
+Subject: Documento fiscal
+Date: Fri, 18 Sep 2026 12:00:00 -0300
+Message-ID: <nome-codificado@fornecedor.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="LIMITE"
+
+--LIMITE
+Content-Type: text/plain; charset=utf-8
+
+Segue.
+--LIMITE
+Content-Type: application/pdf
+Content-Disposition: attachment; filename="=?UTF-8?B?Tm90YSBGaXNjYWwgbsK6IDQ1LnBkZg==?="
+Content-Transfer-Encoding: base64
+
+JVBERi0xLjQKMSAwIG9iaiA8PCAvVHlwZSAvQ2F0YWxvZyA+PiBlbmRvYmoKdHJhaWxlciA8PCAvUm9vdCAxIDAgUiA+PgolJUVPRgo=
+--LIMITE--

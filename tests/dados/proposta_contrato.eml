@@ -1,0 +1,24 @@
+From: =?utf-8?q?Cobran=C3=A7a?= <cobranca@fornecedor.example>
+To: financeiro@empresa.example
+Subject: Proposta comercial
+Date: Fri, 18 Sep 2026 12:00:00 -0300
+Message-ID: <proposta@fornecedor.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="===============1296218210424765740=="
+
+--===============1296218210424765740==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Segue em anexo.
+
+--===============1296218210424765740==
+Content-Type: application/pdf
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="contrato.pdf"
+MIME-Version: 1.0
+
+JVBERi0xLjQKMSAwIG9iaiA8PCAvVHlwZSAvQ2F0YWxvZyA+PiBlbmRvYmoKdHJhaWxlciA8PCAv
+Um9vdCAxIDAgUiA+PgolJUVPRgo=
+
+--===============1296218210424765740==--

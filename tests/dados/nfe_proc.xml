@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<nfeProc xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00">
+  <NFe><infNFe Id="NFe00000000000000000000550010000000011000000010" versao="4.00">
+    <emit><CNPJ>00000000000191</CNPJ><xNome>FORNECEDOR FICTICIO LTDA</xNome></emit>
+  </infNFe></NFe>
+  <protNFe versao="4.00"><infProt><cStat>100</cStat></infProt></protNFe>
+</nfeProc>

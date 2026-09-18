@@ -1,0 +1,23 @@
+From: =?utf-8?q?Cobran=C3=A7a?= <cobranca@fornecedor.example>
+To: financeiro@empresa.example
+Subject: Boleto sem identificador
+Date: Fri, 18 Sep 2026 12:00:00 -0300
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="===============6039146975206517445=="
+
+--===============6039146975206517445==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Segue em anexo.
+
+--===============6039146975206517445==
+Content-Type: application/pdf
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="boleto.pdf"
+MIME-Version: 1.0
+
+JVBERi0xLjQKMSAwIG9iaiA8PCAvVHlwZSAvQ2F0YWxvZyA+PiBlbmRvYmoKdHJhaWxlciA8PCAv
+Um9vdCAxIDAgUiA+PgolJUVPRgo=
+
+--===============6039146975206517445==--

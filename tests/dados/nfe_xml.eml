@@ -1,0 +1,29 @@
+From: =?utf-8?q?Cobran=C3=A7a?= <cobranca@fornecedor.example>
+To: financeiro@empresa.example
+Subject: NF-e autorizada
+Date: Fri, 18 Sep 2026 12:00:00 -0300
+Message-ID: <nfe-xml@fornecedor.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="===============1115655126575737790=="
+
+--===============1115655126575737790==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Segue em anexo.
+
+--===============1115655126575737790==
+Content-Type: application/xml
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="arquivo.xml"
+MIME-Version: 1.0
+
+PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPG5mZVByb2MgeG1sbnM9Imh0
+dHA6Ly93d3cucG9ydGFsZmlzY2FsLmluZi5ici9uZmUiIHZlcnNhbz0iNC4wMCI+CiAgPE5GZT48
+aW5mTkZlIElkPSJORmUwMDAwMDAwMDAwMDAwMDAwMDAwMDU1MDAxMDAwMDAwMDAxMTAwMDAwMDAx
+MCIgdmVyc2FvPSI0LjAwIj4KICAgIDxlbWl0PjxDTlBKPjAwMDAwMDAwMDAwMTkxPC9DTlBKPjx4
+Tm9tZT5GT1JORUNFRE9SIEZJQ1RJQ0lPIExUREE8L3hOb21lPjwvZW1pdD4KICA8L2luZk5GZT48
+L05GZT4KICA8cHJvdE5GZSB2ZXJzYW89IjQuMDAiPjxpbmZQcm90PjxjU3RhdD4xMDA8L2NTdGF0
+PjwvaW5mUHJvdD48L3Byb3RORmU+CjwvbmZlUHJvYz4K
+
+--===============1115655126575737790==--
