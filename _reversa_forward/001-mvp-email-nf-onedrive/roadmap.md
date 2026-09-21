@@ -125,13 +125,13 @@ Não há dados legados a migrar; o banco nasce vazio e `DATA_INICIAL` limita a p
 
 ## 10. Critério de pronto
 
-- [ ] Todas as ações do `actions.md` marcadas `[X]`
+- [X] Todas as ações do `actions.md` marcadas `[X]`
 - [ ] `cross-check.md` (se executado) sem CRITICAL nem HIGH
-- [ ] `regression-watch.md` gerado
+- [X] `regression-watch.md` gerado
 - [ ] Re-extração reversa executada e sem regressão vermelha (recomendado, não obrigatório)
-- [ ] `pytest` verde, incluindo a integração com o Rclone contra um diretório local
-- [ ] Os 14 cenários Gherkin do `requirements.md` §7 têm teste automatizado correspondente ou, quando dependem da infraestrutura real (RF-14, RF-20), roteiro manual no `onboarding.md`
-- [ ] L-03 fechada com a convenção real aplicada em `envio/nomeacao.py`
+- [X] `pytest` verde, incluindo a integração com o Rclone contra um diretório local
+- [X] Os 14 cenários Gherkin do `requirements.md` §7 têm teste automatizado correspondente ou, quando dependem da infraestrutura real (RF-14, RF-20), roteiro manual no `onboarding.md`
+- [X] L-03 fechada com a convenção real aplicada em `envio/nomeacao.py`
 - [ ] `grep` pelo valor de `SENHA_EMAIL1` e do token do Telegram nos logs de um ciclo real sem ocorrências
 
 ## 11. Histórico de alterações
@@ -139,3 +139,4 @@ Não há dados legados a migrar; o banco nasce vazio e `DATA_INICIAL` limita a p
 | Data | Alteração | Autor |
 |------|-----------|-------|
 | 2026-09-18 | Versão inicial gerada por `/reversa-plan`, com L-03 adotada como premissa | reversa |
+| 2026-09-21 | Critério de pronto conferido: cinco itens verificados e marcados; seguem abertos o ciclo real (grep de segredos), a re-extração reversa e o `cross-check.md`, não executado | reversa |

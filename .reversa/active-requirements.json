@@ -1,9 +1,9 @@
 {
   "schema-version": 1,
-  "feature-dir": "_reversa_forward/001-mvp-email-nf-onedrive",
-  "feature-id": "001",
-  "short-name": "mvp-email-nf-onedrive",
-  "started-at": "2026-09-18T19:21:16Z",
+  "feature-dir": "_reversa_forward/002-oauth-gmail-google-cloud",
+  "feature-id": "002",
+  "short-name": "oauth-gmail-google-cloud",
+  "started-at": "2026-09-21T18:40:11Z",
   "current-stage": "requirements",
   "stages-completed": [],
   "paused-features": []
