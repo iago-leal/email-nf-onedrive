@@ -60,3 +60,63 @@
 | Subcomandos destrutivos do Rclone recusados (RN-02) | `int/rclone::test_subcomandos_fora_da_lista_sao_recusados` |
 | Registro corrompido nunca é recriado | `uni/registro::test_banco_corrompido_aborta` |
 | Exceção não prevista e disco cheio (EM EC-06, EC-07) | `e2e/fal::test_excecao_nao_prevista`, `test_disco_cheio` |
+
+---
+
+# Feature `002-oauth-gmail-google-cloud`
+
+> Fontes: `_reversa_forward/002-oauth-gmail-google-cloud/requirements.md` §5 (RF-01 a RF-14) e §7 (16 cenários).
+> Abreviações novas: `e2e/oauth` = `tests/integracao/test_ciclo_oauth.py`; `e2e/oauth-fal` = `tests/integracao/test_ciclo_oauth_falhas.py`; `e2e/autorizar` = `tests/integracao/test_autorizar_caixa.py`; `e2e/caixas` = `tests/integracao/test_cli_caixas.py`; `int/servico` = `tests/integracao/test_autorizacao_servico.py`; `uni/arquivo` = `tests/unidade/test_autorizacao_arquivo.py`; `uni/fluxo` = `tests/unidade/test_autorizacao_fluxo.py`.
+> O serviço de autorização do Google é um dublê HTTP em `127.0.0.1` (`ServicoAutorizacaoFalso`), o `AUTHENTICATE XOAUTH2` é atendido pelo `ServidorIMAPFalso`, e o navegador do operador é simulado no teste. Nenhum teste fala com o Google; o que depende do Google real tem roteiro manual no `onboarding.md` da feature.
+> Estado na geração deste mapa: 361 testes, todos passando (236 anteriores, sem alteração de expectativa além de `COMANDOS_PERMITIDOS`, e 125 novos).
+
+## Cenários do §7
+
+| # | Cenário | Testes que o cobrem | Observação |
+|---|---------|---------------------|------------|
+| 1 | Instalação atual segue funcionando sem edição | `uni/configuracao::test_auth_ausente_vale_senha_e_nada_muda`; `e2e/oauth::test_instalacao_sem_oauth_nao_fala_com_o_servico_de_autorizacao`; `e2e/caixas::test_verificar_config_sem_oauth_fica_como_antes` | Os 236 testes da feature 001 seguem verdes. `onboarding.md` §2. |
+| 2 | Caixa em oauth dispensa a senha | `uni/configuracao::test_caixa_oauth_dispensa_a_senha_e_e_valida_sem_autorizacao`, `test_senha_presente_em_caixa_oauth_e_ignorada_com_alerta` | |
+| 3 | Modo de autenticação inválido | `uni/configuracao::test_auth_invalido_invalida_so_a_caixa`, `test_auth_aceita_maiusculas` | |
+| 4 | Credenciais do cliente ausentes | `uni/configuracao::test_credenciais_do_cliente_ausentes_invalidam_so_as_caixas_oauth`, `test_credenciais_do_cliente_sem_caixa_oauth_nao_geram_alerta`; `e2e/oauth-fal::test_credenciais_do_cliente_ausentes_viram_erro_de_configuracao_da_caixa`; `e2e/autorizar::test_credenciais_do_cliente_ausentes` | |
+| 5 | Autorização de uma caixa no computador do operador | `e2e/autorizar::test_sucesso_grava_a_autorizacao_e_sai_com_0`, `test_pedido_de_consentimento_e_troca_seguem_o_contrato`, `test_nao_usa_trava_registro_nem_aviso`; `uni/fluxo` (15 testes); `uni/arquivo::test_grava_com_600_em_diretorio_700_criado_sob_demanda` | Com o Google real: `onboarding.md` §5. |
+| 6 | Diretório de autorizações configurável | `e2e/autorizar::test_diretorio_de_autorizacoes_configuravel`; `uni/configuracao::test_dir_autorizacoes_relativo_e_absoluto` | |
+| 7 | Consentimento dado com a conta errada | `e2e/autorizar::test_conta_divergente_revoga_e_nada_grava`, `test_conta_divergente_com_revogacao_indisponivel`, `test_conta_nao_identificada`, `test_conta_com_maiusculas_diferentes_e_a_mesma_conta` | `onboarding.md` §5, teste negativo 1. |
+| 8 | Ciclo completo com caixa em oauth | `e2e/oauth::test_instalacao_mista_coleta_as_caixas_dos_dois_modos`, `test_instalacao_so_com_caixas_oauth`, `test_simulacao_tambem_autentica_por_oauth`; `int/coleta::test_caixa_oauth_conecta_por_xoauth2_sem_login` | `onboarding.md` §7. |
+| 9 | Renovação sem intervenção | `e2e/oauth::test_credencial_temporaria_e_renovada_a_cada_execucao`; `int/servico::test_renovacao_devolve_a_credencial_e_a_registra_como_segredo` | O prazo real de 1 h só se verifica à mão: `onboarding.md` §7. |
+| 10 | Autorização revogada pelo titular | `e2e/oauth-fal::test_invalid_grant_pede_nova_autorizacao_e_preserva_o_arquivo`, `test_autorizacao_ausente`, `test_autorizacao_de_outro_cliente_oauth`, `test_authenticate_recusado_pelo_servidor_de_email`; `int/coleta::test_xoauth2_recusado_responde_ao_desafio_e_falha_por_autorizacao` | Revogação real: `onboarding.md` §8.1. |
+| 11 | Recuperação após nova autorização | `e2e/oauth-fal::test_recuperacao_depois_da_falha_transitoria`; `e2e/autorizar::test_reautorizacao_substitui_a_anterior` | A supressão de 6 h e o aviso de recuperação são os do gerenciador da feature 001. `onboarding.md` §8.2. |
+| 12 | Serviço de autorização do Google fora do ar | `e2e/oauth-fal::test_servico_indisponivel_e_transitorio_e_preserva_o_arquivo` (503, 429, tempo esgotado, JSON inválido); `int/servico::test_classificacao_das_falhas_com_tentativa_unica`, `test_servico_inalcancavel_e_transitorio` | `onboarding.md` §8.3. |
+| 13 | Troca de modo não duplica documentos | `e2e/oauth::test_troca_de_modo_nao_duplica_documentos` | `onboarding.md` §7. |
+| 14 | Teste de acesso por caixa | `e2e/caixas::test_todas_as_caixas_confirmadas`, `test_uma_linha_por_desfecho_e_codigo_1`, `test_so_a_caixa_pedida`, `test_pasta_inexistente_e_falha`, `test_authenticate_recusado_e_servidor_fora_do_ar`, `test_cliente_recusado_pelo_google`, `test_indice_inexistente_sai_com_2`, `test_configuracao_invalida_e_nenhuma_caixa_valida_saem_com_2` | |
+| 15 | Arquivo de autorização com permissão aberta | `uni/configuracao::test_permissao_aberta_da_autorizacao_gera_alerta`, `test_permissao_aberta_do_diretorio_gera_alerta`, `test_permissoes_corretas_nao_geram_alerta`, `test_diretorio_aberto_sem_caixa_oauth_nao_gera_alerta`; `e2e/oauth::test_permissao_aberta_da_autorizacao_vira_alerta_no_log` | `onboarding.md` §8.5. |
+| 16 | Segredos fora dos logs | `e2e/oauth::test_nenhum_segredo_chega_ao_log`; `e2e/autorizar::test_sucesso_grava_a_autorizacao_e_sai_com_0`; `int/servico::test_log_traz_o_estado_e_o_erro_sem_nenhum_segredo`; `uni/configuracao::test_segredo_do_cliente_e_mascarado_e_fica_fora_do_repr`; `uni/arquivo::test_leitura_devolve_a_autorizacao_e_registra_o_segredo` | Em instalação real: `onboarding.md` §9 (ação T039). |
+
+## Requisitos funcionais
+
+| RF | Resumo | Testes | Verificação manual |
+|----|--------|--------|--------------------|
+| RF-01 | `AUTH_EMAIL<n>`: `senha` ou `oauth`, padrão `senha` | `uni/configuracao::test_auth_ausente_vale_senha_e_nada_muda`, `test_auth_aceita_maiusculas`, `test_auth_invalido_invalida_so_a_caixa`, `test_auth_orfa_gera_alerta`, `test_duplicidade_independe_do_modo` | `onboarding.md` §3 |
+| RF-02 | Senha dispensada em `oauth`, exigida em `senha` | `uni/configuracao::test_caixa_oauth_dispensa_a_senha_e_e_valida_sem_autorizacao`, `test_senha_presente_em_caixa_oauth_e_ignorada_com_alerta`, `test_senha_ausente_invalida_so_a_caixa` | |
+| RF-03 | Credenciais do cliente OAuth no `.env`, exigidas só com caixa em `oauth` | `uni/configuracao::test_credenciais_do_cliente_ausentes_invalidam_so_as_caixas_oauth`, `test_credenciais_do_cliente_sem_caixa_oauth_nao_geram_alerta`, `test_segredo_do_cliente_e_mascarado_e_fica_fora_do_repr` | |
+| RF-04 | `autorizar-caixa <n>` grava a autorização com 600, sem imprimir segredo | `e2e/autorizar` (21 testes); `uni/arquivo` (23 testes); `uni/fluxo` (15 testes); `int/servico::test_troca_do_codigo_envia_o_verificador_e_o_retorno` | `onboarding.md` §5 |
+| RF-05 | Autorização feita fora da VPS e copiada sem edição | `uni/arquivo::test_grava_com_600_em_diretorio_700_criado_sob_demanda` (nada no arquivo depende da máquina); `e2e/oauth` usa arquivos gravados fora do comando | `onboarding.md` §6 |
+| RF-06 | Recusa quando a conta que consentiu difere de `EMAIL<n>` | `e2e/autorizar::test_conta_divergente_revoga_e_nada_grava`, `test_conta_divergente_com_revogacao_indisponivel`, `test_conta_nao_identificada`; `uni/fluxo::test_id_token_*` | `onboarding.md` §5 |
+| RF-07 | `AUTHENTICATE XOAUTH2` com credencial temporária renovada a cada execução | `int/coleta::test_caixa_oauth_conecta_por_xoauth2_sem_login`, `test_so_comandos_de_leitura_e_body_peek`; `e2e/oauth::test_instalacao_mista_coleta_as_caixas_dos_dois_modos`, `test_credencial_temporaria_e_renovada_a_cada_execucao` | `onboarding.md` §7 |
+| RF-08 | Falha de autorização só da caixa, com causa própria | `e2e/oauth-fal::test_autorizacao_ausente`, `test_invalid_grant_pede_nova_autorizacao_e_preserva_o_arquivo`, `test_autorizacao_de_outro_cliente_oauth`, `test_cliente_recusado_gera_um_aviso_so_e_pula_as_demais_caixas_oauth`, `test_authenticate_recusado_pelo_servidor_de_email`, `test_todas_as_caixas_em_falha_de_autorizacao_sai_com_codigo_2` | `onboarding.md` §8.1 e §8.4 |
+| RF-09 | Serviço indisponível é falha transitória; a autorização não é descartada | `e2e/oauth-fal::test_servico_indisponivel_e_transitorio_e_preserva_o_arquivo`, `test_recuperacao_depois_da_falha_transitoria`; `int/servico::test_classificacao_das_falhas_com_tentativa_unica` | `onboarding.md` §8.3 |
+| RF-10 | `verificar-config` mostra o modo e o estado da autorização, sem rede | `e2e/caixas::test_verificar_config_mostra_o_modo_e_o_estado_da_autorizacao`, `test_verificar_config_sem_oauth_fica_como_antes`; `uni/arquivo::test_estado_por_stat_sem_abrir_o_arquivo` | |
+| RF-11 | `testar-caixa [<n>]`, uma tentativa por caixa | `e2e/caixas` (8 testes de `testar-caixa`) | `onboarding.md` §5 e §6 |
+| RF-12 | Alerta de permissão aberta da autorização | `uni/configuracao::test_permissao_aberta_*`, `test_permissoes_corretas_nao_geram_alerta`; `e2e/oauth::test_permissao_aberta_da_autorizacao_vira_alerta_no_log` | `onboarding.md` §8.5 |
+| RF-13 | Roteiro do Google Cloud e da operação no guia; `.env.example` | sem teste automatizado | `docs/instalacao-e-operacao.md` §16; leitura por terceiro na ação T039 |
+| RF-14 | Comunicado ao titular | sem teste automatizado | `docs/instalacao-e-operacao.md` §16.2 |
+
+## Invariantes vigiadas
+
+| Invariante | Testes |
+|------------|--------|
+| A lista de comandos IMAP ganhou `AUTHENTICATE` e nada mais (W014, D-07) | `int/coleta::test_so_comandos_de_leitura_e_body_peek`, `test_caixa_oauth_conecta_por_xoauth2_sem_login`; `e2e/caixas::test_todas_as_caixas_confirmadas` |
+| Uma tentativa de renovação por caixa e por execução (D-09) | `int/servico::test_classificacao_das_falhas_com_tentativa_unica`; `e2e/oauth-fal::test_servico_indisponivel_e_transitorio_e_preserva_o_arquivo` |
+| Depois de `oauth:cliente`, nenhuma nova requisição na mesma execução (D-08) | `e2e/oauth-fal::test_cliente_recusado_gera_um_aviso_so_e_pula_as_demais_caixas_oauth`; `e2e/caixas::test_cliente_recusado_pelo_google` |
+| O ciclo nunca escreve nem apaga o arquivo de autorização (RF-09) | `e2e/oauth::test_instalacao_mista_coleta_as_caixas_dos_dois_modos`; `e2e/oauth-fal` (comparação de bytes antes e depois) |
+| A página de retorno não reflete parâmetros; `/favicon.ico` não consome o retorno | `e2e/autorizar::test_pagina_de_retorno_e_estatica_e_favicon_nao_consome_o_retorno` |
+| Endereços do Google só mudam por injeção, nunca pelo `.env` (D-14) | `uni/fluxo::test_enderecos_padrao_sao_os_do_google`; não existe variável de ambiente lida para esse fim |

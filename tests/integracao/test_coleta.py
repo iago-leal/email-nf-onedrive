@@ -16,7 +16,8 @@ from .dubles import ServidorIMAPFalso
 
 pytestmark = pytest.mark.integracao
 
-COMANDOS_PERMITIDOS = {"CONNECT", "LOGIN", "LIST", "EXAMINE", "SEARCH", "FETCH", "LOGOUT"}
+# W014: a lista é fechada. A feature 002 acrescentou AUTHENTICATE (XOAUTH2) e nada mais.
+COMANDOS_PERMITIDOS = {"CONNECT", "LOGIN", "AUTHENTICATE", "LIST", "EXAMINE", "SEARCH", "FETCH", "LOGOUT"}
 
 
 def _caixa(indice=1, endereco="financeiro@empresa.example", senha="app-1", pasta="INBOX"):
@@ -36,12 +37,12 @@ def ambiente(home, servidor):
     """Executa a coleta com o servidor dublê; devolve (resultados, registro aberto)."""
     abertos = []
 
-    def _coletar(*caixas, data_inicial=date(2026, 9, 1)):
+    def _coletar(*caixas, data_inicial=date(2026, 9, 1), provedor=None):
         registro = Registro.abrir(home / "var" / "registro.sqlite3")
         abertos.append(registro)
         fabrica = lambda c: ClienteIMAP(c.imap_host, c.imap_porta, fabrica=servidor.fabrica)
         resultados = coletar(caixas or (_caixa(),), registro, home / "var" / "trabalho" / "x",
-                             data_inicial, logging.getLogger("teste-coleta"), fabrica)
+                             data_inicial, logging.getLogger("teste-coleta"), fabrica, provedor)
         registro.commit()
         return resultados, registro
 
@@ -165,3 +166,62 @@ def test_servidor_fora_do_ar(servidor, ambiente):
     servidor.fora_do_ar.add("imap1.example")
     (resultado,), _ = ambiente()
     assert resultado.falha.causa == "caixa1:conexao"
+
+
+# --- Feature 002: caixa em modo oauth (D-07, D-08, interfaces/imap-gmail-xoauth2.md) ---------
+
+CAIXA_OAUTH = "fiscal@cliente.example"
+
+
+class _ProvedorFixo:
+    """Faz o papel de `autorizacao.credencial.ProvedorCredencial`: devolve a credencial temporária."""
+
+    def __init__(self, credencial: str) -> None:
+        self.credencial = credencial
+        self.pedidos: list[int] = []
+
+    def obter(self, caixa) -> str:
+        self.pedidos.append(caixa.indice)
+        return self.credencial
+
+
+def _caixa_oauth(indice=2):
+    return Caixa(indice=indice, endereco=CAIXA_OAUTH, senha="", pasta="INBOX", imap_host=f"imap{indice}.example",
+                 destino="Destino", modo="oauth")
+
+
+def test_caixa_oauth_conecta_por_xoauth2_sem_login(servidor, dados, ambiente, caplog):
+    servidor.adicionar_caixa_oauth(CAIXA_OAUTH, "ya29.valida")
+    _entregar(servidor, dados, "boleto_simples.eml", caixa=CAIXA_OAUTH)
+    provedor = _ProvedorFixo("ya29.valida")
+    with caplog.at_level(logging.INFO):
+        (resultado,), _registro = ambiente(_caixa_oauth(), provedor=provedor)
+    assert resultado.falha is None
+    assert [item.nome_original for item in resultado.para_envio] == ["Boleto Set.pdf"]
+    assert provedor.pedidos == [2]
+    assert ("AUTHENTICATE", "XOAUTH2") in servidor.comandos
+    assert "LOGIN" not in servidor.nomes_de_comandos()
+    assert servidor.nomes_de_comandos() <= COMANDOS_PERMITIDOS
+    assert "caixa 2: conectada (oauth)" in caplog.text
+
+
+def test_caixa_senha_nao_consulta_o_provedor_e_registra_o_modo(servidor, ambiente, caplog):
+    provedor = _ProvedorFixo("ya29.valida")
+    with caplog.at_level(logging.INFO):
+        ambiente(provedor=provedor)
+    assert provedor.pedidos == []
+    assert "AUTHENTICATE" not in servidor.nomes_de_comandos()
+    assert "caixa 1: conectada (senha)" in caplog.text
+
+
+def test_xoauth2_recusado_responde_ao_desafio_e_falha_por_autorizacao(servidor, dados, ambiente, caplog):
+    servidor.adicionar_caixa_oauth(CAIXA_OAUTH, "ya29.valida")
+    _entregar(servidor, dados, "boleto_simples.eml")
+    with caplog.at_level(logging.INFO):
+        r1, r2 = ambiente(_caixa(), _caixa_oauth(), provedor=_ProvedorFixo("ya29.recusada"))[0]
+    assert r1.falha is None and len(r1.para_envio) == 1  # RN-09: a falha de uma caixa não para as outras
+    assert r2.falha.causa == "caixa2:autorizacao"
+    assert r2.falha.mensagem == ("caixa 2: autorização OAuth recusada pelo servidor de e-mail. "
+                                 "Ação: rode autorizar-caixa 2 e confira se o IMAP está ativo na conta.")
+    assert '"status": "400"' in caplog.text  # o desafio decodificado vai ao log
+    assert "ya29.recusada" not in caplog.text

@@ -254,3 +254,139 @@ def test_repr_nao_expoe_segredos(home, escrever_env):
     texto = repr(config)
     assert "app-pass-1" not in texto
     assert "token-secreto" not in texto
+
+
+# --- Feature 002: modo de autenticação por caixa (D-10, RF-01 a RF-03, RF-12) -----------------
+
+OAUTH = {"OAUTH_CLIENT_ID": "id-do-cliente.apps.example", "OAUTH_CLIENT_SECRET": "segredo-do-cliente"}
+
+
+def _autorizacao(home, endereco="a@empresa.example", modo_arquivo=0o600, modo_diretorio=0o700, diretorio="autorizacoes"):
+    pasta = home / diretorio
+    pasta.mkdir(parents=True, exist_ok=True)
+    os.chmod(pasta, modo_diretorio)
+    caminho = pasta / f"{endereco}.json"
+    caminho.write_text("{}", encoding="utf-8")
+    os.chmod(caminho, modo_arquivo)
+    return caminho
+
+
+def test_auth_ausente_vale_senha_e_nada_muda(home, escrever_env):
+    escrever_env(_env(EMAIL1="a@empresa.example", SENHA_EMAIL1="s1"))
+    config = carregar_configuracao(home)
+    assert config.caixas[0].modo == "senha"
+    assert config.cliente_oauth is None
+    assert config.dir_autorizacoes == home / "autorizacoes"
+    assert config.alertas == ()
+
+
+def test_auth_aceita_maiusculas(home, escrever_env):
+    escrever_env(_env(EMAIL1="a@empresa.example", AUTH_EMAIL1="OAuth", **OAUTH))
+    assert carregar_configuracao(home).caixas[0].modo == "oauth"
+
+
+def test_auth_invalido_invalida_so_a_caixa(home, escrever_env):
+    escrever_env(_env(EMAIL1="a@empresa.example", SENHA_EMAIL1="s1", AUTH_EMAIL1="token",
+                      EMAIL2="b@empresa.example", SENHA_EMAIL2="s2"))
+    config = carregar_configuracao(home)
+    assert [c.indice for c in config.caixas] == [2]
+    assert config.caixas_invalidas[0].motivo == "caixa 1: AUTH_EMAIL1 inválido (use senha ou oauth)"
+
+
+def test_caixa_oauth_dispensa_a_senha_e_e_valida_sem_autorizacao(home, escrever_env):
+    escrever_env(_env(EMAIL1="a@empresa.example", AUTH_EMAIL1="oauth", **OAUTH))
+    config = carregar_configuracao(home)
+    caixa = config.caixas[0]
+    assert (caixa.modo, caixa.senha) == ("oauth", "")
+    assert config.caixas_invalidas == ()
+    assert config.cliente_oauth.client_id == OAUTH["OAUTH_CLIENT_ID"]
+    assert not (home / "autorizacoes").exists()  # carregar a configuração não cria nada
+
+
+def test_senha_presente_em_caixa_oauth_e_ignorada_com_alerta(home, escrever_env):
+    escrever_env(_env(EMAIL1="a@empresa.example", AUTH_EMAIL1="oauth", SENHA_EMAIL1="senha-velha", **OAUTH))
+    config = carregar_configuracao(home)
+    assert config.caixas[0].senha == ""
+    assert "SENHA_EMAIL1 presente em caixa oauth; retire-a do .env" in config.alertas
+    assert segredos.mascarar("senha-velha") == "****"
+
+
+@pytest.mark.parametrize("faltante", ["OAUTH_CLIENT_ID", "OAUTH_CLIENT_SECRET"])
+def test_credenciais_do_cliente_ausentes_invalidam_so_as_caixas_oauth(home, escrever_env, faltante):
+    oauth = {chave: valor for chave, valor in OAUTH.items() if chave != faltante}
+    escrever_env(_env(EMAIL1="a@empresa.example", SENHA_EMAIL1="s1",
+                      EMAIL2="b@empresa.example", AUTH_EMAIL2="oauth", **oauth))
+    config = carregar_configuracao(home)
+    assert [c.indice for c in config.caixas] == [1]
+    assert config.cliente_oauth is None
+    assert config.caixas_invalidas[0].motivo == "caixa 2: credenciais do cliente OAuth ausentes"
+
+
+def test_credenciais_do_cliente_sem_caixa_oauth_nao_geram_alerta(home, escrever_env):
+    escrever_env(_env(EMAIL1="a@empresa.example", SENHA_EMAIL1="s1", **OAUTH))
+    config = carregar_configuracao(home)
+    assert config.alertas == ()
+    assert config.cliente_oauth is not None
+
+
+def test_segredo_do_cliente_e_mascarado_e_fica_fora_do_repr(home, escrever_env):
+    escrever_env(_env(EMAIL1="a@empresa.example", AUTH_EMAIL1="oauth", **OAUTH))
+    config = carregar_configuracao(home)
+    assert segredos.mascarar("x segredo-do-cliente y") == "x **** y"
+    assert "segredo-do-cliente" not in repr(config)
+
+
+def test_auth_orfa_gera_alerta(home, escrever_env):
+    escrever_env(_env(EMAIL1="a@empresa.example", SENHA_EMAIL1="s1", AUTH_EMAIL3="oauth"))
+    assert "AUTH_EMAIL3 sem EMAIL3" in carregar_configuracao(home).alertas
+
+
+def test_duplicidade_independe_do_modo(home, escrever_env):
+    escrever_env(_env(EMAIL1="a@empresa.example", SENHA_EMAIL1="s1",
+                      EMAIL2="A@empresa.example", AUTH_EMAIL2="oauth", **OAUTH))
+    config = carregar_configuracao(home)
+    assert config.caixas_invalidas[0].motivo == "caixa 2: duplicada da caixa 1"
+
+
+def test_dir_autorizacoes_relativo_e_absoluto(home, escrever_env, tmp_path_factory):
+    escrever_env(_env(EMAIL1="a@empresa.example", SENHA_EMAIL1="s1", DIR_AUTORIZACOES="segredos/oauth"))
+    assert carregar_configuracao(home).dir_autorizacoes == home / "segredos" / "oauth"
+    absoluto = tmp_path_factory.mktemp("fora")
+    escrever_env(_env(EMAIL1="a@empresa.example", SENHA_EMAIL1="s1", DIR_AUTORIZACOES=str(absoluto)))
+    assert carregar_configuracao(home).dir_autorizacoes == absoluto
+
+
+def test_endereco_com_separador_de_caminho_invalida_a_caixa_oauth(home, escrever_env):
+    escrever_env(_env(EMAIL1="../fora@empresa.example", AUTH_EMAIL1="oauth",
+                      EMAIL2="../fora@empresa.example", SENHA_EMAIL2="s2", PASTA_EMAIL2="Outra", **OAUTH))
+    config = carregar_configuracao(home)
+    assert [c.indice for c in config.caixas] == [2]  # em modo senha o endereço não vira nome de arquivo
+    assert config.caixas_invalidas[0].motivo == "caixa 1: EMAIL1 não pode nomear o arquivo de autorização"
+
+
+def test_permissao_aberta_da_autorizacao_gera_alerta(home, escrever_env):
+    _autorizacao(home, modo_arquivo=0o644)
+    escrever_env(_env(EMAIL1="A@empresa.example", AUTH_EMAIL1="oauth", **OAUTH))
+    alertas = carregar_configuracao(home).alertas
+    assert "permissão da autorização da caixa 1 mais aberta que 600" in alertas
+    assert not any("diretório" in alerta for alerta in alertas)
+
+
+def test_permissao_aberta_do_diretorio_gera_alerta(home, escrever_env):
+    _autorizacao(home, modo_diretorio=0o755)
+    escrever_env(_env(EMAIL1="a@empresa.example", AUTH_EMAIL1="oauth", **OAUTH))
+    alertas = carregar_configuracao(home).alertas
+    assert "permissão do diretório de autorizações mais aberta que 700" in alertas
+    assert not any("autorização da caixa" in alerta for alerta in alertas)
+
+
+def test_permissoes_corretas_nao_geram_alerta(home, escrever_env):
+    _autorizacao(home)
+    escrever_env(_env(EMAIL1="a@empresa.example", AUTH_EMAIL1="oauth", **OAUTH))
+    assert carregar_configuracao(home).alertas == ()
+
+
+def test_diretorio_aberto_sem_caixa_oauth_nao_gera_alerta(home, escrever_env):
+    _autorizacao(home, modo_diretorio=0o755)
+    escrever_env(_env(EMAIL1="a@empresa.example", SENHA_EMAIL1="s1"))
+    assert carregar_configuracao(home).alertas == ()
