@@ -283,20 +283,31 @@ Dois pontos para ter claros antes de começar:
 
 ### 16.1 Projeto no Google Cloud (uma vez)
 
-Os nomes dos menus mudam com alguma frequência; procure pelo sentido. Use a conta Google do operador.
+Os nomes dos menus mudam com alguma frequência; procure pelo sentido. Use uma conta Google do operador, pessoal ou do Google Workspace. Com conta do Workspace, o projeto nasce dentro da organização do domínio e fica sujeito às políticas dela, o que pesa na entrega ao cliente (seção 16.8).
 
-1. Em <https://console.cloud.google.com>, crie um projeto (por exemplo, `email-nf-onedrive`). Não associe conta de faturamento.
-2. No menu, abra **Google Auth Platform** (em consoles antigos, "APIs e serviços" › "Tela de permissão OAuth").
-3. Em **Branding**, informe o nome do aplicativo (`email-nf-onedrive`) e um e-mail de suporte. Não é preciso logotipo nem domínio.
-4. Em **Público**, escolha o tipo **Externo**. Em seguida, clique em **Publicar aplicativo**, para que o estado fique **Em produção**. Não peça a verificação do aplicativo. Este passo é obrigatório: em modo de teste, toda autorização caduca em 7 dias.
-5. Em **Acesso a dados**, acrescente o escopo `https://mail.google.com/`.
-6. Em **Clientes**, crie um cliente OAuth do tipo **App para computador**. Copie o **ID do cliente** e a **chave secreta** para o `.env`, tanto na máquina do operador quanto na VPS:
+1. Crie o projeto sem conta de faturamento. O identificador é único entre todos os projetos do Google Cloud, e não só entre os seus; use um sufixo, como `email-nf-onedrive-<cliente>`. Pelo terminal, com o [Google Cloud CLI](https://cloud.google.com/sdk/docs/install) autenticado na conta do operador (`gcloud auth list` mostra qual):
+
+   ```bash
+   gcloud projects create email-nf-onedrive-<cliente> --name=email-nf-onedrive
+   ```
+
+   Ou pelo console, em <https://console.cloud.google.com>, no seletor de projetos › **Novo projeto**. Os passos seguintes só existem no console: o Google não oferece linha de comando nem API pública para a tela de consentimento e para clientes do tipo computador.
+2. Abra a **Google Auth Platform** já no projeto: `https://console.cloud.google.com/auth/overview?project=<identificador>`. Se a página disser que "não pode ser visualizada para organizações", o console está no nível da organização, e não do projeto: no seletor do topo, abra a aba **Todos** (o projeto criado pelo terminal não aparece entre os recentes) e selecione-o. O topo deve mostrar o nome do projeto. Em consoles antigos, o caminho é "APIs e serviços" › "Tela de permissão OAuth".
+3. Clique em **Vamos começar**. O assistente tem quatro etapas:
+   - **Informações do app:** nome `email-nf-onedrive` e o e-mail de suporte do operador. Não é preciso logotipo nem domínio.
+   - **Público:** marque **Externo**. Em projeto de organização, o console oferece também **Interno**, que restringe o consentimento às contas do domínio da organização; as caixas dos clientes estão em outros domínios e não conseguiriam autorizar. O texto do Externo avisa que o app começa em modo de testes, o que o passo 4 resolve.
+   - **Dados de contato:** o e-mail do operador.
+   - **Concluir:** aceite a política de dados de usuário e clique em **Criar**. Esperado: "Configuração do OAuth criada".
+4. Em **Público-alvo**, clique em **Publicar app** e confirme, para que o estado fique **Em produção**. Não peça a verificação do aplicativo. Este passo é obrigatório: em modo de teste, só os usuários de teste listados conseguem consentir, e toda autorização caduca em 7 dias.
+5. Em **Acesso a dados** › **Adicionar ou remover escopos**, cole `https://mail.google.com/` no campo de escopo manual, adicione e clique em **Salvar**. O console o classifica como escopo restrito; é esperado.
+6. Em **Clientes** › **Criar cliente**, escolha o tipo **App para computador**, com o nome `email-nf-onedrive`. Não use **Aplicativo da Web**: ele exige endereço de retorno fixo, e o `autorizar-caixa` recebe a resposta em `127.0.0.1` com porta variável. Na janela que se abre, copie o **ID do cliente** e a **chave secreta**, ou baixe o JSON: o console só mostra a chave nesse momento, e perdê-la obriga a gerar outra. Grave os dois no `.env`, tanto na máquina do operador quanto na VPS:
 
    ```
    OAUTH_CLIENT_ID=<ID do cliente>
    OAUTH_CLIENT_SECRET=<chave secreta>
    ```
 
+   O JSON baixado traz a chave em claro; apague-o depois de copiar os valores, e nunca o deixe dentro do repositório.
 7. Não ative nenhuma API: o acesso é por IMAP, que não depende da API do Gmail.
 
 Sem verificação, o Google limita o aplicativo a 100 contas e mostra um aviso na tela de consentimento (seção 16.3, passo 4). Para cinco caixas conhecidas, é o arranjo adequado: a verificação de escopo restrito exige auditoria paga.
@@ -317,11 +328,13 @@ O consentimento é dado pelo operador, que entra na conta com a senha recebida d
 O consentimento exige navegador; por isso é feito na máquina do operador, com uma instalação da ferramenta e o mesmo `.env` da VPS.
 
 1. No `.env`, defina `AUTH_EMAIL<n>=oauth` para a caixa e rode `verificar-config`. Esperado: a caixa termina em `oauth (sem autorização)` e aparece a linha `cliente OAuth: configurado`.
-2. Rode:
+2. Num terminal em primeiro plano, rode:
 
    ```bash
    email-nf-onedrive autorizar-caixa 2
    ```
+
+   O comando imprime o endereço de consentimento e fica aguardando a volta do navegador. Não o mande para segundo plano: o endereço deixa de aparecer na tela, e o comando parece travado.
 
 3. Copie o endereço impresso e abra-o numa **janela anônima** do navegador. Não use a janela normal: ela está com a sua conta, e o consentimento sairia para a conta errada. Entre com o endereço e a senha da caixa.
 4. Na tela **"O Google não verificou este app"**, clique em **Avançado** e em **Acessar email-nf-onedrive (não seguro)**. O aviso é esperado: o aplicativo é seu e não passou pela verificação pública.
@@ -341,7 +354,7 @@ O comando espera o consentimento por até 5 minutos e sai com código 0 quando g
 | `credenciais do cliente OAuth ausentes` | falta `OAUTH_CLIENT_ID` ou `OAUTH_CLIENT_SECRET` | seção 16.1, passo 6 |
 | `não foi possível revogar; revogue em myaccount.google.com/permissions` | a revogação automática falhou | remova o acesso à mão, na conta em que o consentimento foi dado |
 
-**Se o Google pedir confirmação em outro aparelho ou código por SMS**, pare: essa caixa precisa do titular presente. Combine uma chamada e faça os passos 2 a 5 com ele confirmando o desafio.
+**Se o Google pedir confirmação em outro aparelho ou código por SMS**, pare: essa caixa precisa do titular presente. É o caso de toda conta com verificação em duas etapas. Faça os passos 2 a 5 com o titular ao lado, ou numa chamada, com ele confirmando o desafio no próprio celular. Convém descobrir antes quais caixas têm a verificação ativa e agendar todas numa única visita.
 
 Se o `AUTHENTICATE` for recusado logo depois de uma autorização bem-sucedida (`caixa N: falhou (autorização recusada...)` no `testar-caixa`), o mais provável é o **IMAP desativado** na conta ou no domínio (seção 5, passo 3).
 
@@ -408,5 +421,7 @@ O projeto nasce na conta do operador e pode mudar de dono sem reautorizar nenhum
 2. O cliente aceita o convite que chega por e-mail.
 3. Confirmado o aceite, o cliente (ou você) remove a conta do operador da lista.
 4. Em **Google Auth Platform** › **Branding**, troque o e-mail de suporte pelo do cliente.
+
+**Projeto dentro de uma organização.** Se o projeto nasceu numa conta do Google Workspace (seção 16.1), ele pertence à organização do domínio do operador, e a troca de proprietário não o tira de lá. Há duas saídas. Na primeira, o cliente recebe o papel de proprietário e o projeto continua na organização do operador; a política de compartilhamento restrito ao domínio, se estiver ativa, impede o convite a uma conta de fora, e o administrador precisa abrir exceção. Na segunda, o projeto é movido para a organização do cliente, o que exige permissão de administrador de projetos nas duas organizações. Se nenhuma das duas for viável, resta a alternativa do fim desta seção.
 
 O ID e a chave secreta do cliente OAuth não mudam, e as autorizações seguem válidas. Confira com `testar-caixa` na VPS. Se a transferência por convite não estiver disponível para o projeto, a alternativa é o cliente criar um projeto novo (16.1) e as caixas serem autorizadas de novo (16.3 e 16.4).
