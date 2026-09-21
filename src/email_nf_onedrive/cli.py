@@ -56,7 +56,7 @@ def _verificar_config(home: Path) -> int:
     if config is None:
         return 2
     for caixa in config.caixas:
-        print(f"{caixa.indice} · {caixa.endereco} · {caixa.pasta} · {caixa.destino} · senha {segredos.MASCARA}")
+        print(f"{caixa.indice} · {caixa.endereco} · {caixa.pasta} · {caixa.destino} · empresa {caixa.empresa} · senha {segredos.MASCARA}")
     for invalida in config.caixas_invalidas:
         print(f"inválida: {invalida.motivo}")
     print(f"remote do Rclone: {config.rclone_remote}")

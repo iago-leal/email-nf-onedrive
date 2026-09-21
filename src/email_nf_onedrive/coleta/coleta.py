@@ -37,6 +37,8 @@ class AnexoParaEnvio:
     remetente: str
     data_mensagem: datetime
     sha256: str
+    assunto: str = ""
+    classe: str = ""
 
 
 @dataclass(frozen=True)
@@ -105,7 +107,7 @@ class _ColetorCaixa:
             existente = self.registro.buscar(self.caixa.endereco, msg.message_id, anexo.sha256)
             if existente is not None:
                 if existente.estado in ESTADOS_PENDENTES:  # fluxo alternativo A: nova tentativa de envio
-                    self._para_envio(existente.id, anexo, msg, data)
+                    self._para_envio(existente.id, anexo, msg, data, existente.classe)
                 continue
             classe = classificar(anexo.nome, msg.assunto, anexo.conteudo)
             self.resultado.classes[classe] += 1
@@ -123,15 +125,17 @@ class _ColetorCaixa:
             novo = self.registro.registrar_anexo(**campos, estado="extraido")
             self.log.info("extraído: %s (%s, sha256 %s, remetente %s, assunto %r)", anexo.nome, classe,
                           anexo.sha256, msg.remetente, msg.assunto, extra=self.extra)
-            self._para_envio(novo.id, anexo, msg, data)
+            self._para_envio(novo.id, anexo, msg, data, classe)
 
-    def _para_envio(self, anexo_id: int, anexo: AnexoExtraido, msg: MensagemAnalisada, data: datetime) -> None:
+    def _para_envio(self, anexo_id: int, anexo: AnexoExtraido, msg: MensagemAnalisada, data: datetime,
+                    classe: str) -> None:
         if anexo_id in self._enfileirados:  # mesmo anexo repetido na mensagem ou na pasta
             return
         self._enfileirados.add(anexo_id)
         self.resultado.para_envio.append(AnexoParaEnvio(
             anexo_id=anexo_id, caminho_local=self._gravar(anexo_id, anexo), caixa=self.caixa,
             nome_original=anexo.nome, remetente=msg.remetente, data_mensagem=data, sha256=anexo.sha256,
+            assunto=msg.assunto, classe=classe,
         ))
 
     def executar(self, fabrica: FabricaIMAP, data_inicial: date) -> ResultadoCaixa:

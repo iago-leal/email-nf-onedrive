@@ -116,7 +116,7 @@ def test_verificar_config_lista_caixas_com_senha_mascarada(cenario, capsys):
     cenario.env["EMAIL3"] = "sem-arroba"
     assert cenario.executar("verificar-config") == 0
     saida = capsys.readouterr().out
-    assert f"1 · {CAIXA_1} · INBOX · {cenario.destino} · senha ****" in saida
+    assert f"1 · {CAIXA_1} · INBOX · {cenario.destino} · empresa ACME · senha ****" in saida
     assert "inválida: caixa 3: EMAIL3 inválido" in saida
     assert SENHA_1 not in saida
     assert cenario.servidor.comandos == []

@@ -25,6 +25,7 @@ class Caixa:
     imap_host: str
     destino: str
     imap_porta: int = PORTA_IMAP
+    empresa: str = ""  # rótulo no nome dos arquivos; vazio usa o domínio do endereço
 
 
 @dataclass(frozen=True)

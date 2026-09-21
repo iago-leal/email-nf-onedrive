@@ -194,7 +194,7 @@ A saída é descartada porque tudo vai para o log. Execuções sobrepostas são 
 Cada linha tem data e hora, nível (`INFO`, `WARNING`, `ERROR`), a caixa quando se aplica e a mensagem:
 
 ```
-2026-09-18T12:00:04-03:00 INFO [caixa 1] enviado: 2026-09-18_cobranca_Boleto Set.pdf -> <Empresa> Financeiro/CONTAS A PAGAR (1.2 s)
+2026-09-18T12:00:04-03:00 INFO [caixa 1] enviado: ACME - FORNECEDOR - BOLETO.pdf -> <Empresa> Financeiro/CONTAS A PAGAR (1.2 s)
 2026-09-18T12:00:05-03:00 INFO resumo: 1 caixa, 1 extraídos, 1 enviados, 0 falhas, 5 s (desde a execução anterior: 30 min)
 ```
 
@@ -243,7 +243,7 @@ Para desativar uma caixa, apague ou comente as linhas dela. O histórico no regi
 ## 13. Ajustes que exigem alteração de código
 
 - **Palavras-chave** que identificam documentos: `PALAVRAS_CHAVE` em `app/src/email_nf_onedrive/coleta/classificacao.py`.
-- **Convenção de nomes** dos arquivos (`AAAA-MM-DD_remetente_nome-original`, provisória até a equipe confirmar o padrão da pasta): `app/src/email_nf_onedrive/envio/nomeacao.py`.
+- **Convenção de nomes** dos arquivos (`<EMPRESA> - <FORNECEDOR> [NF <n>] - <REF|BOLETO>.<ext>`, o padrão apurado na pasta em `docs/onedrive/estrutura-contas-a-pagar.md`): `app/src/email_nf_onedrive/envio/nomeacao.py`. O rótulo da empresa vem de `EMPRESA_EMAIL<n>` no `.env`.
 
 Depois de alterar, reinstale (`.venv/bin/pip install ./app`) e rode `executar --simular`.
 

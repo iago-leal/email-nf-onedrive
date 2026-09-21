@@ -12,6 +12,7 @@ import logging
 import time
 from dataclasses import dataclass, field
 
+from email_nf_onedrive.coleta.classificacao import NFE_XML
 from email_nf_onedrive.coleta.coleta import AnexoParaEnvio, Falha
 from email_nf_onedrive.envio import nomeacao
 from email_nf_onedrive.envio.rclone import ACESSO, CONFIG, TOKEN, ErroRclone, ObjetoRemoto, Rclone
@@ -118,8 +119,11 @@ class Enviador:
         inicio = time.monotonic()
         tamanho = item.caminho_local.stat().st_size
         hash_local = self.rclone.hash_local(item.caminho_local)
-        caminho = nomeacao.caminho_destino(destino, data_mensagem=item.data_mensagem,
-                                           remetente=item.remetente, nome_original=item.nome_original)
+        caminho = nomeacao.caminho_destino(destino, nomeacao.DadosNome(
+            empresa=item.caixa.empresa, remetente=item.remetente, nome_original=item.nome_original,
+            assunto=item.assunto, classe=item.classe,
+            conteudo=item.caminho_local.read_bytes() if item.classe == NFE_XML else None,
+        ))
         caminho, identico = self._escolher_nome(caminho, tamanho, hash_local)
         nome_final = caminho.rsplit("/", 1)[1]
 

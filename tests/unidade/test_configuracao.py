@@ -83,6 +83,16 @@ def test_pasta_servidor_e_destino_por_caixa(home, escrever_env):
     assert caixa2.destino == "Outra Empresa/CONTAS A PAGAR"
 
 
+def test_empresa_por_caixa_com_padrao_pelo_dominio(home, escrever_env):
+    escrever_env(_env(
+        EMAIL1="financeiro@acme.example", SENHA_EMAIL1="s1", EMPRESA_EMAIL1="ACME",
+        EMAIL2="fulano@mineradora-b.example", SENHA_EMAIL2="s2",
+    ))
+    caixa1, caixa2 = carregar_configuracao(home).caixas
+    assert caixa1.empresa == "ACME"
+    assert caixa2.empresa == "MINERADORA B"
+
+
 def test_senha_ausente_invalida_so_a_caixa(home, escrever_env):
     escrever_env(_env(
         EMAIL1="a@empresa.example", SENHA_EMAIL1="s1",

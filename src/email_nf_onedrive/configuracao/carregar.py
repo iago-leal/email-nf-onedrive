@@ -17,6 +17,7 @@ from dotenv import dotenv_values
 
 from email_nf_onedrive import segredos
 from email_nf_onedrive.configuracao.modelo import Caixa, CaixaInvalida, Configuracao, ErroConfiguracao
+from email_nf_onedrive.envio.nomeacao import rotulo_do_endereco
 
 PASTA_PADRAO = "INBOX"
 IMAP_HOST_PADRAO = "imap.gmail.com"
@@ -117,6 +118,7 @@ def carregar_configuracao(home: Path) -> Configuracao:
             pasta=pasta,
             imap_host=env.get(f"IMAP_HOST_EMAIL{n}") or IMAP_HOST_PADRAO,
             destino=env.get(f"DESTINO_ONEDRIVE{n}") or destino_global,
+            empresa=env.get(f"EMPRESA_EMAIL{n}") or rotulo_do_endereco(endereco),
         ))
 
     return Configuracao(

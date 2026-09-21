@@ -33,6 +33,7 @@ class Cenario:
         self.transportes_criados: list[tuple[str, str]] = []
         self.env = {
             "EMAIL1": CAIXA_1,
+            "EMPRESA_EMAIL1": "ACME",
             "SENHA_EMAIL1": SENHA_1,
             "IMAP_HOST_EMAIL1": "imap1.example",
             "RCLONE_REMOTE": ":local",

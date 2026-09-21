@@ -6,7 +6,8 @@ import pytest
 
 pytestmark = pytest.mark.integracao
 
-BOLETO = "2026-09-18_cobranca_Boleto Set.pdf"
+BOLETO = "ACME - FORNECEDOR - BOLETO.pdf"
+NFE = "ACME - FORNECEDOR FICTICIO LTDA - REF.xml"
 
 
 def test_boleto_arquivado(cenario):
@@ -25,7 +26,7 @@ def test_reexecucao_nao_duplica(cenario):
     assert cenario.executar("executar") == 0
     cenario.relogio.avancar(minutes=30)
     assert cenario.executar("executar") == 0
-    assert cenario.arquivos_no_destino() == [BOLETO, "2026-09-18_cobranca_arquivo.xml"]
+    assert cenario.arquivos_no_destino() == [BOLETO, NFE]
     assert cenario.estados() == ["enviado", "enviado"]
     assert "resumo: 1 caixa, 0 extraídos, 0 enviados, 0 falhas" in cenario.log()
     assert "(desde a execução anterior: 30 min)" in cenario.log()
@@ -36,7 +37,7 @@ def test_nome_repetido_recebe_sufixo_e_preserva_o_original(cenario):
     cenario.entregar("boleto_simples.eml")
     assert cenario.executar("executar") == 0
     assert (cenario.destino / BOLETO).read_bytes() == b"%PDF arquivo da equipe"
-    assert cenario.arquivos_no_destino() == [BOLETO, "2026-09-18_cobranca_Boleto Set_2.pdf"]
+    assert cenario.arquivos_no_destino() == [BOLETO, "ACME - FORNECEDOR - BOLETO_2.pdf"]
 
 
 def test_retomada_apos_falha_de_envio(cenario):

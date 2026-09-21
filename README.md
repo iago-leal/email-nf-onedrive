@@ -7,7 +7,7 @@ A cada execução, agendada no `cron` a cada 30 minutos, a ferramenta:
 1. lê as caixas do Google Workspace configuradas no `.env`, por IMAP;
 2. extrai os anexos PDF e XML, inclusive de mensagens encaminhadas;
 3. classifica cada anexo: NF-e em XML e documentos com palavra-chave (nota fiscal, boleto, fatura etc.) seguem para o OneDrive, e os demais ficam retidos para revisão manual;
-4. envia os arquivos à pasta de destino via [Rclone](https://rclone.org), com o nome `AAAA-MM-DD_remetente_nome-original`;
+4. envia os arquivos à pasta de destino via [Rclone](https://rclone.org), com o nome no padrão da pasta, `<EMPRESA> - <FORNECEDOR> [NF <n>] - <REF|BOLETO>.<ext>` (por exemplo, `ACME - FORNECEDOR NF 123 - REF.pdf`);
 5. registra o que foi processado, grava log diário e avisa o operador pelo Telegram quando algo falha.
 
 ## O que ela nunca faz

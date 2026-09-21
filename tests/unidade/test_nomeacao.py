@@ -1,45 +1,104 @@
-"""Testes da nomeação provisória (EO RF-01, RF-02, RF-04, D-12, premissa P-L03)."""
+"""Testes da convenção de nomes da pasta CONTAS A PAGAR (EO RF-01, RF-02, RF-04, D-12, L-03)."""
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from pathlib import Path
 
 import pytest
 
-from email_nf_onedrive.envio.nomeacao import LIMITE_NOME, caminho_destino, com_sufixo, nome_destino, sanear
+from email_nf_onedrive.envio.nomeacao import (
+    LIMITE_NOME, DadosNome, caminho_destino, com_sufixo, dados_nfe, nome_destino, rotulo_do_endereco, sanear,
+)
 
-RECEBIDO = datetime(2026, 9, 18, 15, 0, tzinfo=timezone.utc)
-
-
-def test_exemplo_da_spec():
-    nome = nome_destino(RECEBIDO, "cobranca@fornecedor.com.br", "Boleto Set.pdf")
-    assert nome == "2026-09-18_cobranca_Boleto Set.pdf"
+DADOS = Path(__file__).resolve().parents[1] / "dados"
 
 
-def test_data_no_fuso_de_brasilia():
-    # 01:30 UTC de 19/09 ainda é 18/09 em Brasília.
-    recebido = datetime(2026, 9, 19, 1, 30, tzinfo=timezone.utc)
-    assert nome_destino(recebido, "a@b.example", "x.pdf").startswith("2026-09-18_")
+def _dados(**campos) -> DadosNome:
+    base = dict(empresa="ACME", remetente="cobranca@fornecedor.com.br", nome_original="Boleto Set.pdf",
+                assunto="Boleto", classe="palavra-chave")
+    return DadosNome(**{**base, **campos})
+
+
+def test_exemplo_da_spec_boleto():
+    assert nome_destino(_dados()) == "ACME - FORNECEDOR - BOLETO.pdf"
+
+
+def test_nota_em_pdf_com_numero_no_nome():
+    dados = _dados(nome_original="NF 109652 Fornecedor.PDF", assunto="Sua nota fiscal", remetente="nfe@fornecedor.com.br")
+    assert nome_destino(dados) == "ACME - FORNECEDOR NF 109652 - REF.pdf"
+
+
+@pytest.mark.parametrize(
+    ("nome", "assunto", "numero"),
+    [
+        ("NFS-e 202600.pdf", "", "202600"),
+        ("danfe_000000123.pdf", "", "123"),
+        ("documento.pdf", "NF-e nº 789 emitida", "789"),
+        ("nota fiscal n. 55.pdf", "", "55"),
+        ("documento.pdf", "Fatura de setembro", ""),
+    ],
+)
+def test_numero_da_nota_no_nome_ou_no_assunto(nome, assunto, numero):
+    nome_final = nome_destino(_dados(nome_original=nome, assunto=assunto))
+    esperado = f" NF {numero} - " if numero else " - "
+    assert esperado in nome_final
+
+
+def test_boleto_reconhecido_pelo_assunto():
+    dados = _dados(nome_original="documento.pdf", assunto="Segue boleto da NF 12")
+    assert nome_destino(dados) == "ACME - FORNECEDOR NF 12 - BOLETO.pdf"
+
+
+def test_nfe_xml_usa_emitente_e_numero_do_xml():
+    conteudo = (DADOS / "nfe_proc.xml").read_bytes()
+    dados = _dados(nome_original="arquivo.xml", assunto="", classe="nfe-xml", conteudo=conteudo)
+    assert nome_destino(dados) == "ACME - FORNECEDOR FICTICIO LTDA - REF.xml"
+
+
+def test_nfe_xml_com_numero():
+    conteudo = (
+        b'<nfeProc xmlns="http://www.portalfiscal.inf.br/nfe"><NFe><infNFe>'
+        b"<ide><nNF>000123</nNF></ide><emit><xNome>Fornecedor &amp; Cia</xNome></emit>"
+        b"</infNFe></NFe></nfeProc>"
+    )
+    assert dados_nfe(conteudo) == ("Fornecedor & Cia", "000123")
+    dados = _dados(nome_original="nfe.XML", classe="nfe-xml", conteudo=conteudo)
+    assert nome_destino(dados) == "ACME - FORNECEDOR & CIA NF 123 - REF.xml"
+
+
+def test_xml_truncado_recorre_ao_remetente():
+    dados = _dados(nome_original="nfe.xml", classe="nfe-xml", conteudo=b"<nfeProc><NFe>")
+    assert nome_destino(dados) == "ACME - FORNECEDOR - REF.xml"
+
+
+def test_empresa_vazia_usa_dominio_do_remetente():
+    assert nome_destino(_dados(empresa="")) == "FORNECEDOR - FORNECEDOR - BOLETO.pdf"
+
+
+@pytest.mark.parametrize(
+    ("endereco", "rotulo"),
+    [
+        ("cobranca@fornecedor.com.br", "FORNECEDOR"),
+        ("fulano.silva@empresa-a.example", "EMPRESA A"),
+        ("empresaadm@gmail.com", "EMPRESAADM"),
+        ("joao.silva@outlook.com", "JOAO SILVA"),
+        ("x@açaí-mineração.com.br", "ACAI MINERACAO"),
+        ("sem-arroba", "SEM ARROBA"),
+        ("", "REMETENTE"),
+    ],
+)
+def test_rotulo_do_endereco(endereco, rotulo):
+    assert rotulo_do_endereco(endereco) == rotulo
 
 
 def test_caminho_destino_junta_pasta_e_nome():
-    caminho = caminho_destino(
-        "Financeiro/CONTAS A PAGAR",
-        data_mensagem=RECEBIDO,
-        remetente="cobranca@fornecedor.com.br",
-        nome_original="Boleto Set.pdf",
-    )
-    assert caminho == "Financeiro/CONTAS A PAGAR/2026-09-18_cobranca_Boleto Set.pdf"
+    caminho = caminho_destino("ACME Financeiro/CONTAS A PAGAR", _dados())
+    assert caminho == "ACME Financeiro/CONTAS A PAGAR/ACME - FORNECEDOR - BOLETO.pdf"
 
 
 def test_caminho_destino_tolera_barra_final():
-    caminho = caminho_destino(
-        "Financeiro/CONTAS A PAGAR/",
-        data_mensagem=RECEBIDO,
-        remetente="a@b.example",
-        nome_original="x.pdf",
-    )
-    assert caminho == "Financeiro/CONTAS A PAGAR/2026-09-18_a_x.pdf"
+    caminho = caminho_destino("ACME Financeiro/CONTAS A PAGAR/", _dados())
+    assert caminho == "ACME Financeiro/CONTAS A PAGAR/ACME - FORNECEDOR - BOLETO.pdf"
 
 
 @pytest.mark.parametrize(
@@ -81,22 +140,26 @@ def test_truncamento_preserva_extensao():
 
 
 def test_nome_destino_nunca_passa_do_limite():
-    nome = nome_destino(RECEBIDO, "cobranca@fornecedor.example", "y" * 300 + ".pdf")
+    nome = nome_destino(_dados(empresa="E" * 300))
     assert len(nome) == 200
-    assert nome.startswith("2026-09-18_cobranca_")
+    assert nome.startswith("EEEE")
     assert nome.endswith(".pdf")
 
 
-def test_remetente_saneado():
-    nome = nome_destino(RECEBIDO, 'nf"e*@fornecedor.example', "x.pdf")
-    assert nome == "2026-09-18_nfe_x.pdf"
+def test_caracteres_invalidos_no_remetente_e_na_empresa():
+    dados = _dados(empresa='AC*ME', remetente='nf"e*@forne<cedor>.example')
+    assert nome_destino(dados) == "ACME - FORNECEDOR - BOLETO.pdf"
+
+
+def test_anexo_sem_extensao():
+    assert nome_destino(_dados(nome_original="boleto")) == "ACME - FORNECEDOR - BOLETO"
 
 
 @pytest.mark.parametrize(
     ("nome", "n", "esperado"),
     [
-        ("2026-09-18_cobranca_boleto.pdf", 2, "2026-09-18_cobranca_boleto_2.pdf"),
-        ("2026-09-18_cobranca_boleto.pdf", 3, "2026-09-18_cobranca_boleto_3.pdf"),
+        ("ACME - FORNECEDOR - BOLETO.pdf", 2, "ACME - FORNECEDOR - BOLETO_2.pdf"),
+        ("ACME - FORNECEDOR - BOLETO.pdf", 3, "ACME - FORNECEDOR - BOLETO_3.pdf"),
         ("sem_extensao", 2, "sem_extensao_2"),
     ],
 )

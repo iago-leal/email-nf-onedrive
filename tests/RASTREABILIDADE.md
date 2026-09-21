@@ -37,7 +37,7 @@
 | RF-07 | Classificação e retenção dos não reconhecidos | `uni/classificacao` (15 testes); `int/coleta::test_sem_classificacao_e_retido_e_nao_vai_para_envio`; `e2e/arq::test_documento_sem_classificacao_fica_retido` | `onboarding.md` §4 (conferir retidos reais) |
 | RF-08 | Registro persistente e não reenvio | `uni/registro` (19 testes); `e2e/arq::test_reexecucao_nao_duplica` | |
 | RF-09 | "Possível documento sem anexo" | `int/coleta::test_sem_anexo_e_compactado_registrados_uma_vez`; `e2e/arq::test_sem_anexo_e_compactado_registrados_uma_vez` | |
-| RF-10 | Nome padronizado, saneado, até 200 caracteres | `uni/nomeacao` (12 testes) | Convenção provisória até a L-03 (`onboarding.md` §3) |
+| RF-10 | Nome padronizado, saneado, até 200 caracteres | `uni/nomeacao` (40 testes) | Convenção da pasta `CONTAS A PAGAR`, L-03 fechada em 2026-09-21 (`docs/onedrive/estrutura-contas-a-pagar.md` §3) |
 | RF-11 | Sem sobrescrita; sufixo; idêntico já presente | `int/envio::test_conteudo_diferente_recebe_sufixo_e_preserva_o_original`, `test_arquivo_identico_ja_presente_nao_e_reenviado`, `test_dois_anexos_de_mesmo_nome_na_mesma_execucao`; `int/rclone::test_copiar_nunca_sobrescreve`; `e2e/arq::test_nome_repetido_recebe_sufixo_e_preserva_o_original` | |
 | RF-12 | Confirmação no destino; `falha-envio` e nova tentativa | `int/envio::test_envio_novo_confirma_registra_e_apaga_copia_local`, `test_destino_inexistente_nao_e_criado`, `test_aviso_apos_cinco_tentativas`; `e2e/arq::test_retomada_apos_falha_de_envio` | |
 | RF-13 | Cópia local apagada após a confirmação | `int/envio::test_envio_novo_confirma_registra_e_apaga_copia_local`; `e2e/arq::test_boleto_arquivado`; `e2e/fal::test_excecao_nao_prevista` | |

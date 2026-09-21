@@ -46,7 +46,7 @@ def novo_item(home, registro, destino):
 
     def _novo(conteudo: bytes, nome="boleto.pdf", remetente="cobranca@fornecedor.example", pasta_destino=None):
         n = next(contador)
-        caixa = Caixa(1, "financeiro@empresa.example", "s", "INBOX", "imap", str(pasta_destino or destino))
+        caixa = Caixa(1, "financeiro@empresa.example", "s", "INBOX", "imap", str(pasta_destino or destino), empresa="ACME")
         anexo = registro.registrar_anexo(
             caixa_endereco=caixa.endereco, caixa_indice=1, message_id=f"<m{n}>", sha256=f"{n:064d}",
             nome_original=nome, remetente=remetente, assunto="Boleto", data_mensagem=RECEBIDO,
@@ -66,38 +66,38 @@ def _estado(registro, item):
 def test_envio_novo_confirma_registra_e_apaga_copia_local(registro, destino, novo_item):
     item = novo_item(b"%PDF conteudo A")
     resultado = enviar_anexos([item], registro, Rclone(":local"), LOG)
-    final = destino / "2026-09-18_cobranca_boleto.pdf"
+    final = destino / "ACME - FORNECEDOR - BOLETO.pdf"
     assert final.read_bytes() == b"%PDF conteudo A"
     anexo = _estado(registro, item)
     assert anexo.estado == "enviado"
-    assert anexo.caminho_destino == f"{destino}/2026-09-18_cobranca_boleto.pdf"
+    assert anexo.caminho_destino == f"{destino}/ACME - FORNECEDOR - BOLETO.pdf"
     assert not item.caminho_local.exists()
     assert resultado.enviados == 1 and resultado.falhas == []
 
 
 def test_arquivo_identico_ja_presente_nao_e_reenviado(registro, destino, novo_item):
-    final = destino / "2026-09-18_cobranca_boleto.pdf"
+    final = destino / "ACME - FORNECEDOR - BOLETO.pdf"
     final.write_bytes(b"%PDF conteudo A")
     item = novo_item(b"%PDF conteudo A")
     enviar_anexos([item], registro, Rclone(":local"), LOG)
-    assert sorted(p.name for p in destino.iterdir()) == ["2026-09-18_cobranca_boleto.pdf"]
+    assert sorted(p.name for p in destino.iterdir()) == ["ACME - FORNECEDOR - BOLETO.pdf"]
     assert _estado(registro, item).estado == "enviado"
 
 
 def test_conteudo_diferente_recebe_sufixo_e_preserva_o_original(registro, destino, novo_item):
-    original = destino / "2026-09-18_cobranca_boleto.pdf"
+    original = destino / "ACME - FORNECEDOR - BOLETO.pdf"
     original.write_bytes(b"%PDF original da equipe")
     item = novo_item(b"%PDF outro boleto")
     enviar_anexos([item], registro, Rclone(":local"), LOG)
     assert original.read_bytes() == b"%PDF original da equipe"
-    assert (destino / "2026-09-18_cobranca_boleto_2.pdf").read_bytes() == b"%PDF outro boleto"
+    assert (destino / "ACME - FORNECEDOR - BOLETO_2.pdf").read_bytes() == b"%PDF outro boleto"
 
 
 def test_dois_anexos_de_mesmo_nome_na_mesma_execucao(registro, destino, novo_item):
     a, b = novo_item(b"%PDF A"), novo_item(b"%PDF B")
     enviar_anexos([a, b], registro, Rclone(":local"), LOG)
     assert sorted(p.name for p in destino.iterdir()) == [
-        "2026-09-18_cobranca_boleto.pdf", "2026-09-18_cobranca_boleto_2.pdf",
+        "ACME - FORNECEDOR - BOLETO.pdf", "ACME - FORNECEDOR - BOLETO_2.pdf",
     ]
 
 
