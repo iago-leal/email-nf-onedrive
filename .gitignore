@@ -18,3 +18,8 @@ var/
 
 #Configuração local do rclone (token do OneDrive)
 .rclone/
+
+#Dados do cliente que não saem da máquina: listagens do OneDrive e quadro kanban
+docs/onedrive/*.txt
+docs/onedrive/*.tsv
+.vscode/
