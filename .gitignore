@@ -19,6 +19,9 @@ var/
 #Configuração local do rclone (token do OneDrive)
 .rclone/
 
+#Autorização durável das caixas em modo oauth (um JSON por caixa, com o refresh token)
+autorizacoes/
+
 #Dados do cliente que não saem da máquina: listagens do OneDrive e quadro kanban
 docs/onedrive/*.txt
 docs/onedrive/*.tsv

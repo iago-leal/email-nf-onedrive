@@ -1,6 +1,7 @@
 """Cliente IMAP restrito à leitura (D-05, interfaces/imap-gmail.md).
 
-Só expõe LOGIN, LIST, EXAMINE, SEARCH SINCE, FETCH BODY.PEEK[] e LOGOUT. A pasta
+Só expõe LOGIN ou AUTHENTICATE XOAUTH2 (feature 002, D-07), LIST, EXAMINE,
+SEARCH SINCE, FETCH BODY.PEEK[] e LOGOUT. A pasta
 é aberta com `select(readonly=True)`, que emite EXAMINE, e as mensagens são
 lidas com BODY.PEEK[], que não altera a flag \\Seen (RN-01).
 """
@@ -12,12 +13,15 @@ import re
 from datetime import date
 from typing import Callable
 
+from email_nf_onedrive import segredos
 from email_nf_onedrive.coleta import utf7
 from email_nf_onedrive.coleta.janela import formatar_since
 
 TIMEOUT_S = 60
 
 AUTENTICACAO = "autenticacao"
+AUTORIZACAO = "autorizacao"  # AUTHENTICATE XOAUTH2 recusado: causa distinta da senha recusada (RF-08)
+LIMITE_DESAFIO = 200
 PASTA = "pasta"
 CONEXAO = "conexao"
 
@@ -65,12 +69,40 @@ class ClienteIMAP:
             raise ErroIMAP(causa_no, _texto(dados))
         return dados
 
-    def conectar(self, usuario: str, senha: str) -> None:
+    def _abrir(self) -> None:
         try:
             self._imap = self._fabrica(self.host, self.porta, timeout=self.timeout)
         except OSError as erro:
             raise ErroIMAP(CONEXAO, f"{type(erro).__name__}: {erro}") from erro
+
+    def conectar(self, usuario: str, senha: str) -> None:
+        self._abrir()
         self._chamar(self._imap.login, usuario, senha, causa_no=AUTENTICACAO)
+
+    def conectar_oauth(self, usuario: str, credencial: str) -> None:
+        """AUTHENTICATE XOAUTH2 com a credencial temporária; o `imaplib` cuida do base64.
+
+        Na recusa, o servidor devolve um desafio com o erro em JSON e espera uma linha
+        vazia antes do NO. O desafio vai ao detalhe do erro, mascarado e truncado.
+        """
+        self._abrir()
+        segredos.registrar(credencial)
+        desafios: list[bytes] = []
+
+        def responder(desafio: bytes) -> bytes:
+            desafios.append(desafio)
+            if len(desafios) == 1:
+                return f"user={usuario}\x01auth=Bearer {credencial}\x01\x01".encode()
+            return b""
+
+        try:
+            self._chamar(self._imap.authenticate, "XOAUTH2", responder, causa_no=AUTORIZACAO)
+        except ErroIMAP as erro:
+            if erro.causa != AUTORIZACAO:
+                raise
+            motivo = b" ".join(d for d in desafios[1:] if d).decode(errors="replace")
+            detalhe = segredos.mascarar(f"{erro.detalhe} {motivo}".strip())[:LIMITE_DESAFIO]
+            raise ErroIMAP(AUTORIZACAO, detalhe) from erro
 
     def listar_pastas(self) -> list[str]:
         pastas = []

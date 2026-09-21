@@ -14,6 +14,7 @@ class ResumoExecucao:
     enviados: int = 0
     retidos: int = 0
     falhas: int = 0
+    falhas_autorizacao: int = 0  # já incluídas em `falhas`; só as distingue na linha de resumo (feature 002, D-13)
     intervalo_desde_anterior: timedelta | None = None
     codigo_saida: int = 0
     fim: datetime | None = field(default=None)
@@ -33,7 +34,10 @@ class ResumoExecucao:
         partes = [caixas, f"{self.extraidos} extraídos", f"{self.enviados} enviados"]
         if self.retidos:
             partes.append(f"{self.retidos} retidos")
-        partes += [f"{self.falhas} falhas", f"{self.duracao_s} s"]
+        partes.append(f"{self.falhas} falhas")
+        if self.falhas_autorizacao:
+            partes.append(f"{self.falhas_autorizacao} de autorização")
+        partes.append(f"{self.duracao_s} s")
         texto = "resumo: " + ", ".join(partes)
         if self.intervalo_desde_anterior is not None:
             minutos = round(self.intervalo_desde_anterior.total_seconds() / 60)

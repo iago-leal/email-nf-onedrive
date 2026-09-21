@@ -23,9 +23,11 @@ from typing import Callable
 from dotenv import dotenv_values
 
 from email_nf_onedrive import segredos
+from email_nf_onedrive.autorizacao.credencial import ProvedorCredencial, e_causa_de_autorizacao
+from email_nf_onedrive.autorizacao.servico import Enderecos
 from email_nf_onedrive.coleta.coleta import Falha, FabricaIMAP, coletar, fabrica_imap_padrao
 from email_nf_onedrive.configuracao.carregar import carregar_configuracao
-from email_nf_onedrive.configuracao.modelo import Configuracao, ErroConfiguracao
+from email_nf_onedrive.configuracao.modelo import MODO_OAUTH, Configuracao, ErroConfiguracao
 from email_nf_onedrive.envio.envio import enviar_anexos
 from email_nf_onedrive.envio.rclone import Rclone
 from email_nf_onedrive.execucao import telegram
@@ -53,6 +55,17 @@ class Dependencias:
     criar_transporte: Callable[[str, str], Transporte] = telegram.criar_transporte
     agora: Callable[[], datetime] = _agora_utc
     limite_s: int = LIMITE_DURACAO_S
+    # Feature 002, D-14: os endereços do Google só mudam por aqui, nunca pelo .env.
+    servico_autorizacao: Enderecos = field(default_factory=Enderecos)
+    # Chamado pelo `autorizar-caixa` com o endereço de consentimento já impresso; os testes simulam o navegador.
+    ao_exibir_endereco: Callable[[str], None] | None = None
+
+
+def criar_provedor(config: Configuracao, deps: Dependencias, logger: logging.Logger | None) -> ProvedorCredencial | None:
+    """Provedor de credencial da execução; `None` na instalação sem caixa em modo oauth."""
+    if config.cliente_oauth is None or all(caixa.modo != MODO_OAUTH for caixa in config.caixas):
+        return None
+    return ProvedorCredencial(config.cliente_oauth, config.dir_autorizacoes, deps.servico_autorizacao, logger)
 
 
 def _transporte_de_emergencia(home: Path, deps: Dependencias) -> Transporte | None:
@@ -136,7 +149,7 @@ class _Ciclo:
 
         self.trabalho = self.var / "trabalho" / f"{resumo.inicio:%Y%m%dT%H%M%S}-{os.getpid()}"
         resultados = coletar(config.caixas, self.registro, self.trabalho, config.data_inicial, self.log,
-                             self.deps.fabrica_imap)
+                             self.deps.fabrica_imap, criar_provedor(config, self.deps, self.log))
         itens = []
         for resultado in resultados:
             resumo.extraidos += sum(resultado.classes.values())
@@ -146,6 +159,7 @@ class _Ciclo:
                 resumo.caixas_processadas += 1
             else:
                 resumo.falhas += 1
+                resumo.falhas_autorizacao += e_causa_de_autorizacao(resultado.falha.causa)
                 self._falhar(resultado.falha.causa, resultado.falha.mensagem)
 
         envio = enviar_anexos(itens, self.registro, self.deps.criar_rclone(config.rclone_remote), self.log,

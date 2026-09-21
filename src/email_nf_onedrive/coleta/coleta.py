@@ -14,18 +14,25 @@ from collections import Counter
 from dataclasses import dataclass, field
 from datetime import date, datetime, timezone
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Protocol
 
+from email_nf_onedrive.autorizacao.credencial import ErroCredencial
 from email_nf_onedrive.coleta.classificacao import SEM_CLASSIFICACAO, classificar, contem_palavra_chave
-from email_nf_onedrive.coleta.imap import AUTENTICACAO, PASTA, ClienteIMAP, ErroIMAP
+from email_nf_onedrive.coleta.imap import AUTENTICACAO, AUTORIZACAO, PASTA, ClienteIMAP, ErroIMAP
 from email_nf_onedrive.coleta.janela import data_de_corte
 from email_nf_onedrive.coleta.mime import AnexoExtraido, MensagemAnalisada, analisar_mensagem
-from email_nf_onedrive.configuracao.modelo import Caixa
+from email_nf_onedrive.configuracao.modelo import MODO_OAUTH, Caixa
 from email_nf_onedrive.registro.banco import ESTADOS_PENDENTES, Registro
 
 PROGRESSO_A_CADA = 50
 
 FabricaIMAP = Callable[[Caixa], ClienteIMAP]
+
+
+class Provedor(Protocol):
+    """Quem entrega a credencial temporária de uma caixa em modo oauth (`autorizacao.credencial`)."""
+
+    def obter(self, caixa: Caixa) -> str: ...
 
 
 @dataclass(frozen=True)
@@ -60,9 +67,25 @@ def fabrica_imap_padrao(caixa: Caixa) -> ClienteIMAP:
     return ClienteIMAP(caixa.imap_host, caixa.imap_porta)
 
 
+def conectar(cliente: ClienteIMAP, caixa: Caixa, provedor: Provedor | None) -> None:
+    """Autentica conforme o modo da caixa: LOGIN ou AUTHENTICATE XOAUTH2, nunca os dois (feature 002, D-07).
+
+    Em oauth, a credencial é obtida antes de abrir a conexão; `ErroCredencial` sobe ao chamador.
+    """
+    if caixa.modo != MODO_OAUTH:
+        cliente.conectar(caixa.endereco, caixa.senha)
+        return
+    if provedor is None:
+        raise RuntimeError(f"caixa {caixa.indice} em modo oauth sem provedor de credencial")
+    cliente.conectar_oauth(caixa.endereco, provedor.obter(caixa))
+
+
 def _falha_imap(caixa: Caixa, erro: ErroIMAP) -> Falha:
     n = caixa.indice
-    if erro.causa == AUTENTICACAO:
+    if erro.causa == AUTORIZACAO:
+        mensagem = (f"caixa {n}: autorização OAuth recusada pelo servidor de e-mail. "
+                    f"Ação: rode autorizar-caixa {n} e confira se o IMAP está ativo na conta.")
+    elif erro.causa == AUTENTICACAO:
         mensagem = (f"caixa {n}: autenticação recusada. Ação: verifique a senha de app no .env "
                     f"(SENHA_EMAIL{n}) e se o IMAP está ativo no Google Workspace.")
     elif erro.causa == PASTA:
@@ -138,7 +161,7 @@ class _ColetorCaixa:
             assunto=msg.assunto, classe=classe,
         ))
 
-    def executar(self, fabrica: FabricaIMAP, data_inicial: date) -> ResultadoCaixa:
+    def executar(self, fabrica: FabricaIMAP, data_inicial: date, provedor: Provedor | None = None) -> ResultadoCaixa:
         caixa = self.caixa
         corte = data_de_corte(
             data_inicial,
@@ -147,8 +170,8 @@ class _ColetorCaixa:
         )
         cliente = fabrica(caixa)
         try:
-            cliente.conectar(caixa.endereco, caixa.senha)
-            self.log.info("caixa %d: conectada", caixa.indice, extra=self.extra)
+            conectar(cliente, caixa, provedor)
+            self.log.info("caixa %d: conectada (%s)", caixa.indice, caixa.modo, extra=self.extra)
             try:
                 cliente.examinar(caixa.pasta)
             except ErroIMAP as erro:
@@ -167,6 +190,11 @@ class _ColetorCaixa:
         except ErroIMAP as erro:
             self.resultado.falha = _falha_imap(caixa, erro)
             self.log.error("%s", self.resultado.falha.mensagem, extra=self.extra)
+            if erro.causa == AUTORIZACAO:
+                self.log.error("resposta do servidor de e-mail: %s", erro.detalhe, extra=self.extra)
+        except ErroCredencial as erro:  # a conexão IMAP nem chega a ser aberta
+            self.resultado.falha = Falha(erro.causa, erro.mensagem)
+            self.log.error("%s", erro.mensagem, extra=self.extra)
         finally:
             cliente.encerrar()
         self._resumir()
@@ -183,10 +211,14 @@ class _ColetorCaixa:
 
 
 def coletar(caixas: tuple[Caixa, ...], registro: Registro, pasta_trabalho: Path, data_inicial: date,
-            logger: logging.Logger, fabrica: FabricaIMAP = fabrica_imap_padrao) -> list[ResultadoCaixa]:
-    """Coleta as caixas em sequência, na ordem dos índices (CE RF-10)."""
+            logger: logging.Logger, fabrica: FabricaIMAP = fabrica_imap_padrao,
+            provedor: Provedor | None = None) -> list[ResultadoCaixa]:
+    """Coleta as caixas em sequência, na ordem dos índices (CE RF-10).
+
+    `provedor` só é necessário quando há caixa em modo oauth; a instalação sem OAuth não o constrói.
+    """
     pasta_trabalho.mkdir(parents=True, exist_ok=True, mode=0o700)
     return [
-        _ColetorCaixa(caixa, registro, pasta_trabalho, logger).executar(fabrica, data_inicial)
+        _ColetorCaixa(caixa, registro, pasta_trabalho, logger).executar(fabrica, data_inicial, provedor)
         for caixa in sorted(caixas, key=lambda c: c.indice)
     ]

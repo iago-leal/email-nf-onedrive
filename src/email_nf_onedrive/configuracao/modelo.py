@@ -4,8 +4,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import date
+from pathlib import Path
 
 PORTA_IMAP = 993
+
+MODO_SENHA = "senha"
+MODO_OAUTH = "oauth"
+DIR_AUTORIZACOES_PADRAO = "autorizacoes"
 
 
 class ErroConfiguracao(Exception):
@@ -26,6 +31,15 @@ class Caixa:
     destino: str
     imap_porta: int = PORTA_IMAP
     empresa: str = ""  # rótulo no nome dos arquivos; vazio usa o domínio do endereço
+    modo: str = MODO_SENHA  # "senha" (LOGIN) ou "oauth" (AUTHENTICATE XOAUTH2); em oauth a senha fica vazia
+
+
+@dataclass(frozen=True)
+class ClienteOAuth:
+    """Credenciais do cliente OAuth criado no Google Cloud (feature 002, data-delta §3)."""
+
+    client_id: str
+    client_secret: str = field(repr=False)
 
 
 @dataclass(frozen=True)
@@ -43,6 +57,8 @@ class Configuracao:
     telegram_bot_token: str | None = field(default=None, repr=False)
     telegram_chat_id: str | None = None
     alertas: tuple[str, ...] = ()
+    cliente_oauth: ClienteOAuth | None = None
+    dir_autorizacoes: Path = Path(DIR_AUTORIZACOES_PADRAO)
 
     @property
     def telegram_ativo(self) -> bool:
