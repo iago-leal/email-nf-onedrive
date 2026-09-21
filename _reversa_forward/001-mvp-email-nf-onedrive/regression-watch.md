@@ -20,7 +20,6 @@ W001 a W010: contratos fixados na rodada T001–T014 e implementados na rodada T
 | W004 | `_reversa_sdd/sdd/coleta-email.md#6.1` (RF-05, RF-06) | Classificação `nfe-xml` pela raiz e namespace; palavras-chave com fronteira de letras. | redação | `info.pdf` classificado como `palavra-chave`, ou NF-e em XML não reconhecida. |
 | W005 | `_reversa_sdd/sdd/coleta-email.md#6.1` (RF-04, EC-05, EC-06, EC-08) | Extração de PDF e XML, inclusive em mensagem encaminhada; compactados só sinalizados. | presença | `.zip` extraído, ou anexo de mensagem encaminhada ignorado. |
 | W006 | `_reversa_sdd/sdd/coleta-email.md#6.1` (RF-03) | Janela = `DATA_INICIAL` sem histórico; senão `min(última − 2 dias, pendente mais antiga)`, nunca antes de `DATA_INICIAL`. | redação | `tests/unidade/test_janela.py` falha. |
-| W007 | `_reversa_sdd/sdd/envio-onedrive.md#6.1` (RF-01, RF-02, RF-04) | Nome `AAAA-MM-DD_<remetente>_<nome>` (data em Brasília), saneado, até 200 caracteres, sufixo `_n`. Provisório até fechar a L-03. | redação | Mudança na convenção sem a decisão da L-03 registrada. |
 | W008 | `requirements.md#4` (RN-03, RN-05), `roadmap.md#3` (D-08, D-09) | Registro com chave (endereço, identificador da mensagem, SHA-256), estado terminal `retido`, estados terminais imutáveis. | presença | Anexo reenviado após renumeração de caixa, ou `retido` enviado. |
 | W009 | `_reversa_sdd/sdd/execucao-monitoramento.md#6.1` (RF-03, RF-04) | Trava exclusiva, abandonada após 25 min ou com PID morto; execução limitada a 20 min. | presença | Duas execuções simultâneas completas. |
 | W010 | `_reversa_sdd/sdd/execucao-monitoramento.md#6.1` (RF-07 a RF-09) | Aviso na primeira falha, supressão de 6 h por causa, recuperação única, reenvio de aviso não entregue. | presença | Mais de um aviso por causa em 6 h, ou falha sem aviso. |
@@ -35,7 +34,12 @@ W001 a W010: contratos fixados na rodada T001–T014 e implementados na rodada T
 | W019 | `_reversa_sdd/sdd/execucao-monitoramento.md#11` (EC-06, EC-07); `configuracao-caixas.md#6.1` (RF-08) | Erro de configuração é avisado mesmo sem configuração válida (par `TELEGRAM_*` lido à parte) e passa pela supressão; exceção não prevista deixa a pilha no log, avisa com o tipo do erro, libera a trava e remove a pasta de trabalho. | presença | Erro de configuração silencioso, ou trava presa após exceção. |
 | W020 | `_reversa_sdd/sdd/execucao-monitoramento.md#6.1` (RF-12); `requirements.md#5` (RF-20) | O guia `docs/instalacao-e-operacao.md` cobre requisitos da VPS, usuário de serviço, Python e Rclone, senha de app, `rclone authorize` e alternativas de tenant, `.env` com `chmod 600`, bot do Telegram, `cron`, nova caixa, renovação de credenciais, leitura do log e revisão dos retidos; o README declara as garantias RN-01 e RN-02. | presença | Seção do guia removida, ou comando citado no guia que o `--help` não reconhece. |
 | W021 | `tests/RASTREABILIDADE.md` | Cada cenário do §7 e cada RF-01 a RF-20 aponta para ao menos um teste existente ou para um passo manual explícito. | presença | Teste citado no mapa que o `pytest --collect-only` não encontra, ou RF sem linha. |
+| W022 | `requirements.md#10` (L-03), `#5` (RF-10); `docs/onedrive/estrutura-contas-a-pagar.md#3`; `roadmap.md#3` (D-12, alterada na rodada T042) | Nome `<EMPRESA> - <FORNECEDOR> [NF <n>] - <REF\|BOLETO>.<ext>`: EMPRESA de `EMPRESA_EMAIL<n>` ou do domínio da caixa; FORNECEDOR do emitente da NF-e ou do domínio do remetente; número do XML ou do nome/assunto; saneado, até 200 caracteres, sufixo `_n`. | redação | `tests/unidade/test_nomeacao.py` falha, ou arquivo chega ao destino com data ou nome original no nome. |
 
 ## Histórico de re-extrações
 
 ## Arquivadas
+
+| ID | Arquivada em | Motivo |
+|----|--------------|--------|
+| W007 | 2026-09-21 | Convenção provisória substituída pela definitiva na T042; a decisão da L-03 está registrada em `requirements.md#10`. Sucedida por W022. |

@@ -86,7 +86,7 @@
 | T039 | Implementar `cli.py`: `argparse` com `--home`, `executar [--simular]`, `verificar-config` (listagem mascarada, sem rede) e `testar-onedrive`, repassando o código de saída (EM RF-01, CC RF-10, `interfaces/cli-e-env.md`). | T017, T037, T038 | - | `src/email_nf_onedrive/cli.py` | 🟢 | [X] |
 | T040 | Escrever testes de ponta a ponta dos cenários de arquivamento do `requirements.md` §7 (boleto arquivado, reexecução, nome repetido, retomada após falha, retido para revisão, sem anexo e compactado, simulação) chamando `cli.main` com IMAP dublê, Rclone local e Telegram dublê. | T039 | - | `tests/integracao/test_ciclo_arquivamento.py` | 🟢 | [X] |
 | T041 | Escrever testes de ponta a ponta dos cenários de falha do `requirements.md` §7 (caixa incompleta com código 1, erro global com código 2 sem rede, supressão e recuperação de aviso, credenciais ausentes do log e dos avisos, execuções sobrepostas). | T039 | - | `tests/integracao/test_ciclo_falhas.py` | 🟢 | [X] |
-| T042 | **Manual, requer operador:** com o remote do OneDrive configurado, rodar `rclone lsf --max-depth 2` na pasta de destino, registrar o padrão de nomes e subpastas encontrado e ajustar `envio/nomeacao.py` e `tests/unidade/test_nomeacao.py` a ele, fechando a L-03 do `requirements.md`. | T024, T037 | - | `src/email_nf_onedrive/envio/nomeacao.py` | 🔴 | [ ] |
+| T042 | **Manual, requer operador:** com o remote do OneDrive configurado, rodar `rclone lsf --max-depth 2` na pasta de destino, registrar o padrão de nomes e subpastas encontrado e ajustar `envio/nomeacao.py` e `tests/unidade/test_nomeacao.py` a ele, fechando a L-03 do `requirements.md`. | T024, T037 | - | `src/email_nf_onedrive/envio/nomeacao.py` | 🔴 | [X] |
 
 ## Fase 5, Polimento
 

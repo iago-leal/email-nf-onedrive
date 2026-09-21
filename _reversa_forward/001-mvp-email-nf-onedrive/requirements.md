@@ -89,7 +89,7 @@ A coluna "Spec" aponta o requisito de origem, que detalha limites e mensagens. A
 | RF-07 | O sistema classifica cada anexo como `nfe-xml`, `palavra-chave` ou `sem-classificacao`; entrega ao envio só os das duas primeiras classes e registra os `sem-classificacao` no log e no registro de processados como retidos para revisão manual, sem enviá-los e sem voltar a registrá-los nas execuções seguintes. | Must | Um XML de NF-e chamado `arquivo.xml` recebe `nfe-xml` e é enviado; um PDF `contrato.pdf` sem palavra-chave recebe `sem-classificacao`, aparece uma única vez no log como "retido para revisão" e não chega ao destino. | 🟢 | CE RF-05, RF-06, RF-07 (alterado), EC-07 |
 | RF-08 | O sistema mantém um registro persistente dos anexos, com os estados `extraido`, `enviado` e `falha-envio`, e ignora os já enviados. | Must | Duas execuções seguidas sem e-mails novos entregam zero anexos na segunda. | 🟢 | CE RF-08, fluxos A e B; EO seção 9 |
 | RF-09 | O sistema registra no log as mensagens com palavra-chave no assunto e sem anexo PDF ou XML, como "possível documento sem anexo". | Should | Um e-mail "Sua NFS-e está disponível" só com link aparece no log com remetente, assunto e data. | 🟡 | CE RF-09 |
-| RF-10 | O sistema dá a cada arquivo o nome padronizado vigente, sem caracteres inválidos no OneDrive e com no máximo 200 caracteres, preservada a extensão. | Must | `Boleto Set.pdf`, de `cobranca@fornecedor.com.br`, recebido em 18/09/2026, vira `2026-09-18_cobranca_Boleto Set.pdf` na convenção provisória. | 🟡 | EO RF-01, RF-02 |
+| RF-10 | O sistema dá a cada arquivo o nome no padrão da pasta, `<EMPRESA> - <FORNECEDOR> [NF <n>] - <REF\|BOLETO>.<ext>`, sem caracteres inválidos no OneDrive e com no máximo 200 caracteres, preservada a extensão. | Must | `Boleto Set.pdf`, de `cobranca@fornecedor.com.br`, na caixa da empresa ACME, vira `ACME - FORNECEDOR - BOLETO.pdf`; o XML de NF-e vira `ACME - <emitente> NF <n> - REF.xml`. | 🟢 | EO RF-01, RF-02; L-03 |
 | RF-11 | O sistema envia cada arquivo ao destino da caixa sem sobrescrever: diante de arquivo de mesmo nome e conteúdo diferente, acrescenta sufixo numérico; diante de arquivo idêntico, dá o anexo por enviado sem novo upload. | Must | Um segundo `boleto.pdf` distinto, do mesmo remetente e dia, vira `..._boleto_2.pdf`, e o primeiro permanece intacto. | 🟡 | EO RF-03, RF-04, RF-05 |
 | RF-12 | O sistema confirma cada envio comparando o tamanho remoto com o local antes de marcar `enviado`; em erro ou divergência, marca `falha-envio` e retenta na execução seguinte. | Must | Com o OneDrive indisponível, o anexo fica `falha-envio` e chega ao destino na execução seguinte, sem intervenção. | 🟡 | EO RF-06, RF-07, EC-01 a EC-08 |
 | RF-13 | O sistema apaga a cópia local de cada anexo assim que o envio é confirmado. | Must | Após uma execução sem falhas, a pasta de trabalho está vazia. | 🟡 | EO RF-08 |
@@ -258,7 +258,7 @@ Cenário: Instalação por terceiro
 
 Ponto que altera o comportamento especificado e depende de decisão do usuário:
 
-- 🔴 **L-03** [DÚVIDA] (experiência do usuário) Qual convenção de nomes e de subpastas (por mês, por empresa, por fornecedor) a equipe já usa em `CONTAS A PAGAR`? Decidido na sessão de 2026-09-18: levantar o padrão atual com `rclone lsf` assim que o remote estiver configurado, e só então fixar a convenção (`_reversa_sdd/sdd/envio-onedrive.md#14. Open Questions`, OQ-01). Até lá vale a convenção provisória do RF-10, que o plano deve isolar para ser trocada sem afetar o restante do envio.
+- 🟢 **L-03** (resolvida em 2026-09-21) Convenção de nomes e de subpastas de `CONTAS A PAGAR`, levantada com `rclone lsf -R` sobre 2.304 arquivos e 738 pastas (`docs/onedrive/estrutura-contas-a-pagar.md`). **Nomes:** `<EMPRESA> - <FORNECEDOR> [NF <n>] - <REF|BOLETO>.<ext>`; adotado no RF-10 e implementado em `envio/nomeacao.py` (T042), com a EMPRESA em `EMPRESA_EMAIL<n>` no `.env`. **Subpastas:** a equipe usa a grade `NOTAS E BOLETOS POR VENCIMENTO/DIA <1..31>/202X-<01..12>/`, por dia e mês de **vencimento**; essa parte fica fora desta feature e vira exigência nova (cartão 2 do kanban), pois exige ler o vencimento do documento. Até lá a ferramenta grava na raiz do destino.
 
 Premissas operacionais, que não mudam o requisito e são validadas na instalação e na semana de simulação:
 
@@ -275,6 +275,7 @@ Premissas operacionais, que não mudam o requisito e são validadas na instalaç
 |------|-----------|-------|
 | 2026-09-18 | Versão inicial gerada por `/reversa-requirements`, consolidando PRD e as quatro specs do ciclo `/reversa-new` | reversa |
 | 2026-09-18 | Sessão de esclarecimentos: anexos `sem-classificacao` retidos (RN-03, RF-07), retenção de log e registro definida (RN-07); L-01 e L-02 resolvidas, L-03 mantida | reversa-clarify |
+| 2026-09-21 | L-03 resolvida pelo levantamento da pasta real (T042): RF-10 passa à convenção `EMPRESA - FORNECEDOR - TIPO`; a organização por vencimento vira exigência nova | reversa-coding |
 
 ## Pendências de Qualidade
 
