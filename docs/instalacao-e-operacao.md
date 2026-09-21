@@ -62,6 +62,8 @@ A ferramenta entra no Gmail com uma **senha de app**, não com a senha da conta.
 
 Se a opção "Senhas de app" não aparecer, o administrador do Workspace precisa permitir a verificação em duas etapas para a organização.
 
+Há uma alternativa que dispensa a senha de app: o acesso por **OAuth 2.0**, com um projeto próprio no Google Cloud (seção 16). Os dois modos convivem na mesma instalação, caixa a caixa.
+
 ## 6. Acesso ao OneDrive com o Rclone
 
 ### 6.1 Autorização
@@ -123,7 +125,7 @@ Preencha, no mínimo:
 | Variável | Conteúdo |
 |----------|----------|
 | `EMAIL1` | endereço da primeira caixa |
-| `SENHA_EMAIL1` | a senha de app da seção 5, sem espaços |
+| `SENHA_EMAIL1` | a senha de app da seção 5, sem espaços; dispensada se a caixa usar OAuth (seção 16) |
 | `PASTA_EMAIL1` | pasta ou marcador monitorado; `INBOX` se omitida |
 | `RCLONE_REMOTE` | o nome do remote da seção 6, sem os dois-pontos |
 | `DESTINO_ONEDRIVE` | a pasta de destino, relativa ao remote |
@@ -138,7 +140,7 @@ Valide sem acessar a rede:
 .venv/bin/email-nf-onedrive --home /opt/email-nf-onedrive verificar-config
 ```
 
-Esperado: uma linha `1 · <endereço> · INBOX · <destino> · senha ****` por caixa e código de saída 0. Erros aparecem um por linha, no formato `<escopo>: <variável> <problema>`. O `.env` nunca deve ser versionado nem copiado para fora da VPS.
+Esperado: uma linha `1 · <endereço> · INBOX · <destino> · senha ****` por caixa (nas caixas em OAuth, o final é `oauth (autorizada)` ou `oauth (sem autorização)`) e código de saída 0. Erros aparecem um por linha, no formato `<escopo>: <variável> <problema>`. O `.env` nunca deve ser versionado nem copiado para fora da VPS.
 
 ## 8. Bot do Telegram
 
@@ -157,11 +159,13 @@ Esperado: uma linha `1 · <endereço> · INBOX · <destino> · senha ****` por c
 
 ```bash
 cd /opt/email-nf-onedrive
+.venv/bin/email-nf-onedrive testar-caixa
 .venv/bin/email-nf-onedrive testar-onedrive
 .venv/bin/email-nf-onedrive executar --simular
 tail -30 var/log/email-nf-onedrive.log
 ```
 
+- `testar-caixa` autentica em cada caixa, abre a pasta em somente leitura e encerra, sem ler mensagens. Esperado: `caixa N: acesso confirmado (senha)` ou `(oauth)`. Com um índice (`testar-caixa 2`), testa só aquela caixa.
 - `testar-onedrive` grava, confere e apaga um arquivo de teste em cada destino. Esperado: `OneDrive: escrita confirmada em <destino>`.
 - `executar --simular` lê as caixas e mostra no log o que seria enviado ("simulação: enviaria ...") e o que ficaria retido, sem enviar, sem gravar o registro e sem avisar. Confira se algum documento legítimo ficaria retido; se ficar, ver seção 13.
 
@@ -184,6 +188,7 @@ A saída é descartada porque tudo vai para o log. Execuções sobrepostas são 
 | Caminho | Conteúdo |
 |---------|----------|
 | `.env` | configuração e credenciais (permissão 600) |
+| `autorizacoes/` | autorização OAuth de cada caixa, um `.json` por endereço (diretório 700, arquivos 600); **faça backup** por canal cifrado e nunca versione (seção 16) |
 | `var/log/email-nf-onedrive.log` | log do dia; os 29 dias anteriores ficam em arquivos com a data no nome |
 | `var/registro.sqlite3` | registro dos anexos já processados; **faça backup**, ele impede reenvios |
 | `var/execucao.lock` | existe só durante uma execução |
@@ -233,7 +238,7 @@ Esses anexos são retentados automaticamente a cada execução; depois de 5 tent
 
 ## 12. Acrescentar uma caixa
 
-1. Gere a senha de app da nova conta (seção 5).
+1. Gere a senha de app da nova conta (seção 5) ou, para OAuth, siga a seção 16.3 com `AUTH_EMAIL2=oauth`.
 2. No `.env`, acrescente o próximo índice livre: `EMAIL2`, `SENHA_EMAIL2` e, se preciso, `PASTA_EMAIL2`, `DESTINO_ONEDRIVE2` e `IMAP_HOST_EMAIL2`. Lacunas na numeração são aceitas.
 3. Rode `verificar-config`. Uma caixa incompleta é ignorada com aviso, sem derrubar as demais.
 4. Rode `executar --simular`. A nova caixa começa pela `DATA_INICIAL`; se ela for antiga, todo o histórico dessa caixa será enviado na primeira execução.
@@ -252,6 +257,7 @@ Depois de alterar, reinstale (`.venv/bin/pip install ./app`) e rode `executar --
 | Sintoma no aviso ou no log | Causa provável | O que fazer |
 |----------------------------|----------------|-------------|
 | `caixa N: autenticação recusada` | senha de app revogada, troca de senha da conta ou IMAP desativado | gere nova senha de app (seção 5), atualize `SENHA_EMAILN` e rode `verificar-config` |
+| `caixa N: autorização OAuth ...`, `serviço de autorização do Google indisponível` ou `credenciais do cliente OAuth recusadas` | falha do acesso por OAuth | ver a tabela da seção 16.6 |
 | `OneDrive: reautorize o remote` | token da Microsoft expirado ou revogado (troca de senha, ação do administrador, longa inatividade) | refaça 6.1: `rclone authorize "onedrive"` na máquina com navegador e, na VPS, `rclone config`, edite o remote e cole o novo token; confirme com `testar-onedrive` |
 | `acesso negado ... (403)` | a pasta deixou de estar compartilhada com permissão de edição | peça à `<conta-admin>` que restaure o compartilhamento |
 | `destino não encontrado` | a pasta foi renomeada ou movida | corrija `DESTINO_ONEDRIVE`; a ferramenta nunca cria a pasta |
@@ -265,3 +271,142 @@ Depois de trocar qualquer credencial, a próxima execução com sucesso envia a 
 - **Disco cheio:** a execução termina com código 2 e aviso "disco cheio". Libere espaço; os anexos pendentes são retomados.
 - **Registro corrompido:** a execução para com código 2 e aviso sobre `var/registro.sqlite3`. Restaure o backup. Sem backup, mova o arquivo para outro nome: a ferramenta cria um registro novo e reconhece os arquivos que já estão no OneDrive com o mesmo conteúdo, sem duplicá-los, mas os retidos voltam a aparecer no log uma vez.
 - **Trava presa:** uma trava com mais de 25 minutos, ou de processo que não existe mais, é removida automaticamente, com a linha "trava abandonada removida" no log.
+
+## 16. Acesso por OAuth 2.0 (alternativa à senha de app)
+
+Em vez da senha de app, uma caixa pode ser lida com uma **autorização OAuth** concedida a um aplicativo seu, registrado no Google Cloud. A autorização é dada uma vez, no navegador, e fica gravada num arquivo; a cada execução a ferramenta a troca por uma credencial temporária, que vive só em memória. O modo é escolhido por caixa, com `AUTH_EMAIL<n>=oauth`; sem essa variável, a caixa continua em `senha`, e nada muda.
+
+Dois pontos para ter claros antes de começar:
+
+- **O Google só oferece um escopo para IMAP, e ele é amplo.** A tela de consentimento fala em "ler, escrever, enviar e excluir permanentemente" os e-mails. A ferramenta continua usando apenas a leitura descrita na seção 1: a lista de comandos IMAP que ela emite é fechada e vigiada por teste. O titular da caixa deve saber disso antes (seção 16.2).
+- **Não há custo.** O projeto no Google Cloud é criado sem conta de faturamento; recuse qualquer oferta de avaliação gratuita que peça cartão.
+
+### 16.1 Projeto no Google Cloud (uma vez)
+
+Os nomes dos menus mudam com alguma frequência; procure pelo sentido. Use a conta Google do operador.
+
+1. Em <https://console.cloud.google.com>, crie um projeto (por exemplo, `email-nf-onedrive`). Não associe conta de faturamento.
+2. No menu, abra **Google Auth Platform** (em consoles antigos, "APIs e serviços" › "Tela de permissão OAuth").
+3. Em **Branding**, informe o nome do aplicativo (`email-nf-onedrive`) e um e-mail de suporte. Não é preciso logotipo nem domínio.
+4. Em **Público**, escolha o tipo **Externo**. Em seguida, clique em **Publicar aplicativo**, para que o estado fique **Em produção**. Não peça a verificação do aplicativo. Este passo é obrigatório: em modo de teste, toda autorização caduca em 7 dias.
+5. Em **Acesso a dados**, acrescente o escopo `https://mail.google.com/`.
+6. Em **Clientes**, crie um cliente OAuth do tipo **App para computador**. Copie o **ID do cliente** e a **chave secreta** para o `.env`, tanto na máquina do operador quanto na VPS:
+
+   ```
+   OAUTH_CLIENT_ID=<ID do cliente>
+   OAUTH_CLIENT_SECRET=<chave secreta>
+   ```
+
+7. Não ative nenhuma API: o acesso é por IMAP, que não depende da API do Gmail.
+
+Sem verificação, o Google limita o aplicativo a 100 contas e mostra um aviso na tela de consentimento (seção 16.3, passo 4). Para cinco caixas conhecidas, é o arranjo adequado: a verificação de escopo restrito exige auditoria paga.
+
+**Google Workspace com restrição a aplicativos de terceiros.** Se o consentimento parar em "acesso bloqueado pelo administrador", o administrador do domínio precisa marcar o aplicativo como confiável: Admin › Segurança › Acesso e controle de dados › Controles de API › Gerenciar acesso de apps de terceiros › Adicionar app › ID do cliente OAuth, com acesso **Confiável**. Se isso não for possível, mantenha a caixa em `senha`, com senha de app (seção 5).
+
+### 16.2 Comunicado ao titular da caixa
+
+O consentimento é dado pelo operador, que entra na conta com a senha recebida do cliente. Por ser ato praticado em nome do titular, avise-o **antes**. Texto pronto para enviar:
+
+> Olá. Para arquivar automaticamente as notas fiscais e os boletos que chegam ao seu e-mail, vou autorizar a nossa ferramenta a ler a sua caixa. Farei isso entrando na sua conta uma única vez, com a senha que você me passou, e depois a senha deixa de ficar guardada conosco.
+> Na autorização, o Google descreve o acesso como "ler, escrever, enviar e excluir e-mails", porque é a única permissão que ele oferece para esse tipo de leitura. A ferramenta só lê: não marca mensagens como lidas, não move, não apaga e não envia nada.
+> Você pode conferir e cancelar esse acesso quando quiser, em <https://myaccount.google.com/permissions>, no item "email-nf-onedrive".
+> Se você trocar a senha da conta, o Google cancela a autorização, e eu precisarei refazê-la; me avise quando isso acontecer.
+
+### 16.3 Autorizar uma caixa (na máquina do operador)
+
+O consentimento exige navegador; por isso é feito na máquina do operador, com uma instalação da ferramenta e o mesmo `.env` da VPS.
+
+1. No `.env`, defina `AUTH_EMAIL<n>=oauth` para a caixa e rode `verificar-config`. Esperado: a caixa termina em `oauth (sem autorização)` e aparece a linha `cliente OAuth: configurado`.
+2. Rode:
+
+   ```bash
+   email-nf-onedrive autorizar-caixa 2
+   ```
+
+3. Copie o endereço impresso e abra-o numa **janela anônima** do navegador. Não use a janela normal: ela está com a sua conta, e o consentimento sairia para a conta errada. Entre com o endereço e a senha da caixa.
+4. Na tela **"O Google não verificou este app"**, clique em **Avançado** e em **Acessar email-nf-onedrive (não seguro)**. O aviso é esperado: o aplicativo é seu e não passou pela verificação pública.
+5. Mantenha marcada a permissão de acesso ao Gmail e continue. A janela mostra "Você pode fechar esta janela", e o terminal, `caixa 2: autorizada · <endereço>` e o caminho do arquivo gravado.
+6. Confirme o acesso: `email-nf-onedrive testar-caixa 2`. Esperado: `caixa 2: acesso confirmado (oauth)`.
+
+O comando espera o consentimento por até 5 minutos e sai com código 0 quando grava a autorização, ou 2 em qualquer recusa, sem gravar nada:
+
+| Mensagem | O que aconteceu | O que fazer |
+|----------|-----------------|-------------|
+| `conta autorizada difere de EMAIL2` | o consentimento foi dado com outra conta; a ferramenta já o revogou | repita na janela anônima, com a conta certa |
+| `caixa 2: consentimento negado` | alguém clicou em "Cancelar" | repita |
+| `caixa 2: tempo esgotado à espera do consentimento` | o endereço não foi aberto em 5 min | repita |
+| `caixa 2: acesso ao correio não concedido` | a permissão do Gmail foi desmarcada na tela | repita, mantendo-a marcada |
+| `caixa 2: o Google não devolveu autorização durável` | resposta incompleta do Google | repita; se persistir, remova o acesso em <https://myaccount.google.com/permissions> e repita |
+| `caixa 2 não está em modo oauth` | falta `AUTH_EMAIL2=oauth` no `.env` | corrija o `.env` |
+| `credenciais do cliente OAuth ausentes` | falta `OAUTH_CLIENT_ID` ou `OAUTH_CLIENT_SECRET` | seção 16.1, passo 6 |
+| `não foi possível revogar; revogue em myaccount.google.com/permissions` | a revogação automática falhou | remova o acesso à mão, na conta em que o consentimento foi dado |
+
+**Se o Google pedir confirmação em outro aparelho ou código por SMS**, pare: essa caixa precisa do titular presente. Combine uma chamada e faça os passos 2 a 5 com ele confirmando o desafio.
+
+Se o `AUTHENTICATE` for recusado logo depois de uma autorização bem-sucedida (`caixa N: falhou (autorização recusada...)` no `testar-caixa`), o mais provável é o **IMAP desativado** na conta ou no domínio (seção 5, passo 3).
+
+### 16.4 Levar as autorizações para a VPS
+
+As autorizações não dependem da máquina em que foram dadas. Copie o diretório por canal cifrado e confira as permissões:
+
+```bash
+# na máquina do operador; o usuário de serviço não aceita login, então a cópia passa pelo seu usuário
+scp -rp autorizacoes/ <seu-usuario>@<vps>:autorizacoes-novas
+
+# na VPS
+sudo mkdir -p -m 700 /opt/email-nf-onedrive/autorizacoes
+sudo cp ~/autorizacoes-novas/*.json /opt/email-nf-onedrive/autorizacoes/
+rm -r ~/autorizacoes-novas
+sudo chown -R email-nf: /opt/email-nf-onedrive/autorizacoes
+sudo chmod 700 /opt/email-nf-onedrive/autorizacoes
+sudo chmod 600 /opt/email-nf-onedrive/autorizacoes/*.json
+sudo -iu email-nf
+.venv/bin/email-nf-onedrive testar-caixa
+```
+
+Esperado: `acesso confirmado (oauth)` em cada caixa autorizada, sem nenhum passo de navegador. O diretório padrão é `autorizacoes/`, ao lado do `.env`; `DIR_AUTORIZACOES` aponta outro, absoluto ou relativo à instalação. Quem usa um diretório próprio responde por mantê-lo fora do versionamento. Permissão mais aberta que 700 no diretório ou 600 nos arquivos gera alerta no `verificar-config` e no log.
+
+Esses arquivos dão acesso às caixas: trate-os como o `.env`. Inclua-os no backup, sempre cifrado, e nunca os envie por e-mail ou mensageiro.
+
+### 16.5 Passar uma instalação existente para OAuth
+
+A troca é por caixa e reversível. O registro de processados usa o endereço, de modo que mudar o modo **não** reenvia documento já arquivado.
+
+1. Atualize a ferramenta na máquina do operador e na VPS e rode `verificar-config`: nada deve mudar, com todas as caixas em `senha ****`.
+2. Crie o projeto (16.1) e preencha `OAUTH_CLIENT_ID` e `OAUTH_CLIENT_SECRET` nos dois `.env`.
+3. Para cada caixa: envie o comunicado (16.2), defina `AUTH_EMAIL<n>=oauth`, rode `autorizar-caixa <n>` e `testar-caixa <n>` (16.3).
+4. Copie as autorizações para a VPS e rode `testar-caixa` lá (16.4).
+5. **Retire `SENHA_EMAIL<n>` das caixas autorizadas**, nos dois `.env`: a senha de terceiro não deve continuar guardada. Enquanto ela estiver lá, o `verificar-config` e o log mostram `alerta: SENHA_EMAILn presente em caixa oauth; retire-a do .env`. Por fim, rode `executar --simular` antes de religar o `cron`.
+
+Para voltar atrás numa caixa, remova `AUTH_EMAIL<n>` e reponha a senha de app.
+
+### 16.6 Avisos de autorização
+
+A linha de resumo do log ganha o trecho `k de autorização` quando alguma caixa falha por estes motivos. As demais caixas seguem normalmente.
+
+| Aviso | Natureza | O que fazer |
+|-------|----------|-------------|
+| `caixa N: autorização OAuth ausente (rode autorizar-caixa N)` | permanente | o arquivo da caixa não está no diretório de autorizações: autorize (16.3) ou copie-o (16.4) |
+| `caixa N: autorização OAuth recusada (rode autorizar-caixa N)` | permanente | o titular revogou o acesso, trocou a senha da conta, ou a autorização ficou 6 meses sem uso: refaça 16.3 e 16.4 |
+| `caixa N: autorização OAuth inválida: ... (rode autorizar-caixa N)` | permanente | arquivo ilegível, de outro endereço ou emitido para outro cliente OAuth: refaça 16.3 e 16.4 |
+| `caixa N: autorização OAuth recusada pelo servidor de e-mail` | permanente | confira se o IMAP está ativo na conta (seção 5, passo 3); se estiver, refaça 16.3 |
+| `caixa N: serviço de autorização do Google indisponível` | transitória | nada: a próxima execução tenta de novo, e a autorização gravada não é tocada |
+| `credenciais do cliente OAuth recusadas pelo Google` | permanente, vale para todas as caixas em OAuth | confira `OAUTH_CLIENT_ID` e `OAUTH_CLIENT_SECRET` no `.env` contra o cliente do Google Cloud (16.1, passo 6) |
+
+A ferramenta nunca apaga nem altera um arquivo de autorização durante a execução; só o `autorizar-caixa` grava.
+
+### 16.7 Revogar o acesso
+
+- **Uma caixa:** na conta do titular, em <https://myaccount.google.com/permissions>, remova "email-nf-onedrive". Depois apague o arquivo `autorizacoes/<endereço>.json` na VPS e na máquina do operador e retire a caixa do `.env` (ou volte-a para `senha`).
+- **Todas de uma vez**, por exemplo se a VPS ou o `.env` vazarem: no Google Cloud, em **Clientes**, gere nova chave secreta para o cliente OAuth e exclua a antiga. As autorizações gravadas deixam de servir a quem só tiver a chave antiga. Atualize `OAUTH_CLIENT_SECRET` nos dois `.env` e rode `testar-caixa`. Em caso de vazamento, peça também a cada titular que remova o acesso na própria conta e refaça as autorizações (16.3).
+
+### 16.8 Entrega do projeto ao cliente
+
+O projeto nasce na conta do operador e pode mudar de dono sem reautorizar nenhuma caixa:
+
+1. No Google Cloud, em **IAM e administrador** › **IAM**, conceda à conta do cliente o papel **Proprietário**.
+2. O cliente aceita o convite que chega por e-mail.
+3. Confirmado o aceite, o cliente (ou você) remove a conta do operador da lista.
+4. Em **Google Auth Platform** › **Branding**, troque o e-mail de suporte pelo do cliente.
+
+O ID e a chave secreta do cliente OAuth não mudam, e as autorizações seguem válidas. Confira com `testar-caixa` na VPS. Se a transferência por convite não estiver disponível para o projeto, a alternativa é o cliente criar um projeto novo (16.1) e as caixas serem autorizadas de novo (16.3 e 16.4).
