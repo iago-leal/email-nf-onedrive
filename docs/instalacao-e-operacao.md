@@ -292,15 +292,22 @@ Os nomes dos menus mudam com alguma frequência; procure pelo sentido. Use uma c
    ```
 
    Ou pelo console, em <https://console.cloud.google.com>, no seletor de projetos › **Novo projeto**. Os passos seguintes só existem no console: o Google não oferece linha de comando nem API pública para a tela de consentimento e para clientes do tipo computador.
-2. Abra a **Google Auth Platform** já no projeto: `https://console.cloud.google.com/auth/overview?project=<identificador>`. Se a página disser que "não pode ser visualizada para organizações", o console está no nível da organização, e não do projeto: no seletor do topo, abra a aba **Todos** (o projeto criado pelo terminal não aparece entre os recentes) e selecione-o. O topo deve mostrar o nome do projeto. Em consoles antigos, o caminho é "APIs e serviços" › "Tela de permissão OAuth".
+2. Abra a **Google Auth Platform** já no projeto: `https://console.cloud.google.com/auth/overview?project=<identificador>&authuser=<conta do operador>`. O `authuser` importa quando o navegador tem mais de uma conta Google: sem ele, o console abre na conta padrão, que não enxerga o projeto. Se a página disser que "não pode ser visualizada para organizações", o console está no nível da organização, e não do projeto: no seletor do topo, abra a aba **Todos** (o projeto criado pelo terminal não aparece entre os recentes) e selecione-o. O topo deve mostrar o nome do projeto. Em consoles antigos, o caminho é "APIs e serviços" › "Tela de permissão OAuth".
 3. Clique em **Vamos começar**. O assistente tem quatro etapas:
    - **Informações do app:** nome `email-nf-onedrive` e o e-mail de suporte do operador. Não é preciso logotipo nem domínio.
    - **Público:** marque **Externo**. Em projeto de organização, o console oferece também **Interno**, que restringe o consentimento às contas do domínio da organização; as caixas dos clientes estão em outros domínios e não conseguiriam autorizar. O texto do Externo avisa que o app começa em modo de testes, o que o passo 4 resolve.
    - **Dados de contato:** o e-mail do operador.
    - **Concluir:** aceite a política de dados de usuário e clique em **Criar**. Esperado: "Configuração do OAuth criada".
-4. Em **Público-alvo**, clique em **Publicar app** e confirme, para que o estado fique **Em produção**. Não peça a verificação do aplicativo. Este passo é obrigatório: em modo de teste, só os usuários de teste listados conseguem consentir, e toda autorização caduca em 7 dias.
-5. Em **Acesso a dados** › **Adicionar ou remover escopos**, cole `https://mail.google.com/` no campo de escopo manual, adicione e clique em **Salvar**. O console o classifica como escopo restrito; é esperado.
-6. Em **Clientes** › **Criar cliente**, escolha o tipo **App para computador**, com o nome `email-nf-onedrive`. Não use **Aplicativo da Web**: ele exige endereço de retorno fixo, e o `autorizar-caixa` recebe a resposta em `127.0.0.1` com porta variável. Na janela que se abre, copie o **ID do cliente** e a **chave secreta**, ou baixe o JSON: o console só mostra a chave nesse momento, e perdê-la obriga a gerar outra. Grave os dois no `.env`, tanto na máquina do operador quanto na VPS:
+4. Em **Branding**, preencha também a **página inicial do aplicativo**, a **política de privacidade** e os **domínios autorizados**: sem os dois endereços, o botão **Publicar app** do passo seguinte fica inativo. Servem o repositório e a política que acompanha a ferramenta:
+
+   - página inicial: `https://github.com/iago-leal/email-nf-onedrive`
+   - política de privacidade: `https://github.com/iago-leal/email-nf-onedrive/blob/main/docs/politica-de-privacidade.md`
+   - domínio autorizado: `github.com`
+
+   A política (`docs/politica-de-privacidade.md`) indica o contato do operador; numa instalação de outro operador, publique uma cópia com o contato dele e use o endereço dessa cópia.
+5. Em **Público-alvo**, no bloco **Status de publicação**, clique em **Publicar app** e confirme, para que o estado fique **Em produção**. Não peça a verificação do aplicativo, e não use usuários de teste como atalho. Este passo é obrigatório: em modo de teste, só os usuários de teste listados conseguem consentir, e toda autorização caduca em 7 dias. Sem ele, o consentimento para em "Erro 403: access_denied", com a mensagem de que o app "está em fase de testes".
+6. Em **Acesso a dados** › **Adicionar ou remover escopos**, cole `https://mail.google.com/` no campo de escopo manual, adicione e clique em **Salvar**. O console o classifica como escopo restrito; é esperado.
+7. Em **Clientes** › **Criar cliente**, escolha o tipo **App para computador**, com o nome `email-nf-onedrive`. Não use **Aplicativo da Web**: ele exige endereço de retorno fixo, e o `autorizar-caixa` recebe a resposta em `127.0.0.1` com porta variável. Na janela que se abre, copie o **ID do cliente** e a **chave secreta**, ou baixe o JSON: o console só mostra a chave nesse momento, e perdê-la obriga a gerar outra. Grave os dois no `.env`, tanto na máquina do operador quanto na VPS:
 
    ```
    OAUTH_CLIENT_ID=<ID do cliente>
@@ -308,7 +315,7 @@ Os nomes dos menus mudam com alguma frequência; procure pelo sentido. Use uma c
    ```
 
    O JSON baixado traz a chave em claro; apague-o depois de copiar os valores, e nunca o deixe dentro do repositório.
-7. Não ative nenhuma API: o acesso é por IMAP, que não depende da API do Gmail.
+8. Não ative nenhuma API: o acesso é por IMAP, que não depende da API do Gmail.
 
 Sem verificação, o Google limita o aplicativo a 100 contas e mostra um aviso na tela de consentimento (seção 16.3, passo 4). Para cinco caixas conhecidas, é o arranjo adequado: a verificação de escopo restrito exige auditoria paga.
 
@@ -336,9 +343,9 @@ O consentimento exige navegador; por isso é feito na máquina do operador, com 
 
    O comando imprime o endereço de consentimento e fica aguardando a volta do navegador. Não o mande para segundo plano: o endereço deixa de aparecer na tela, e o comando parece travado.
 
-3. Copie o endereço impresso e abra-o numa **janela anônima** do navegador. Não use a janela normal: ela está com a sua conta, e o consentimento sairia para a conta errada. Entre com o endereço e a senha da caixa.
+3. Copie o endereço impresso e abra-o numa **janela anônima** do navegador, nova a cada caixa. Não use a janela normal: ela está com a sua conta, e o consentimento sairia para a conta errada; nem reaproveite a anônima da caixa anterior, que ainda está conectada àquela conta. Entre com o endereço e a senha da caixa.
 4. Na tela **"O Google não verificou este app"**, clique em **Avançado** e em **Acessar email-nf-onedrive (não seguro)**. O aviso é esperado: o aplicativo é seu e não passou pela verificação pública.
-5. Mantenha marcada a permissão de acesso ao Gmail e continue. A janela mostra "Você pode fechar esta janela", e o terminal, `caixa 2: autorizada · <endereço>` e o caminho do arquivo gravado.
+5. Na tela "email-nf-onedrive quer acessar sua Conta do Google", **marque a caixa do Gmail** ("Ler, escrever, enviar e excluir permanentemente…") ou clique em **Selecionar tudo**: o Google apresenta as permissões desmarcadas. Só então clique em **Continuar**. A janela mostra "Você pode fechar esta janela", e o terminal, `caixa 2: autorizada · <endereço>` e o caminho do arquivo gravado.
 6. Confirme o acesso: `email-nf-onedrive testar-caixa 2`. Esperado: `caixa 2: acesso confirmado (oauth)`.
 
 O comando espera o consentimento por até 5 minutos e sai com código 0 quando grava a autorização, ou 2 em qualquer recusa, sem gravar nada:
@@ -348,10 +355,10 @@ O comando espera o consentimento por até 5 minutos e sai com código 0 quando g
 | `conta autorizada difere de EMAIL2` | o consentimento foi dado com outra conta; a ferramenta já o revogou | repita na janela anônima, com a conta certa |
 | `caixa 2: consentimento negado` | alguém clicou em "Cancelar" | repita |
 | `caixa 2: tempo esgotado à espera do consentimento` | o endereço não foi aberto em 5 min | repita |
-| `caixa 2: acesso ao correio não concedido` | a permissão do Gmail foi desmarcada na tela | repita, mantendo-a marcada |
+| `caixa 2: acesso ao correio não concedido` | a caixa do Gmail ficou desmarcada na tela de permissões | repita, marcando-a antes de continuar |
 | `caixa 2: o Google não devolveu autorização durável` | resposta incompleta do Google | repita; se persistir, remova o acesso em <https://myaccount.google.com/permissions> e repita |
 | `caixa 2 não está em modo oauth` | falta `AUTH_EMAIL2=oauth` no `.env` | corrija o `.env` |
-| `credenciais do cliente OAuth ausentes` | falta `OAUTH_CLIENT_ID` ou `OAUTH_CLIENT_SECRET` | seção 16.1, passo 6 |
+| `credenciais do cliente OAuth ausentes` | falta `OAUTH_CLIENT_ID` ou `OAUTH_CLIENT_SECRET` | seção 16.1, passo 7 |
 | `não foi possível revogar; revogue em myaccount.google.com/permissions` | a revogação automática falhou | remova o acesso à mão, na conta em que o consentimento foi dado |
 
 **Se o Google pedir confirmação em outro aparelho ou código por SMS**, pare: essa caixa precisa do titular presente. É o caso de toda conta com verificação em duas etapas. Faça os passos 2 a 5 com o titular ao lado, ou numa chamada, com ele confirmando o desafio no próprio celular. Convém descobrir antes quais caixas têm a verificação ativa e agendar todas numa única visita.
@@ -404,7 +411,7 @@ A linha de resumo do log ganha o trecho `k de autorização` quando alguma caixa
 | `caixa N: autorização OAuth inválida: ... (rode autorizar-caixa N)` | permanente | arquivo ilegível, de outro endereço ou emitido para outro cliente OAuth: refaça 16.3 e 16.4 |
 | `caixa N: autorização OAuth recusada pelo servidor de e-mail` | permanente | confira se o IMAP está ativo na conta (seção 5, passo 3); se estiver, refaça 16.3 |
 | `caixa N: serviço de autorização do Google indisponível` | transitória | nada: a próxima execução tenta de novo, e a autorização gravada não é tocada |
-| `credenciais do cliente OAuth recusadas pelo Google` | permanente, vale para todas as caixas em OAuth | confira `OAUTH_CLIENT_ID` e `OAUTH_CLIENT_SECRET` no `.env` contra o cliente do Google Cloud (16.1, passo 6) |
+| `credenciais do cliente OAuth recusadas pelo Google` | permanente, vale para todas as caixas em OAuth | confira `OAUTH_CLIENT_ID` e `OAUTH_CLIENT_SECRET` no `.env` contra o cliente do Google Cloud (16.1, passo 7) |
 
 A ferramenta nunca apaga nem altera um arquivo de autorização durante a execução; só o `autorizar-caixa` grava.
 
