@@ -78,8 +78,8 @@ change_risk:
   reasons: [só a linha de resumo e um parâmetro opcional, nenhum dado histórico tocado, nenhum contrato externo, sem concorrência, reversível por git revert]
 
 delivery:
-  merged: null
-  deployed: null
+  merged: "main b95a42f (fix) + 260d830 (registro), push em 2026-09-22"
+  deployed: "VPS medicina-leal, /opt/email-nf-onedrive, commit 260d830, 2026-09-22; pip install . no venv, verificar-config com código 0"
 
 post_fix_observation:
   window: "1 ciclo real interrompido pelo limite na VPS (critério de aceite 4)"
@@ -89,7 +89,7 @@ post_fix_observation:
 closure:
   policy: production-service
   satisfied: false
-  missing: [entrega na VPS, observação de 1 ciclo interrompido com resumo coerente]
+  missing: [observação de 1 ciclo interrompido com resumo coerente]
 resolution_kind: null
 ---
 

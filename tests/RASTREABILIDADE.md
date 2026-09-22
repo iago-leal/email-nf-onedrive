@@ -120,3 +120,48 @@
 | O ciclo nunca escreve nem apaga o arquivo de autorização (RF-09) | `e2e/oauth::test_instalacao_mista_coleta_as_caixas_dos_dois_modos`; `e2e/oauth-fal` (comparação de bytes antes e depois) |
 | A página de retorno não reflete parâmetros; `/favicon.ico` não consome o retorno | `e2e/autorizar::test_pagina_de_retorno_e_estatica_e_favicon_nao_consome_o_retorno` |
 | Endereços do Google só mudam por injeção, nunca pelo `.env` (D-14) | `uni/fluxo::test_enderecos_padrao_sao_os_do_google`; não existe variável de ambiente lida para esse fim |
+
+---
+
+# Correções de bugs
+
+> Fonte: `_reversa_bugs/email-nf-onedrive/bugs/<ID>/bug.md`, campos `traceability.reproduction_tests` e
+> `regression_tests`. Estes testes não pertencem a nenhuma feature: nasceram de defeito observado em
+> produção e ficam aqui para que uma correção futura não os desfaça sem querer.
+> A spec efetiva de cada um está no adendo correspondente, em `_reversa_sdd/addenda/bug-<ID>-vNNN.md`.
+> Estado na geração deste mapa: 393 testes, todos passando.
+
+## `BUG-20260922-VBJD` · fornecedor recebe o nome da própria empresa
+
+> Adendo: `bug-BUG-20260922-VBJD-v001.md` (veredito `spec-desatualizada`). Altera a leitura da
+> RF-01 de `envio-onedrive` e acrescenta a ordem de fontes do fornecedor.
+
+| Intenção | O que prova | Testes |
+|----------|-------------|--------|
+| reprodução | Remetente interno sem outra fonte não vira fornecedor | `uni/nomeacao::test_remetente_interno_sem_outra_fonte_fica_a_identificar` |
+| reprodução | O PDF herda o emitente do XML da mesma mensagem | `uni/nomeacao::test_pdf_herda_o_emitente_do_xml_da_mesma_mensagem` |
+| reprodução | O encaminhamento interno leva o remetente original | `uni/nomeacao::test_encaminhamento_interno_usa_o_remetente_original`; `e2e/arq::test_encaminhamento_interno_leva_o_fornecedor_real` |
+| reprodução | A leitura MIME expõe o remetente original, anexado ou em linha | `uni/mime::test_encaminhada_como_anexo_expoe_o_remetente_original`, `test_encaminhada_em_linha_expoe_o_remetente_original` |
+| reprodução | A coleta entrega ao envio as fontes do fornecedor | `int/coleta::test_coleta_entrega_ao_envio_as_fontes_do_fornecedor` |
+| regressão | Remetente externo segue inalterado | `uni/nomeacao::test_remetente_externo_sem_outra_fonte_nao_muda`, `test_encaminhamento_por_externo_usa_o_remetente_original` |
+| regressão | Provedor genérico não é domínio interno | `uni/nomeacao::test_remetente_de_provedor_generico_nao_e_interno`; `uni/configuracao::test_dominios_internos_sao_os_das_caixas_sem_os_genericos` |
+| regressão | Precedência entre as fontes | `uni/nomeacao::test_emitente_do_proprio_xml_vence_o_da_mensagem`, `test_emitente_da_mensagem_vence_o_remetente_original`, `test_remetente_original_interno_e_pulado`, `test_dominio_interno_comparado_sem_diferenca_de_caixa`, `test_pdf_de_remetente_externo_tambem_herda_o_emitente_do_xml` |
+| regressão | Linha `De:` sem endereço não conta como remetente | `uni/mime::test_mensagem_direta_nao_tem_remetente_encaminhado`, `test_remetentes_citados_no_corpo` |
+
+## `BUG-20260922-RWDA` · resumo com `0 enviados` após interrupção
+
+> Adendo: `bug-BUG-20260922-RWDA-v001.md` (veredito `spec-gap`). Acrescenta a RF-14 (limite de 20 min
+> e interrupção), relê a RF-11 de `execucao-monitoramento` e cria o caso EC-RWDA-1.
+
+| Intenção | O que prova | Testes |
+|----------|-------------|--------|
+| reprodução | O resumo da execução interrompida conta os envios já confirmados, e o número bate com o log, o destino e o registro | `e2e/fal::test_interrupcao_por_tempo_conta_os_envios_ja_confirmados` |
+| regressão | A interrupção mantém o código de saída 2 e o aviso `execucao:tempo` | `e2e/fal::test_interrupcao_por_tempo_preserva_o_codigo_e_o_aviso` |
+| regressão | Falha de anexo ocorrida antes da interrupção também entra no resumo | `e2e/fal::test_falha_de_anexo_antes_da_interrupcao_entra_no_resumo` |
+| regressão | `enviar_anexos` preenche o acumulador de quem chama, e sem o parâmetro segue como antes | `int/envio::test_resultado_de_quem_chama_e_preenchido_a_cada_envio` |
+| regressão | A simulação diz no resumo quantos anexos avaliou | `e2e/arq::test_simulacao_diz_no_resumo_quantos_anexos_avaliou` |
+
+O dublê `_RcloneInterrompido`, em `e2e/fal`, estende o Rclone real e levanta `TempoEsgotado` na
+N-ésima cópia: a mesma exceção que `limite_duracao` levanta a partir do SIGALRM, no mesmo ponto do
+laço de envio. `signal.alarm` só aceita segundos inteiros, e um teste por relógio dependeria de o
+alarme cair no envio, e não na coleta.
