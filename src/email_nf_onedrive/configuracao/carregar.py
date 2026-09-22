@@ -20,7 +20,7 @@ from email_nf_onedrive.autorizacao import arquivo as arquivo_autorizacao
 from email_nf_onedrive.configuracao.modelo import (
     DIR_AUTORIZACOES_PADRAO, MODO_OAUTH, MODO_SENHA, Caixa, CaixaInvalida, ClienteOAuth, Configuracao, ErroConfiguracao,
 )
-from email_nf_onedrive.envio.nomeacao import rotulo_do_endereco
+from email_nf_onedrive.envio.nomeacao import dominios_internos, rotulo_do_endereco
 
 PASTA_PADRAO = "INBOX"
 IMAP_HOST_PADRAO = "imap.gmail.com"
@@ -177,4 +177,5 @@ def carregar_configuracao(home: Path) -> Configuracao:
         alertas=tuple(alertas),
         cliente_oauth=cliente_oauth,
         dir_autorizacoes=dir_autorizacoes,
+        dominios_internos=dominios_internos(c.endereco for c in caixas),
     )

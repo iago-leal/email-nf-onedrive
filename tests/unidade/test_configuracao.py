@@ -93,6 +93,16 @@ def test_empresa_por_caixa_com_padrao_pelo_dominio(home, escrever_env):
     assert caixa2.empresa == "MINERADORA B"
 
 
+def test_dominios_internos_sao_os_das_caixas_sem_os_genericos(home, escrever_env):
+    escrever_env(_env(
+        EMAIL1="financeiro@Empresa.example", SENHA_EMAIL1="s1",
+        EMAIL2="adm@outra.example", SENHA_EMAIL2="s2",
+        EMAIL3="fiscal@outra.example", SENHA_EMAIL3="s3",
+        EMAIL4="caixa@gmail.com", SENHA_EMAIL4="s4",
+    ))
+    assert carregar_configuracao(home).dominios_internos == frozenset({"empresa.example", "outra.example"})
+
+
 def test_senha_ausente_invalida_so_a_caixa(home, escrever_env):
     escrever_env(_env(
         EMAIL1="a@empresa.example", SENHA_EMAIL1="s1",

@@ -163,7 +163,7 @@ class _Ciclo:
                 self._falhar(resultado.falha.causa, resultado.falha.mensagem)
 
         envio = enviar_anexos(itens, self.registro, self.deps.criar_rclone(config.rclone_remote), self.log,
-                              simulacao=self.simulacao)
+                              simulacao=self.simulacao, internos=config.dominios_internos)
         resumo.enviados += envio.enviados
         resumo.falhas += envio.falhas_de_anexo
         for falha in envio.falhas:

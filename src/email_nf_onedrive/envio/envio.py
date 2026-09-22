@@ -56,11 +56,13 @@ def _falha_rclone(erro: ErroRclone, remote: str, destino: str) -> Falha | None:
 
 
 class Enviador:
-    def __init__(self, registro: Registro, rclone: Rclone, logger: logging.Logger, *, simulacao: bool = False) -> None:
+    def __init__(self, registro: Registro, rclone: Rclone, logger: logging.Logger, *, simulacao: bool = False,
+                 internos: frozenset[str] = frozenset()) -> None:
         self.registro = registro
         self.rclone = rclone
         self.log = logger
         self.simulacao = simulacao
+        self.internos = internos
         self.resultado = ResultadoEnvio()
         self._pastas: dict[str, bool] = {}
         self._erro_global: Falha | None = None
@@ -123,6 +125,8 @@ class Enviador:
             empresa=item.caixa.empresa, remetente=item.remetente, nome_original=item.nome_original,
             assunto=item.assunto, classe=item.classe,
             conteudo=item.caminho_local.read_bytes() if item.classe == NFE_XML else None,
+            emitente_mensagem=item.emitente_mensagem, remetentes_encaminhados=item.remetentes_encaminhados,
+            internos=self.internos,
         ))
         caminho, identico = self._escolher_nome(caminho, tamanho, hash_local)
         nome_final = caminho.rsplit("/", 1)[1]
@@ -162,5 +166,5 @@ class Enviador:
 
 
 def enviar_anexos(itens: list[AnexoParaEnvio], registro: Registro, rclone: Rclone, logger: logging.Logger,
-                  *, simulacao: bool = False) -> ResultadoEnvio:
-    return Enviador(registro, rclone, logger, simulacao=simulacao).enviar(itens)
+                  *, simulacao: bool = False, internos: frozenset[str] = frozenset()) -> ResultadoEnvio:
+    return Enviador(registro, rclone, logger, simulacao=simulacao, internos=internos).enviar(itens)

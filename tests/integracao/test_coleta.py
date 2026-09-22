@@ -113,6 +113,24 @@ def test_anexo_pendente_e_reentregue_sem_duplicar_registro(servidor, dados, ambi
     assert len(registro.pendentes("financeiro@empresa.example")) == 1
 
 
+def test_coleta_entrega_ao_envio_as_fontes_do_fornecedor(servidor, dados, ambiente):
+    """BUG-20260922-VBJD: emitente do XML irmão e remetente original, também no reenvio de pendente."""
+    _entregar(servidor, dados, "interna_nfe_e_danfe.eml", "encaminhada_em_linha.eml", "encaminhada.eml")
+    for _ in range(2):  # a 2ª rodada reentrega os pendentes, que ainda não foram enviados
+        (resultado,), registro = ambiente()
+        por_nome = {item.nome_original: item for item in resultado.para_envio}
+        assert sorted(por_nome) == ["boleto_encaminhado.pdf", "boleto_setembro.pdf", "danfe.pdf", "nfe.xml"]
+        assert por_nome["danfe.pdf"].emitente_mensagem == "FORNECEDOR FICTICIO LTDA"
+        assert por_nome["nfe.xml"].emitente_mensagem == "FORNECEDOR FICTICIO LTDA"
+        assert por_nome["boleto_setembro.pdf"].remetentes_encaminhados == ("cobranca@fornecedor.example",)
+        assert por_nome["boleto_setembro.pdf"].emitente_mensagem == ""
+        assert por_nome["boleto_encaminhado.pdf"].remetentes_encaminhados == ("cobranca@fornecedor.example",)
+        assert {item.remetente for item in resultado.para_envio} == {"colega@empresa.example"}
+        registrados = registro.pendentes("financeiro@empresa.example")
+        assert {a.remetente for a in registrados} == {"colega@empresa.example"}  # o registro guarda o From de topo
+        registro.fechar()
+
+
 def test_sem_anexo_e_compactado_registrados_uma_vez(servidor, dados, ambiente, caplog):
     _entregar(servidor, dados, "nfse_link.eml", "compactado.eml")
     with caplog.at_level(logging.INFO, logger="teste-coleta"):

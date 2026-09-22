@@ -7,10 +7,12 @@ from pathlib import Path
 import pytest
 
 from email_nf_onedrive.envio.nomeacao import (
-    LIMITE_NOME, DadosNome, caminho_destino, com_sufixo, dados_nfe, nome_destino, rotulo_do_endereco, sanear,
+    FORNECEDOR_A_IDENTIFICAR, LIMITE_NOME, DadosNome, caminho_destino, com_sufixo, dados_nfe, nome_destino,
+    rotulo_do_endereco, sanear,
 )
 
 DADOS = Path(__file__).resolve().parents[1] / "dados"
+INTERNOS = frozenset({"empresa.example"})
 
 
 def _dados(**campos) -> DadosNome:
@@ -172,3 +174,74 @@ def test_sufixo_respeita_o_limite():
     com = com_sufixo(nome, 12)
     assert len(com) == 200
     assert com.endswith("_12.pdf")
+
+
+# --- Fornecedor em encaminhamento interno (BUG-20260922-VBJD) ---------------------------------
+
+
+def test_remetente_interno_sem_outra_fonte_fica_a_identificar():
+    dados = _dados(remetente="colega@empresa.example", internos=INTERNOS)
+    assert FORNECEDOR_A_IDENTIFICAR == "A IDENTIFICAR"
+    assert nome_destino(dados) == "ACME - A IDENTIFICAR - BOLETO.pdf"
+
+
+def test_dominio_interno_comparado_sem_diferenca_de_caixa():
+    dados = _dados(remetente="Colega@EMPRESA.example", internos=INTERNOS)
+    assert nome_destino(dados) == "ACME - A IDENTIFICAR - BOLETO.pdf"
+
+
+def test_pdf_herda_o_emitente_do_xml_da_mesma_mensagem():
+    dados = _dados(remetente="colega@empresa.example", nome_original="danfe.pdf", assunto="Fwd: Nota fiscal",
+                   emitente_mensagem="Fornecedor Fictício Ltda", internos=INTERNOS)
+    assert nome_destino(dados) == "ACME - FORNECEDOR FICTICIO LTDA - REF.pdf"
+
+
+def test_pdf_de_remetente_externo_tambem_herda_o_emitente_do_xml():
+    dados = _dados(nome_original="danfe.pdf", assunto="Nota", emitente_mensagem="New Line Ltda")
+    assert nome_destino(dados) == "ACME - NEW LINE LTDA - REF.pdf"
+
+
+def test_emitente_do_proprio_xml_vence_o_da_mensagem():
+    conteudo = (DADOS / "nfe_proc.xml").read_bytes()
+    dados = _dados(nome_original="nfe.xml", classe="nfe-xml", conteudo=conteudo, emitente_mensagem="Outro Ltda")
+    assert nome_destino(dados) == "ACME - FORNECEDOR FICTICIO LTDA - REF.xml"
+
+
+def test_encaminhamento_interno_usa_o_remetente_original():
+    dados = _dados(remetente="colega@empresa.example", remetentes_encaminhados=("cobranca@fornecedor.com.br",),
+                   internos=INTERNOS)
+    assert nome_destino(dados) == "ACME - FORNECEDOR - BOLETO.pdf"
+
+
+def test_emitente_da_mensagem_vence_o_remetente_original():
+    dados = _dados(remetente="colega@empresa.example", remetentes_encaminhados=("cobranca@fornecedor.com.br",),
+                   emitente_mensagem="Emitente Ltda", internos=INTERNOS)
+    assert nome_destino(dados) == "ACME - EMITENTE LTDA - BOLETO.pdf"
+
+
+@pytest.mark.parametrize(
+    ("encaminhados", "fornecedor"),
+    [
+        (("outro@empresa.example",), "A IDENTIFICAR"),
+        (("nf@fornecedor.com.br", "outro@empresa.example"), "FORNECEDOR"),
+        (("outro@empresa.example", "nf@fornecedor.com.br"), "FORNECEDOR"),
+    ],
+)
+def test_remetente_original_interno_e_pulado(encaminhados, fornecedor):
+    dados = _dados(remetente="colega@empresa.example", remetentes_encaminhados=encaminhados, internos=INTERNOS)
+    assert nome_destino(dados) == f"ACME - {fornecedor} - BOLETO.pdf"
+
+
+def test_encaminhamento_por_externo_usa_o_remetente_original():
+    dados = _dados(remetente="contador@escritorio.example", remetentes_encaminhados=("nf@fornecedor.com.br",))
+    assert nome_destino(dados) == "ACME - FORNECEDOR - BOLETO.pdf"
+
+
+@pytest.mark.parametrize("internos", [frozenset(), INTERNOS])
+def test_remetente_externo_sem_outra_fonte_nao_muda(internos):
+    assert nome_destino(_dados(internos=internos)) == "ACME - FORNECEDOR - BOLETO.pdf"
+
+
+def test_remetente_de_provedor_generico_nao_e_interno():
+    dados = _dados(remetente="fulano@gmail.com", internos=INTERNOS)
+    assert nome_destino(dados) == "ACME - FULANO - BOLETO.pdf"

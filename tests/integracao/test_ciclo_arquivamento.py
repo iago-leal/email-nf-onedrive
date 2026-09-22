@@ -32,6 +32,16 @@ def test_reexecucao_nao_duplica(cenario):
     assert "(desde a execução anterior: 30 min)" in cenario.log()
 
 
+def test_encaminhamento_interno_leva_o_fornecedor_real(cenario):
+    """BUG-20260922-VBJD: remetente da caixa (empresa.example) nunca vira fornecedor."""
+    cenario.entregar("encaminhada.eml", "encaminhada_em_linha.eml", "interna_nfe_e_danfe.eml")
+    assert cenario.executar("executar") == 0
+    assert cenario.arquivos_no_destino() == [
+        BOLETO, "ACME - FORNECEDOR - BOLETO_2.pdf", "ACME - FORNECEDOR FICTICIO LTDA - REF.pdf", NFE,
+    ]
+    assert not any(" - EMPRESA " in nome for nome in cenario.arquivos_no_destino())
+
+
 def test_nome_repetido_recebe_sufixo_e_preserva_o_original(cenario):
     (cenario.destino / BOLETO).write_bytes(b"%PDF arquivo da equipe")
     cenario.entregar("boleto_simples.eml")

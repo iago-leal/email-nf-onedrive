@@ -59,6 +59,7 @@ class Configuracao:
     alertas: tuple[str, ...] = ()
     cliente_oauth: ClienteOAuth | None = None
     dir_autorizacoes: Path = Path(DIR_AUTORIZACOES_PADRAO)
+    dominios_internos: frozenset[str] = frozenset()  # das caixas; remetente nesses domínios não é fornecedor
 
     @property
     def telegram_ativo(self) -> bool:

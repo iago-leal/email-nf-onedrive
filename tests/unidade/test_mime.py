@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import hashlib
 from datetime import datetime, timezone
+from email.message import EmailMessage
+
+import pytest
 
 from email_nf_onedrive.coleta.mime import analisar_mensagem
 
@@ -85,3 +88,53 @@ def test_mensagem_sem_data():
     msg = analisar_mensagem(bruto)
     assert msg.data is None
     assert msg.anexos == ()
+
+
+# --- Remetente original de encaminhamentos (BUG-20260922-VBJD) --------------------------------
+
+
+def _com_corpo(corpo: str) -> bytes:
+    mensagem = EmailMessage()
+    mensagem["From"] = "Colega <colega@empresa.example>"
+    mensagem["Subject"] = "Fwd: Boleto"
+    mensagem["Message-ID"] = "<corpo@empresa.example>"
+    mensagem.set_content(corpo)
+    mensagem.add_attachment(b"%PDF-1.4\n", maintype="application", subtype="pdf", filename="boleto.pdf")
+    return mensagem.as_bytes()
+
+
+def test_encaminhada_como_anexo_expoe_o_remetente_original(dados):
+    msg = _analisar(dados, "encaminhada.eml")
+    assert msg.remetente == "colega@empresa.example"
+    assert msg.remetentes_encaminhados == ("cobranca@fornecedor.example",)
+
+
+def test_encaminhada_em_linha_expoe_o_remetente_original(dados):
+    msg = _analisar(dados, "encaminhada_em_linha.eml")
+    assert msg.remetente == "colega@empresa.example"
+    assert [a.nome for a in msg.anexos] == ["boleto_setembro.pdf"]
+    assert msg.remetentes_encaminhados == ("cobranca@fornecedor.example",)
+
+
+def test_mensagem_direta_nao_tem_remetente_encaminhado(dados):
+    assert _analisar(dados, "boleto_simples.eml").remetentes_encaminhados == ()
+
+
+@pytest.mark.parametrize(
+    ("corpo", "esperado"),
+    [
+        ("---------- Forwarded message ---------\nFrom: Cobranca <cobranca@fornecedor.example>\nDate: Thu\n",
+         ("cobranca@fornecedor.example",)),
+        ("-----Mensagem original-----\nDe: Cobranca [mailto:Cobranca@Fornecedor.example]\nEnviada em: quinta\n",
+         ("cobranca@fornecedor.example",)),
+        ("Veja abaixo.\n\n> De: nf@fornecedor.example\n> Assunto: NF\n", ("nf@fornecedor.example",)),
+        ("*From:* Cobranca <cobranca@fornecedor.example>\n", ("cobranca@fornecedor.example",)),
+        ("---------- Forwarded message ---------\nFrom: Colega B <b@empresa.example>\n\n"
+         "---------- Forwarded message ---------\nFrom: <nf@fornecedor.example>\n",
+         ("nf@fornecedor.example", "b@empresa.example")),
+        ("Período de cobrança\nDe: 01/09 a 30/09\n", ()),
+        ("Segue o boleto, de acordo com a nota.\n", ()),
+    ],
+)
+def test_remetentes_citados_no_corpo(corpo, esperado):
+    assert analisar_mensagem(_com_corpo(corpo)).remetentes_encaminhados == esperado

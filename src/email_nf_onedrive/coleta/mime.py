@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import re
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from email import message_from_bytes, policy
@@ -14,6 +15,9 @@ TIPOS_DOCUMENTO = {"application/pdf": "pdf", "application/xml": "xml", "text/xml
 EXTENSOES_COMPACTADAS = (".zip", ".rar", ".7z")
 TIPOS_COMPACTADOS = {"application/zip", "application/x-zip-compressed", "application/x-rar-compressed",
                      "application/vnd.rar", "application/x-7z-compressed"}
+# Linha "De:"/"From:" de encaminhamento em linha ou de citação (Gmail, Outlook); só conta com endereço nela.
+_LINHA_REMETENTE = re.compile(r"^[>\s]*\**(?:from|de)\**\s*:\**\s*(.*)$", re.IGNORECASE | re.MULTILINE)
+_ENDERECO = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")
 
 
 @dataclass(frozen=True)
@@ -34,6 +38,7 @@ class MensagemAnalisada:
     data: datetime | None
     anexos: tuple[AnexoExtraido, ...]
     compactados: tuple[str, ...]
+    remetentes_encaminhados: tuple[str, ...] = ()  # do original ao mais recente, sem o From de topo
 
 
 def _extensao(nome: str | None) -> str:
@@ -72,6 +77,31 @@ def _data(mensagem: EmailMessage) -> datetime | None:
     return data.astimezone(timezone.utc)
 
 
+def _remetentes_encaminhados(mensagem: EmailMessage) -> tuple[str, ...]:
+    """Remetentes das mensagens encaminhadas, do original ao mais recente.
+
+    Vêm do `From` das partes `message/rfc822` e das linhas `De:`/`From:` com endereço nos corpos
+    em texto, onde o Gmail e o Outlook põem o cabeçalho do encaminhamento em linha.
+    """
+    achados: list[str] = []
+    for parte in mensagem.walk():
+        tipo = parte.get_content_type()
+        if tipo == "message/rfc822":
+            endereco = parseaddr(str(parte.get_content().get("From", "")))[1].lower()
+            if endereco:
+                achados.append(endereco)
+        elif tipo == "text/plain" and parte.get_content_disposition() != "attachment":
+            try:
+                texto = parte.get_content()
+            except (LookupError, UnicodeError):
+                continue
+            for linha in _LINHA_REMETENTE.finditer(texto):
+                endereco = _ENDERECO.search(linha.group(1))
+                if endereco:
+                    achados.append(endereco.group(0).lower())
+    return tuple(reversed(achados))
+
+
 def analisar_mensagem(bruto: bytes) -> MensagemAnalisada:
     mensagem = message_from_bytes(bruto, policy=policy.default)
     remetente = parseaddr(str(mensagem.get("From", "")))[1].lower()
@@ -106,4 +136,5 @@ def analisar_mensagem(bruto: bytes) -> MensagemAnalisada:
         data=data,
         anexos=tuple(anexos),
         compactados=tuple(compactados),
+        remetentes_encaminhados=_remetentes_encaminhados(mensagem),
     )

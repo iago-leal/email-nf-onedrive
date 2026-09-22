@@ -1,0 +1,31 @@
+From: Colega <colega@empresa.example>
+To: financeiro@empresa.example
+Subject: Fwd: Boleto setembro
+Date: Fri, 18 Sep 2026 12:00:00 -0300
+Message-ID: <em-linha@empresa.example>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="===============0000000000000000001=="
+
+--===============0000000000000000001==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+
+Segue para pagamento.
+
+---------- Mensagem encaminhada ---------
+De: Cobrança <cobranca@fornecedor.example>
+Date: qui., 17 de set. de 2026 às 09:12
+Subject: Boleto setembro
+To: <colega@empresa.example>
+
+Segue o boleto.
+
+--===============0000000000000000001==
+Content-Type: application/pdf
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="boleto_setembro.pdf"
+MIME-Version: 1.0
+
+JVBERi0xLjQKJSBib2xldG8gZW0gbGluaGEKJSVFT0YK
+
+--===============0000000000000000001==--
