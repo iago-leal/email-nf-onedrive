@@ -3,8 +3,8 @@ schema_version: 1
 id: BUG-20260922-RWDA
 display_number: 2
 title: Resumo informa 0 enviados quando a execução é interrompida pelo limite de tempo
-status: active
-phase: delivering
+status: resolved
+phase: observing
 severity: medium
 priority: P2
 created: 2026-09-22
@@ -82,15 +82,20 @@ delivery:
   deployed: "VPS medicina-leal, /opt/email-nf-onedrive, commit 260d830, 2026-09-22; pip install . no venv, verificar-config com código 0"
 
 post_fix_observation:
-  window: "1 ciclo real interrompido pelo limite na VPS (critério de aceite 4)"
-  started: null
-  result: null
+  window: "4 ciclos reais na VPS, 2026-09-22 19:23 a 20:30 UTC; três interrompidos pelo limite"
+  started: 2026-09-22T19:23:03Z
+  result: sem-recorrencia
+  evidence: >
+    Resumos dos quatro ciclos: 116, 111, 149 e 68 enviados, somando 444. O registro fechou com
+    exatamente 444 anexos em estado enviado, e o log da janela traz 344 linhas `enviado:` mais 100
+    `já existia idêntico:`, também 444. Os três primeiros ciclos foram interrompidos pelo limite de
+    1200 s e mostraram a contagem correta; antes da correção diriam 0. O quarto terminou sozinho em
+    473 s com código 0, o que prova que o caminho normal não mudou.
 
 closure:
   policy: production-service
-  satisfied: false
-  missing: [observação de 1 ciclo interrompido com resumo coerente]
-resolution_kind: null
+  satisfied: true
+resolution_kind: fixed
 ---
 
 # Resumo informa 0 enviados quando a execução é interrompida pelo limite de tempo

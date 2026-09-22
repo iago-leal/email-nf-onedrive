@@ -3,8 +3,8 @@ schema_version: 1
 id: BUG-20260922-VBJD
 display_number: 1
 title: Fornecedor recebe o nome da própria empresa em encaminhamento interno
-status: active
-phase: delivering
+status: resolved
+phase: observing
 severity: high
 priority: P1
 created: 2026-09-22
@@ -100,15 +100,18 @@ delivery:
   deployed: "VPS medicina-leal, /opt/email-nf-onedrive, commit 93afccf, 2026-09-22 (sem crontab ativo para email-nf)"
 
 post_fix_observation:
-  window: "1 ciclo real completo depois do reparo CHG-007 (critério 5)"
-  started: null
-  result: null
+  window: "4 ciclos reais na VPS, 2026-09-22 19:23 a 20:30 UTC, lote inteiro escoado"
+  started: 2026-09-22T19:23:03Z
+  result: sem-recorrencia
+  evidence: >
+    444 anexos enviados e 346 arquivos na pasta CONTAS A PAGAR - TESTE, que partiu de zero.
+    Nenhum arquivo com AFLAPARTI, RIOMARMINERACAO ou CALMAISMINERACAO como fornecedor (0 de 346).
+    33 arquivos com A IDENTIFICAR, o sinal previsto de origem não apurada, a investigar à parte.
 
 closure:
   policy: production-service
-  satisfied: false
-  missing: [observação de 1 ciclo real sem AFLAPARTI]
-resolution_kind: null
+  satisfied: true
+resolution_kind: fixed
 ---
 
 # Fornecedor recebe o nome da própria empresa em encaminhamento interno
