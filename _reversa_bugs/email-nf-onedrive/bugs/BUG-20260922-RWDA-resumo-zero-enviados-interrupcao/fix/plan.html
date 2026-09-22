@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plano de correção · BUG-20260922-RWDA</title>
+<style>
+:root{color-scheme:dark}
+body{background:#111317;color:#e6e6e6;font:14px/1.55 system-ui,sans-serif;margin:0;padding:24px 16px}
+main{max-width:1100px;margin:0 auto}h1{font-size:22px;margin:0 0 4px}h2{font-size:16px;margin:28px 0 8px;color:#c9d1ff}
+.meta{color:#9aa0a6;font-size:12px;margin-bottom:16px}
+.cards{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px}.card{background:#1c1f26;border-radius:10px;padding:10px 14px;min-width:120px}.card b{display:block;font-size:18px}
+.box{background:#1c1f26;border-radius:10px;padding:12px 16px;margin:8px 0}
+.grafo{overflow-x:auto;background:#15171c;border-radius:10px;padding:8px}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:6px 8px;border-bottom:1px solid #2a2e37;vertical-align:top}
+th{color:#9aa0a6;font-weight:600}a{color:#8ab4f8}code{background:#23262e;padding:1px 5px;border-radius:4px;font-size:12px}
+pre{background:#15171c;border-radius:8px;padding:10px 12px;overflow-x:auto;font-size:12px;margin:8px 0}
+.tag{display:inline-block;padding:1px 8px;border-radius:999px;font-size:11px;background:#2a2e37}
+.ok{color:#46a758}.warn{color:#f5a524}.bad{color:#e5484d}
+ol,ul{margin:4px 0 4px 20px;padding:0}li{margin:2px 0}
+</style></head>
+<body><main>
+<h1>Plano de correção · #2 · BUG-20260922-RWDA</h1>
+<div class="meta">contexto <code>email-nf-onedrive</code> · 2026-09-22 · gerado por /reversa-debugger-fix antes de qualquer alteração no projeto</div>
+<div class="cards">
+ <div class="card"><b class="warn">medium</b>severidade</div>
+ <div class="card"><b>P2</b>prioridade</div>
+ <div class="card"><b class="ok">baixa</b>risco da mudança</div>
+ <div class="card"><b class="ok">confirmed</b>causa raiz</div>
+ <div class="card"><b>production-service</b>closure policy</div>
+</div>
+
+<h2>1. Defeito</h2>
+<div class="box">A execução interrompida pelo limite de 1200 s encerra com <code>0 enviados</code> no resumo, mesmo tendo arquivado dezenas de documentos. Na primeira execução real da VPS: <code>resumo: 5 caixas, 644 extraídos, 0 enviados, 220 retidos, 1 falhas, 1200 s</code>, com 79 linhas <code>enviado:</code> no mesmo log, 80 arquivos na pasta de teste e 84 linhas <code>enviado</code> no registro. Quem acompanha pelo log — e, quando os avisos do Telegram forem ligados, quem acompanha pelo celular — conclui que nada foi arquivado.</div>
+
+<h2>2. Causa raiz <span class="tag ok">confirmed</span></h2>
+<div class="box">
+O ciclo só transporta as contagens do envio para o resumo <b>depois</b> que <code>enviar_anexos</code> retorna, em <code>execucao/ciclo.py:165-168</code>:
+<pre>envio = enviar_anexos(itens, …)     # TempoEsgotado sai daqui
+resumo.enviados += envio.enviados   # nunca executado
+resumo.falhas += envio.falhas_de_anexo</pre>
+O <code>Enviador</code> já conta certo: <code>self.resultado.enviados += 1</code> a cada envio confirmado (<code>envio/envio.py:147</code>), logo depois de <code>marcar_enviado</code> e do <code>commit</code>. O que se perde é a <b>referência</b> a esse acumulador: <code>TempoEsgotado</code>, levantada pelo SIGALRM de <code>limite_duracao</code> (<code>execucao/trava.py:100</code>) no meio do laço de <code>Enviador.enviar</code>, sobe pelo <code>_executar</code> e o objeto <code>ResultadoEnvio</code> morre com o quadro de pilha. O resumo sai com o valor inicial, zero. O mesmo vale para <code>falhas_de_anexo</code>.
+<br><br>
+<b>Evidências:</b> reprodução determinística 5/5 com dados sintéticos (<a href="../evidence/reproduction.md">evidence/reproduction.md</a>, <a href="../evidence/repro.py">evidence/repro.py</a>): dois arquivos no destino, dois <code>enviado</code> no registro, duas linhas <code>enviado:</code> no log e <code>resumo: 1 caixa, 4 extraídos, 0 enviados, 1 falhas</code>. Na VPS, o desencontro de 2026-09-22T14:32:55Z descrito acima.
+</div>
+
+<h2>3. Estratégia escolhida: correção direta</h2>
+<div class="box">
+Sem debate: não há hipóteses concorrentes — o caminho causal está fechado e a linha que falta executar é visível. A correção devolve ao ciclo a referência ao acumulador, para que ele contabilize <b>o que já foi contado</b>, tenha o envio terminado ou sido interrompido:
+<ol>
+ <li><code>enviar_anexos</code> passa a aceitar um <code>ResultadoEnvio</code> criado por quem chama, em vez de só devolver o seu;</li>
+ <li>o ciclo cria esse objeto, chama o envio dentro de um <code>try</code> e contabiliza num <code>finally</code>, que roda igual no caminho normal e na interrupção.</li>
+</ol>
+Nada muda no protocolo de envio, no registro ou nos dados: a correção é de contabilidade, e o que ela passa a somar já estava gravado no sqlite e no log.
+<br><br>
+<b>Por que não instanciar o <code>Enviador</code> direto no ciclo:</b> exporia a classe ao chamador e quebraria os treze testes que usam a função-fachada. O acumulador injetado mantém a superfície de hoje, com o parâmetro opcional.
+</div>
+
+<h2>4. Correction Change Set proposto</h2>
+<table>
+<tr><th>CHG</th><th>tipo</th><th>artefato</th><th>propósito</th></tr>
+<tr><td>CHG-001</td><td>code</td><td><code>src/email_nf_onedrive/envio/envio.py</code></td><td><code>Enviador.__init__</code> e <code>enviar_anexos</code> aceitam <code>resultado: ResultadoEnvio | None</code>; ausente, criam o próprio, como hoje. Nenhuma chamada existente muda.</td></tr>
+<tr><td>CHG-002</td><td>code</td><td><code>src/email_nf_onedrive/execucao/ciclo.py</code></td><td><code>_executar</code> cria o <code>ResultadoEnvio</code>, envolve o envio em <code>try/finally</code> e contabiliza no <code>finally</code>: <code>enviados</code>, <code>falhas_de_anexo</code> e as falhas nomeadas do envio.</td></tr>
+<tr><td>CHG-003</td><td>code</td><td><code>src/email_nf_onedrive/execucao/resumo.py</code>, <code>execucao/ciclo.py</code></td><td><span class="warn">Decisão sua (ver §6).</span> O resumo passa a mostrar <code>N simulados</code> quando houver, hoje invisível: a simulação da VPS nomeou 269 arquivos e encerrou com <code>8 extraídos, 0 enviados</code>, sem uma linha sobre o trabalho feito.</td></tr>
+<tr><td>CHG-004</td><td>specification</td><td><code>_reversa_sdd/addenda/bug-BUG-20260922-RWDA-v001.md</code></td><td>Adendo, sujeito ao veredito da etapa 7: RF-11 exige que as contagens do resumo reflitam o que aconteceu até a interrupção (e, se a CHG-003 entrar, que a simulação apareça).</td></tr>
+</table>
+
+<h2>5. Testes planejados</h2>
+<table>
+<tr><th>teste</th><th>intenção</th><th>arquivo</th><th>prova</th></tr>
+<tr><td>R1</td><td>reprodução</td><td><code>tests/integracao/test_ciclo_falhas.py</code></td><td>Interrompido o envio no terceiro anexo, o resumo mostra <code>2 enviados</code>, e o número bate com as linhas <code>enviado:</code> do log e com os <code>enviado</code> do registro.</td></tr>
+<tr><td>G1</td><td>regressão</td><td><code>tests/integracao/test_ciclo_falhas.py</code></td><td>A interrupção segue com código de saída 2, linha <code>execução interrompida</code> e aviso da causa <code>execucao:tempo</code>: só a contagem muda.</td></tr>
+<tr><td>G2</td><td>regressão</td><td><code>tests/integracao/test_ciclo_falhas.py</code></td><td>Falha de anexo ocorrida <b>antes</b> da interrupção também entra no resumo, em vez de sumir com ela.</td></tr>
+<tr><td>G3</td><td>regressão</td><td><code>tests/integracao/test_envio.py</code></td><td><code>enviar_anexos</code> sem o parâmetro novo devolve o mesmo <code>ResultadoEnvio</code> de hoje; com ele, preenche o objeto de quem chamou.</td></tr>
+<tr><td>G4</td><td>regressão</td><td>suíte inteira (388 testes)</td><td>Execução sem interrupção mantém o resumo de hoje, inclusive <code>resumo: 1 caixa, 1 extraídos, 1 enviados, 0 falhas</code> em <code>test_ciclo_arquivamento.py</code>.</td></tr>
+</table>
+<div class="box">
+<b>Sobre o critério 3 do bug</b> ("teste de regressão com limite reduzido e envio lento simulado"): <code>signal.alarm</code> só aceita segundos inteiros, de modo que um teste por relógio custaria mais de um segundo e dependeria de o alarme cair no laço de envio, e não na coleta — instável em máquina carregada. Os testes injetam um <code>Rclone</code> que levanta <code>TempoEsgotado</code> a partir da N-ésima cópia: a mesma exceção, no mesmo ponto, sem relógio. Se preferir o teste por tempo real, digo no gate e troco.
+</div>
+
+<h2>6. Riscos e fora do escopo</h2>
+<div class="box">
+<b>Risco da mudança: baixa.</b> Blast radius restrito à linha de resumo e a um parâmetro opcional no envio; nenhum contrato externo, nenhum dado histórico, nenhuma concorrência, reversível por <code>git revert</code>. O <code>finally</code> só soma inteiros e registra falhas já construídas, logo não tem como mascarar a <code>TempoEsgotado</code> que sobe.
+<br><br>
+<b>Decisão pendente (CHG-003):</b> mostrar <code>N simulados</code> amplia o RF-11, que hoje fala em extraídos, enviados e falhas. Recomendo incluir: sem isso, <code>executar --simular</code> continua terminando sem dizer quanto avaliou, que foi exatamente a queixa da simulação de ontem à noite. Se preferir manter a correção mínima, o item sai e o adendo encolhe.
+<br><br>
+<b>Fora do escopo (Agent Notes):</b>
+<ul>
+ <li><b>A mesma perda na coleta.</b> <code>coletar</code> devolve a lista das caixas só no fim (<code>coleta/coleta.py:234</code>); interrompida <i>durante</i> a coleta, o ciclo perde caixas, extraídos e retidos do mesmo jeito. Não houve ocorrência real — as duas interrupções da VPS caíram no envio —, e cobrir isso exigiria transformar <code>coletar</code> em gerador, o que muda a estrutura para além do defeito relatado. Proponho registrar como bug novo.</li>
+ <li>O limite de 1200 s em si: escoar 424 pendentes ainda vai exigir dois ou três ciclos. É decisão de operação, não defeito.</li>
+ <li>Avisos do Telegram seguem desativados na VPS; quando forem ligados, herdarão o número corrigido sem mudança adicional.</li>
+</ul>
+</div>
+
+<h2>7. Mini-grafo do bug</h2>
+<div class="grafo"><svg width="1030" height="170" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif">
+<a href="../../BUG-20260922-VBJD-fornecedor-empresa-propria/bug.md"><g><rect x="20" y="30" width="270" height="100" rx="10" fill="#1c1f26" stroke="#3a3f4b" stroke-width="1.5"/><text x="34" y="56" fill="#e6e6e6" font-size="14" font-weight="600">#1 · VBJD</text><text x="34" y="80" fill="#c9c9c9" font-size="12">Fornecedor com o nome da</text><text x="34" y="96" fill="#c9c9c9" font-size="12">própria empresa</text><text x="34" y="118" fill="#9aa0a6" font-size="11">high · P1 · active/delivering</text></g></a>
+<a href="../bug.md"><g><rect x="380" y="20" width="290" height="120" rx="10" fill="#1c1f26" stroke="#f5a524" stroke-width="3"/><text x="396" y="48" fill="#e6e6e6" font-size="15" font-weight="700">#2 · RWDA</text><text x="396" y="72" fill="#c9c9c9" font-size="12">Resumo com 0 enviados após</text><text x="396" y="88" fill="#c9c9c9" font-size="12">interrupção por tempo</text><text x="396" y="110" fill="#9aa0a6" font-size="11">medium · P2 · execucao-monitoramento</text><text x="396" y="128" fill="#f5a524" font-size="11">active · diagnosing</text></g></a>
+<a href="../../BUG-20260922-2FVK-nf-sem-palavra-chave-retida/bug.md"><g><rect x="740" y="30" width="270" height="100" rx="10" fill="#1c1f26" stroke="#3a3f4b" stroke-width="1.5"/><text x="754" y="56" fill="#e6e6e6" font-size="14" font-weight="600">#3 · 2FVK</text><text x="754" y="80" fill="#c9c9c9" font-size="12">NF sem palavra-chave no nome</text><text x="754" y="96" fill="#c9c9c9" font-size="12">retida por engano</text><text x="754" y="118" fill="#9aa0a6" font-size="11">medium · P2 · open</text></g></a>
+<text x="515" y="162" fill="#9aa0a6" font-size="11" text-anchor="middle">sem relações registradas: os três bugs vêm do mesmo relato, com causas independentes</text>
+</svg></div>
+
+<h2>8. Matriz de relações</h2>
+<table>
+<tr><th>origem</th><th>tipo</th><th>destino</th><th>estado</th></tr>
+<tr><td><a href="../bug.md">#2 RWDA</a></td><td>nenhuma</td><td><a href="../../BUG-20260922-VBJD-fornecedor-empresa-propria/bug.md">#1 VBJD</a></td><td>não relacionada: a dependência é só de agenda — o resumo corrigido serve à janela de observação do #1</td></tr>
+<tr><td><a href="../bug.md">#2 RWDA</a></td><td>nenhuma</td><td><a href="../../BUG-20260922-2FVK-nf-sem-palavra-chave-retida/bug.md">#3 2FVK</a></td><td>não relacionada: classificação, não observabilidade</td></tr>
+</table>
+
+<h2>9. Ordem</h2>
+<div class="box">Sessão de um bug só, e ele vem antes da execução real que fecha o <a href="../../BUG-20260922-VBJD-fornecedor-empresa-propria/bug.md">#1</a>: o critério 4 deste bug pede um ciclo interrompido com resumo coerente observado na VPS, e o #1 pede um ciclo real sem <code>AFLAPARTI</code>. Corrigido primeiro, a mesma janela de observação fecha os dois.</div>
+</main></body></html>

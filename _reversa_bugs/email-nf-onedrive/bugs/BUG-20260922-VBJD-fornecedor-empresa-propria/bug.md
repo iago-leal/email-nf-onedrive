@@ -89,15 +89,15 @@ change_set:
   - {id: CHG-004, kind: code, artifact: src/email_nf_onedrive/envio/nomeacao.py, diff: fix/CHG-004.diff, applied: 2026-09-22}
   - {id: CHG-005, kind: code, artifact: "src/email_nf_onedrive/envio/envio.py, execucao/ciclo.py", diff: fix/CHG-005.diff, applied: 2026-09-22}
   - {id: CHG-006, kind: specification, artifact: _reversa_sdd/addenda/bug-BUG-20260922-VBJD-v001.md, applied: 2026-09-22}
-  - {id: CHG-007, kind: data-repair, artifact: "VPS var/registro.sqlite3 + pasta CONTAS A PAGAR - TESTE", script: fix/CHG-007-reparo.py, applied: null}
+  - {id: CHG-007, kind: data-repair, artifact: "VPS var/registro.sqlite3 + pasta CONTAS A PAGAR - TESTE", script: fix/CHG-007-reparo.py, applied: 2026-09-22, detalhe: "pasta esvaziada (80 arquivos, grade de 429 subpastas preservada); 84 linhas voltaram a extraido; backup var/registro.sqlite3.bak-20260922T171041Z"}
 
 change_risk:
   level: media
   reasons: [nomes no destino são contrato visível ao financeiro, toca mime/coleta/configuração/nomeação/ciclo, leitura do corpo é heurística, sem mudança de esquema, reversível por git revert]
 
 delivery:
-  merged: null
-  deployed: null
+  merged: "main 91c1c39 (fix) + 93afccf (registro), push em 2026-09-22"
+  deployed: "VPS medicina-leal, /opt/email-nf-onedrive, commit 93afccf, 2026-09-22 (sem crontab ativo para email-nf)"
 
 post_fix_observation:
   window: "1 ciclo real completo depois do reparo CHG-007 (critério 5)"
@@ -107,7 +107,7 @@ post_fix_observation:
 closure:
   policy: production-service
   satisfied: false
-  missing: [delivery (commit, push, instalação na VPS), CHG-007 com aprovação, observação de 1 ciclo real sem AFLAPARTI]
+  missing: [observação de 1 ciclo real sem AFLAPARTI]
 resolution_kind: null
 ---
 
@@ -181,12 +181,14 @@ O nome segue a convenção da pasta oficial, `<EMPRESA> - <FORNECEDOR> [NF <n>] 
 | CHG-004 | code | `envio/nomeacao.py`: `_fornecedor`, `dominios_internos`, `FORNECEDOR_A_IDENTIFICAR` | [fix/CHG-004.diff](fix/CHG-004.diff) |
 | CHG-005 | code | `envio/envio.py`, `execucao/ciclo.py`: repasse de `internos` | [fix/CHG-005.diff](fix/CHG-005.diff) |
 | CHG-006 | specification | adendo `bug-BUG-20260922-VBJD-v001.md` | (arquivo novo) |
-| CHG-007 | data-repair | VPS: linhas `enviado` da pasta de teste voltam a `extraido` | [fix/CHG-007-reparo.py](fix/CHG-007-reparo.py), dry-run e backup verificado; **não aplicado** |
+| CHG-007 | data-repair | VPS: 84 linhas `enviado` da pasta de teste voltaram a `extraido` em 2026-09-22, depois de esvaziada a pasta (80 arquivos; a grade de 429 subpastas ficou) | [fix/CHG-007-reparo.py](fix/CHG-007-reparo.py), backup `var/registro.sqlite3.bak-20260922T171041Z` |
 
 **Testes (vermelho → verde):** diff em [fix/testes.diff](fix/testes.diff).
 
 - Vermelho (2026-09-22, antes da correção): `13 failed, 321 passed, 1 error` — `ImportError: FORNECEDOR_A_IDENTIFICAR`; `AttributeError` em `MensagemAnalisada.remetentes_encaminhados`, `AnexoParaEnvio.emitente_mensagem`, `Configuracao.dominios_internos`; ponta a ponta com `'ACME - EMPRESA - BOLETO.pdf' != 'ACME - FORNECEDOR - BOLETO.pdf'`.
 - Verde (2026-09-22, depois): `388 passed` na suíte inteira; `27 passed` nos testes de reprodução e regressão listados em `traceability`.
+
+**Simulação de verificação (VPS, 2026-09-22 17:12–17:32, `executar --simular`):** 269 nomes gerados, **0 com `AFLAPARTI`** (eram 41 de 80 antes) e 27 com `A IDENTIFICAR`. A execução parou nos 1200 s em plena caixa 3; ~155 pendentes não foram nomeados. Os 27 são encaminhamentos internos sem XML cujo remetente original não foi achado, entre eles a NF 29058 (`NEW LINE` na pasta oficial); hipótese a investigar: cabeçalho de encaminhamento só na parte `text/html`. Ver `handoff.md`.
 
 **Ponto de atenção registrado:** pela ordem aprovada, o remetente original precede o remetente de topo também quando este é externo (`test_encaminhamento_por_externo_usa_o_remetente_original`). Uma resposta de fornecedor que cite um terceiro externo no corpo passaria a levar o terceiro. Se isso aparecer na observação, a fonte 3 pode ser restrita a remetente de topo interno.
 

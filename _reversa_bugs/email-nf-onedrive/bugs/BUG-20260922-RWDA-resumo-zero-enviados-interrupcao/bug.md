@@ -3,8 +3,8 @@ schema_version: 1
 id: BUG-20260922-RWDA
 display_number: 2
 title: Resumo informa 0 enviados quando a execução é interrompida pelo limite de tempo
-status: open
-phase: triaging
+status: active
+phase: delivering
 severity: medium
 priority: P2
 created: 2026-09-22
@@ -24,7 +24,7 @@ security_suspected: false
 
 reproduction:
   classification: deterministic
-  rate: "1/1"
+  rate: "1/1 (produção); 5/5 (sintético)"
   suspected_triggers: [limite de 1200 s atingido durante enviar_anexos]
 
 blocking: []
@@ -37,17 +37,59 @@ traceability:
     - "_reversa_sdd/sdd/execucao-monitoramento.md#11. Edge Cases e Tratamento de Erros"
   affected_code:
     - src/email_nf_onedrive/execucao/ciclo.py
-  root_cause: null
-  reproduction_tests: []
-  regression_tests: []
+  root_cause:
+    state: confirmed
+    location: src/email_nf_onedrive/execucao/ciclo.py:165-168 (_Ciclo._executar)
+    summary: >
+      O ciclo transporta as contagens do envio para o resumo só depois que `enviar_anexos` retorna.
+      O Enviador conta certo a cada envio confirmado (envio/envio.py:147), mas a referência ao
+      ResultadoEnvio existe apenas dentro da chamada: a TempoEsgotado levantada pelo SIGALRM de
+      `limite_duracao` (execucao/trava.py:100) no meio do laço de Enviador.enviar sobe pelo
+      _executar e leva o acumulador consigo. O resumo sai com o valor inicial, zero. O mesmo vale
+      para falhas_de_anexo.
+    evidence:
+      - evidence/reproduction.md (5/5 determinístico, dados sintéticos)
+      - evidence/repro.py
+      - leitura de ciclo.py:165-168, envio.py:144-149, trava.py:94-106
+      - VPS medicina-leal, 2026-09-22T14:32:55Z: resumo com 0 enviados, 79 linhas `enviado:` no log
+  reproduction_tests:
+    - tests/integracao/test_ciclo_falhas.py::test_interrupcao_por_tempo_conta_os_envios_ja_confirmados
+  regression_tests:
+    - tests/integracao/test_ciclo_falhas.py::test_interrupcao_por_tempo_preserva_o_codigo_e_o_aviso
+    - tests/integracao/test_ciclo_falhas.py::test_falha_de_anexo_antes_da_interrupcao_entra_no_resumo
+    - tests/integracao/test_envio.py::test_resultado_de_quem_chama_e_preenchido_a_cada_envio
+    - tests/integracao/test_ciclo_arquivamento.py::test_simulacao_diz_no_resumo_quantos_anexos_avaliou
+    - "suíte existente (389 testes verdes antes da correção)"
 
-spec_verdict: null
+spec_verdict:
+  verdict: spec-gap
+  decided_by: iago
+  decided_at: 2026-09-22
+  addendum: _reversa_sdd/addenda/bug-BUG-20260922-RWDA-v001.md
 
-change_set: []
+change_set:
+  - {id: CHG-001, kind: code, artifact: src/email_nf_onedrive/envio/envio.py, diff: fix/CHG-001.diff, applied: 2026-09-22}
+  - {id: CHG-002, kind: code, artifact: src/email_nf_onedrive/execucao/ciclo.py, diff: fix/CHG-002.diff, applied: 2026-09-22}
+  - {id: CHG-003, kind: code, artifact: src/email_nf_onedrive/execucao/resumo.py, diff: fix/CHG-003.diff, applied: 2026-09-22}
+  - {id: CHG-004, kind: specification, artifact: _reversa_sdd/addenda/bug-BUG-20260922-RWDA-v001.md, applied: 2026-09-22}
+
+change_risk:
+  level: baixa
+  reasons: [só a linha de resumo e um parâmetro opcional, nenhum dado histórico tocado, nenhum contrato externo, sem concorrência, reversível por git revert]
+
+delivery:
+  merged: null
+  deployed: null
+
+post_fix_observation:
+  window: "1 ciclo real interrompido pelo limite na VPS (critério de aceite 4)"
+  started: null
+  result: null
 
 closure:
   policy: production-service
   satisfied: false
+  missing: [entrega na VPS, observação de 1 ciclo interrompido com resumo coerente]
 resolution_kind: null
 ---
 
@@ -98,9 +140,58 @@ Em `execucao/ciclo.py:165-167`, a contagem só é somada depois que `enviar_anex
 
 ## Resolution
 
-(preenchida pelo `/reversa-debugger-fix`)
+**Causa raiz (`confirmed`).** O ciclo só transportava as contagens do envio para o resumo depois que
+`enviar_anexos` retornava (`execucao/ciclo.py:165-168`). O `Enviador` sempre contou certo, a cada
+envio confirmado (`envio/envio.py:147`); o que se perdia era a referência ao `ResultadoEnvio`, que
+morria com o quadro de pilha quando a `TempoEsgotado` do SIGALRM subia do meio do laço de envio.
+
+**Veredito de spec: `spec-gap`**, aprovado por iago em 2026-09-22. A RF-11 já exigia as contagens,
+mas a spec nunca especificou o limite de duração de 20 min, que existe no código desde o MVP, nem
+disse que a execução interrompida também grava resumo. Adendo aditivo em
+`_reversa_sdd/addenda/bug-BUG-20260922-RWDA-v001.md`, com três deltas: RF-14 (limite e
+interrupção), releitura da RF-11 (contagens do que aconteceu até o encerramento, mais a contagem de
+simulados) e o caso EC-RWDA-1.
+
+**`resolution_kind`: `fixed`** (pendente da closure policy).
+
+### Change set
+
+| CHG | tipo | artefato | o que mudou |
+|-----|------|----------|-------------|
+| CHG-001 | code | `envio/envio.py` | `Enviador` e `enviar_anexos` aceitam `resultado: ResultadoEnvio \| None`; sem o parâmetro, o comportamento é o de antes. |
+| CHG-002 | code | `execucao/ciclo.py` | O ciclo cria o acumulador, chama o envio em `try` e contabiliza em `finally`, por `_contabilizar_envio`. |
+| CHG-003 | code | `execucao/resumo.py` | Campo `simulados` e o segmento `N simulados` na linha, só quando houver. |
+| CHG-004 | specification | `_reversa_sdd/addenda/bug-BUG-20260922-RWDA-v001.md` | Adendo do veredito `spec-gap`. |
+
+Diffs em `fix/CHG-001.diff`, `fix/CHG-002.diff` e `fix/CHG-003.diff`; os testes em `fix/testes.diff`.
+
+### Prova vermelho → verde
+
+Gate 1, com os testes aplicados e a correção ainda ausente:
+
+```
+FAILED test_ciclo_falhas.py::test_interrupcao_por_tempo_conta_os_envios_ja_confirmados
+        assert '2 enviados' in '... resumo: 1 caixa, 4 extraídos, 0 enviados, 1 falhas, 0 s'
+FAILED test_ciclo_falhas.py::test_falha_de_anexo_antes_da_interrupcao_entra_no_resumo
+FAILED test_envio.py::test_resultado_de_quem_chama_e_preenchido_a_cada_envio
+        TypeError: enviar_anexos() got an unexpected keyword argument 'resultado'
+FAILED test_ciclo_arquivamento.py::test_simulacao_diz_no_resumo_quantos_anexos_avaliou
+4 failed, 389 passed
+```
+
+Gate 2, com o change set aplicado: `393 passed`. A cápsula de reprodução, que exigia `0 enviados`,
+passou a falhar nesse assert, e o resumo do mesmo cenário virou
+`1 caixa, 4 extraídos, 2 enviados, 1 falhas, 0 s`.
+
+O teste `test_interrupcao_por_tempo_preserva_o_codigo_e_o_aviso` passou desde o gate 1, como se
+esperava de regressão pura: ele guarda o código de saída 2 e o aviso `execucao:tempo`, que a
+correção não podia mudar.
 
 ## Agent Notes
 
+- **Fora do escopo, a registrar como bug novo:** a mesma perda de contagem na **coleta**. `coletar`
+  devolve a lista das caixas só no fim (`coleta/coleta.py:234`); interrompida durante a coleta, a
+  execução perderia caixas, extraídos e retidos do mesmo modo. Não houve ocorrência real — as duas
+  interrupções da VPS caíram no envio — e cobrir isso exigiria transformar `coletar` em gerador.
 - Não afeta dados: o registro grava cada envio confirmado, e o ciclo seguinte continua de onde parou.
 - Os avisos do Telegram estão desativados na VPS; quando forem ativados, o mesmo número incorreto iria ao aviso da causa `execucao:tempo`.
