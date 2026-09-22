@@ -1,0 +1,27 @@
+--- a/src/email_nf_onedrive/configuracao/modelo.py
++++ b/src/email_nf_onedrive/configuracao/modelo.py
+@@ -59,6 +59,7 @@
+     alertas: tuple[str, ...] = ()
+     cliente_oauth: ClienteOAuth | None = None
+     dir_autorizacoes: Path = Path(DIR_AUTORIZACOES_PADRAO)
++    dominios_internos: frozenset[str] = frozenset()  # das caixas; remetente nesses domínios não é fornecedor
+ 
+     @property
+     def telegram_ativo(self) -> bool:
+--- a/src/email_nf_onedrive/configuracao/carregar.py
++++ b/src/email_nf_onedrive/configuracao/carregar.py
+@@ -20,7 +20,7 @@
+ from email_nf_onedrive.configuracao.modelo import (
+     DIR_AUTORIZACOES_PADRAO, MODO_OAUTH, MODO_SENHA, Caixa, CaixaInvalida, ClienteOAuth, Configuracao, ErroConfiguracao,
+ )
+-from email_nf_onedrive.envio.nomeacao import rotulo_do_endereco
++from email_nf_onedrive.envio.nomeacao import dominios_internos, rotulo_do_endereco
+ 
+ PASTA_PADRAO = "INBOX"
+ IMAP_HOST_PADRAO = "imap.gmail.com"
+@@ -177,4 +177,5 @@
+         alertas=tuple(alertas),
+         cliente_oauth=cliente_oauth,
+         dir_autorizacoes=dir_autorizacoes,
++        dominios_internos=dominios_internos(c.endereco for c in caixas),
+     )

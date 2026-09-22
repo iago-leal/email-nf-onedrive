@@ -1,0 +1,297 @@
+--- a/tests/unidade/test_nomeacao.py
++++ b/tests/unidade/test_nomeacao.py
+@@ -7,10 +7,12 @@
+ import pytest
+ 
+ from email_nf_onedrive.envio.nomeacao import (
+-    LIMITE_NOME, DadosNome, caminho_destino, com_sufixo, dados_nfe, nome_destino, rotulo_do_endereco, sanear,
++    FORNECEDOR_A_IDENTIFICAR, LIMITE_NOME, DadosNome, caminho_destino, com_sufixo, dados_nfe, nome_destino,
++    rotulo_do_endereco, sanear,
+ )
+ 
+ DADOS = Path(__file__).resolve().parents[1] / "dados"
++INTERNOS = frozenset({"empresa.example"})
+ 
+ 
+ def _dados(**campos) -> DadosNome:
+@@ -172,3 +174,74 @@
+     com = com_sufixo(nome, 12)
+     assert len(com) == 200
+     assert com.endswith("_12.pdf")
++
++
++# --- Fornecedor em encaminhamento interno (BUG-20260922-VBJD) ---------------------------------
++
++
++def test_remetente_interno_sem_outra_fonte_fica_a_identificar():
++    dados = _dados(remetente="colega@empresa.example", internos=INTERNOS)
++    assert FORNECEDOR_A_IDENTIFICAR == "A IDENTIFICAR"
++    assert nome_destino(dados) == "ACME - A IDENTIFICAR - BOLETO.pdf"
++
++
++def test_dominio_interno_comparado_sem_diferenca_de_caixa():
++    dados = _dados(remetente="Colega@EMPRESA.example", internos=INTERNOS)
++    assert nome_destino(dados) == "ACME - A IDENTIFICAR - BOLETO.pdf"
++
++
++def test_pdf_herda_o_emitente_do_xml_da_mesma_mensagem():
++    dados = _dados(remetente="colega@empresa.example", nome_original="danfe.pdf", assunto="Fwd: Nota fiscal",
++                   emitente_mensagem="Fornecedor Fictício Ltda", internos=INTERNOS)
++    assert nome_destino(dados) == "ACME - FORNECEDOR FICTICIO LTDA - REF.pdf"
++
++
++def test_pdf_de_remetente_externo_tambem_herda_o_emitente_do_xml():
++    dados = _dados(nome_original="danfe.pdf", assunto="Nota", emitente_mensagem="New Line Ltda")
++    assert nome_destino(dados) == "ACME - NEW LINE LTDA - REF.pdf"
++
++
++def test_emitente_do_proprio_xml_vence_o_da_mensagem():
++    conteudo = (DADOS / "nfe_proc.xml").read_bytes()
++    dados = _dados(nome_original="nfe.xml", classe="nfe-xml", conteudo=conteudo, emitente_mensagem="Outro Ltda")
++    assert nome_destino(dados) == "ACME - FORNECEDOR FICTICIO LTDA - REF.xml"
++
++
++def test_encaminhamento_interno_usa_o_remetente_original():
++    dados = _dados(remetente="colega@empresa.example", remetentes_encaminhados=("cobranca@fornecedor.com.br",),
++                   internos=INTERNOS)
++    assert nome_destino(dados) == "ACME - FORNECEDOR - BOLETO.pdf"
++
++
++def test_emitente_da_mensagem_vence_o_remetente_original():
++    dados = _dados(remetente="colega@empresa.example", remetentes_encaminhados=("cobranca@fornecedor.com.br",),
++                   emitente_mensagem="Emitente Ltda", internos=INTERNOS)
++    assert nome_destino(dados) == "ACME - EMITENTE LTDA - BOLETO.pdf"
++
++
++@pytest.mark.parametrize(
++    ("encaminhados", "fornecedor"),
++    [
++        (("outro@empresa.example",), "A IDENTIFICAR"),
++        (("nf@fornecedor.com.br", "outro@empresa.example"), "FORNECEDOR"),
++        (("outro@empresa.example", "nf@fornecedor.com.br"), "FORNECEDOR"),
++    ],
++)
++def test_remetente_original_interno_e_pulado(encaminhados, fornecedor):
++    dados = _dados(remetente="colega@empresa.example", remetentes_encaminhados=encaminhados, internos=INTERNOS)
++    assert nome_destino(dados) == f"ACME - {fornecedor} - BOLETO.pdf"
++
++
++def test_encaminhamento_por_externo_usa_o_remetente_original():
++    dados = _dados(remetente="contador@escritorio.example", remetentes_encaminhados=("nf@fornecedor.com.br",))
++    assert nome_destino(dados) == "ACME - FORNECEDOR - BOLETO.pdf"
++
++
++@pytest.mark.parametrize("internos", [frozenset(), INTERNOS])
++def test_remetente_externo_sem_outra_fonte_nao_muda(internos):
++    assert nome_destino(_dados(internos=internos)) == "ACME - FORNECEDOR - BOLETO.pdf"
++
++
++def test_remetente_de_provedor_generico_nao_e_interno():
++    dados = _dados(remetente="fulano@gmail.com", internos=INTERNOS)
++    assert nome_destino(dados) == "ACME - FULANO - BOLETO.pdf"
+--- a/tests/unidade/test_mime.py
++++ b/tests/unidade/test_mime.py
+@@ -4,7 +4,10 @@
+ 
+ import hashlib
+ from datetime import datetime, timezone
++from email.message import EmailMessage
+ 
++import pytest
++
+ from email_nf_onedrive.coleta.mime import analisar_mensagem
+ 
+ 
+@@ -85,3 +88,53 @@
+     msg = analisar_mensagem(bruto)
+     assert msg.data is None
+     assert msg.anexos == ()
++
++
++# --- Remetente original de encaminhamentos (BUG-20260922-VBJD) --------------------------------
++
++
++def _com_corpo(corpo: str) -> bytes:
++    mensagem = EmailMessage()
++    mensagem["From"] = "Colega <colega@empresa.example>"
++    mensagem["Subject"] = "Fwd: Boleto"
++    mensagem["Message-ID"] = "<corpo@empresa.example>"
++    mensagem.set_content(corpo)
++    mensagem.add_attachment(b"%PDF-1.4\n", maintype="application", subtype="pdf", filename="boleto.pdf")
++    return mensagem.as_bytes()
++
++
++def test_encaminhada_como_anexo_expoe_o_remetente_original(dados):
++    msg = _analisar(dados, "encaminhada.eml")
++    assert msg.remetente == "colega@empresa.example"
++    assert msg.remetentes_encaminhados == ("cobranca@fornecedor.example",)
++
++
++def test_encaminhada_em_linha_expoe_o_remetente_original(dados):
++    msg = _analisar(dados, "encaminhada_em_linha.eml")
++    assert msg.remetente == "colega@empresa.example"
++    assert [a.nome for a in msg.anexos] == ["boleto_setembro.pdf"]
++    assert msg.remetentes_encaminhados == ("cobranca@fornecedor.example",)
++
++
++def test_mensagem_direta_nao_tem_remetente_encaminhado(dados):
++    assert _analisar(dados, "boleto_simples.eml").remetentes_encaminhados == ()
++
++
++@pytest.mark.parametrize(
++    ("corpo", "esperado"),
++    [
++        ("---------- Forwarded message ---------\nFrom: Cobranca <cobranca@fornecedor.example>\nDate: Thu\n",
++         ("cobranca@fornecedor.example",)),
++        ("-----Mensagem original-----\nDe: Cobranca [mailto:Cobranca@Fornecedor.example]\nEnviada em: quinta\n",
++         ("cobranca@fornecedor.example",)),
++        ("Veja abaixo.\n\n> De: nf@fornecedor.example\n> Assunto: NF\n", ("nf@fornecedor.example",)),
++        ("*From:* Cobranca <cobranca@fornecedor.example>\n", ("cobranca@fornecedor.example",)),
++        ("---------- Forwarded message ---------\nFrom: Colega B <b@empresa.example>\n\n"
++         "---------- Forwarded message ---------\nFrom: <nf@fornecedor.example>\n",
++         ("nf@fornecedor.example", "b@empresa.example")),
++        ("Período de cobrança\nDe: 01/09 a 30/09\n", ()),
++        ("Segue o boleto, de acordo com a nota.\n", ()),
++    ],
++)
++def test_remetentes_citados_no_corpo(corpo, esperado):
++    assert analisar_mensagem(_com_corpo(corpo)).remetentes_encaminhados == esperado
+--- a/tests/unidade/test_configuracao.py
++++ b/tests/unidade/test_configuracao.py
+@@ -91,6 +91,16 @@
+     caixa1, caixa2 = carregar_configuracao(home).caixas
+     assert caixa1.empresa == "ACME"
+     assert caixa2.empresa == "MINERADORA B"
++
++
++def test_dominios_internos_sao_os_das_caixas_sem_os_genericos(home, escrever_env):
++    escrever_env(_env(
++        EMAIL1="financeiro@Empresa.example", SENHA_EMAIL1="s1",
++        EMAIL2="adm@outra.example", SENHA_EMAIL2="s2",
++        EMAIL3="fiscal@outra.example", SENHA_EMAIL3="s3",
++        EMAIL4="caixa@gmail.com", SENHA_EMAIL4="s4",
++    ))
++    assert carregar_configuracao(home).dominios_internos == frozenset({"empresa.example", "outra.example"})
+ 
+ 
+ def test_senha_ausente_invalida_so_a_caixa(home, escrever_env):
+--- a/tests/integracao/test_coleta.py
++++ b/tests/integracao/test_coleta.py
+@@ -113,6 +113,24 @@
+     assert len(registro.pendentes("financeiro@empresa.example")) == 1
+ 
+ 
++def test_coleta_entrega_ao_envio_as_fontes_do_fornecedor(servidor, dados, ambiente):
++    """BUG-20260922-VBJD: emitente do XML irmão e remetente original, também no reenvio de pendente."""
++    _entregar(servidor, dados, "interna_nfe_e_danfe.eml", "encaminhada_em_linha.eml", "encaminhada.eml")
++    for _ in range(2):  # a 2ª rodada reentrega os pendentes, que ainda não foram enviados
++        (resultado,), registro = ambiente()
++        por_nome = {item.nome_original: item for item in resultado.para_envio}
++        assert sorted(por_nome) == ["boleto_encaminhado.pdf", "boleto_setembro.pdf", "danfe.pdf", "nfe.xml"]
++        assert por_nome["danfe.pdf"].emitente_mensagem == "FORNECEDOR FICTICIO LTDA"
++        assert por_nome["nfe.xml"].emitente_mensagem == "FORNECEDOR FICTICIO LTDA"
++        assert por_nome["boleto_setembro.pdf"].remetentes_encaminhados == ("cobranca@fornecedor.example",)
++        assert por_nome["boleto_setembro.pdf"].emitente_mensagem == ""
++        assert por_nome["boleto_encaminhado.pdf"].remetentes_encaminhados == ("cobranca@fornecedor.example",)
++        assert {item.remetente for item in resultado.para_envio} == {"colega@empresa.example"}
++        registrados = registro.pendentes("financeiro@empresa.example")
++        assert {a.remetente for a in registrados} == {"colega@empresa.example"}  # o registro guarda o From de topo
++        registro.fechar()
++
++
+ def test_sem_anexo_e_compactado_registrados_uma_vez(servidor, dados, ambiente, caplog):
+     _entregar(servidor, dados, "nfse_link.eml", "compactado.eml")
+     with caplog.at_level(logging.INFO, logger="teste-coleta"):
+--- a/tests/integracao/test_ciclo_arquivamento.py
++++ b/tests/integracao/test_ciclo_arquivamento.py
+@@ -32,6 +32,16 @@
+     assert "(desde a execução anterior: 30 min)" in cenario.log()
+ 
+ 
++def test_encaminhamento_interno_leva_o_fornecedor_real(cenario):
++    """BUG-20260922-VBJD: remetente da caixa (empresa.example) nunca vira fornecedor."""
++    cenario.entregar("encaminhada.eml", "encaminhada_em_linha.eml", "interna_nfe_e_danfe.eml")
++    assert cenario.executar("executar") == 0
++    assert cenario.arquivos_no_destino() == [
++        BOLETO, "ACME - FORNECEDOR - BOLETO_2.pdf", "ACME - FORNECEDOR FICTICIO LTDA - REF.pdf", NFE,
++    ]
++    assert not any(" - EMPRESA " in nome for nome in cenario.arquivos_no_destino())
++
++
+ def test_nome_repetido_recebe_sufixo_e_preserva_o_original(cenario):
+     (cenario.destino / BOLETO).write_bytes(b"%PDF arquivo da equipe")
+     cenario.entregar("boleto_simples.eml")
+--- /dev/null
++++ b/tests/dados/encaminhada_em_linha.eml
+@@ -0,0 +1,31 @@
++From: Colega <colega@empresa.example>
++To: financeiro@empresa.example
++Subject: Fwd: Boleto setembro
++Date: Fri, 18 Sep 2026 12:00:00 -0300
++Message-ID: <em-linha@empresa.example>
++MIME-Version: 1.0
++Content-Type: multipart/mixed; boundary="===============0000000000000000001=="
++
++--===============0000000000000000001==
++Content-Type: text/plain; charset="utf-8"
++Content-Transfer-Encoding: 8bit
++
++Segue para pagamento.
++
++---------- Mensagem encaminhada ---------
++De: Cobrança <cobranca@fornecedor.example>
++Date: qui., 17 de set. de 2026 às 09:12
++Subject: Boleto setembro
++To: <colega@empresa.example>
++
++Segue o boleto.
++
++--===============0000000000000000001==
++Content-Type: application/pdf
++Content-Transfer-Encoding: base64
++Content-Disposition: attachment; filename="boleto_setembro.pdf"
++MIME-Version: 1.0
++
++JVBERi0xLjQKJSBib2xldG8gZW0gbGluaGEKJSVFT0YK
++
++--===============0000000000000000001==--
+--- /dev/null
++++ b/tests/dados/interna_nfe_e_danfe.eml
+@@ -0,0 +1,37 @@
++From: Colega <colega@empresa.example>
++To: financeiro@empresa.example
++Subject: Fwd: Nota fiscal
++Date: Fri, 18 Sep 2026 12:00:00 -0300
++Message-ID: <interna-nfe@empresa.example>
++MIME-Version: 1.0
++Content-Type: multipart/mixed; boundary="===============0000000000000000002=="
++
++--===============0000000000000000002==
++Content-Type: text/plain; charset="utf-8"
++Content-Transfer-Encoding: 7bit
++
++Segue a nota e o DANFE.
++
++--===============0000000000000000002==
++Content-Type: application/xml
++Content-Transfer-Encoding: base64
++Content-Disposition: attachment; filename="nfe.xml"
++MIME-Version: 1.0
++
++PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPG5mZVByb2MgeG1sbnM9Imh0
++dHA6Ly93d3cucG9ydGFsZmlzY2FsLmluZi5ici9uZmUiIHZlcnNhbz0iNC4wMCI+CiAgPE5GZT48
++aW5mTkZlIElkPSJORmUwMDAwMDAwMDAwMDAwMDAwMDAwMDU1MDAxMDAwMDAwMDAxMTAwMDAwMDAx
++MCIgdmVyc2FvPSI0LjAwIj4KICAgIDxlbWl0PjxDTlBKPjAwMDAwMDAwMDAwMTkxPC9DTlBKPjx4
++Tm9tZT5GT1JORUNFRE9SIEZJQ1RJQ0lPIExUREE8L3hOb21lPjwvZW1pdD4KICA8L2luZk5GZT48
++L05GZT4KICA8cHJvdE5GZSB2ZXJzYW89IjQuMDAiPjxpbmZQcm90PjxjU3RhdD4xMDA8L2NTdGF0
++PjwvaW5mUHJvdD48L3Byb3RORmU+CjwvbmZlUHJvYz4K
++
++--===============0000000000000000002==
++Content-Type: application/pdf
++Content-Transfer-Encoding: base64
++Content-Disposition: attachment; filename="danfe.pdf"
++MIME-Version: 1.0
++
++JVBERi0xLjQKJSBkYW5mZSBkYSBub3RhCiUlRU9GCg==
++
++--===============0000000000000000002==--

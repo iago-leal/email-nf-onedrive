@@ -1,0 +1,76 @@
+--- a/src/email_nf_onedrive/envio/nomeacao.py
++++ b/src/email_nf_onedrive/envio/nomeacao.py
+@@ -6,7 +6,10 @@
+     <EMPRESA> - <FORNECEDOR>[ NF <n>] - <TIPO>.<ext>
+ 
+ - EMPRESA vem de `EMPRESA_EMAIL<n>` no .env; sem ele, do domínio da caixa.
+-- FORNECEDOR vem do emitente da NF-e (XML) ou do domínio do remetente.
++- FORNECEDOR vem, nesta ordem, do emitente do XML de NF-e do anexo ou de outro anexo da
++  mesma mensagem, do remetente original de um encaminhamento e do domínio do remetente; os
++  dois últimos só valem fora dos domínios das caixas, que são da própria empresa. Sem fonte,
++  `A IDENTIFICAR` (BUG-20260922-VBJD).
+ - NF <n> vem do XML ou do primeiro número de nota no nome do anexo ou no assunto.
+ - TIPO é `BOLETO` quando o nome ou o assunto falam em boleto, e `REF` (a nota) nos demais.
+ 
+@@ -28,6 +31,7 @@
+ LIMITE_NOME = 200
+ TIPO_NOTA = "REF"
+ TIPO_BOLETO = "BOLETO"
++FORNECEDOR_A_IDENTIFICAR = "A IDENTIFICAR"
+ 
+ # Provedores genéricos não identificam fornecedor; nesses casos vale a parte local do endereço.
+ DOMINIOS_GENERICOS = frozenset({
+@@ -56,6 +60,9 @@
+     assunto: str = ""
+     classe: str = ""
+     conteudo: bytes | None = None
++    emitente_mensagem: str = ""
++    remetentes_encaminhados: tuple[str, ...] = ()  # do original ao mais recente
++    internos: frozenset[str] = frozenset()
+ 
+ 
+ def _sem_acentos(texto: str) -> str:
+@@ -104,6 +111,16 @@
+     return _rotulo(escolhido) or "REMETENTE"
+ 
+ 
++def _dominio(endereco: str) -> str:
++    return endereco.strip().lower().rpartition("@")[2] if "@" in endereco else ""
++
++
++def dominios_internos(enderecos) -> frozenset[str]:
++    """Domínios das caixas, menos os provedores genéricos: uma caixa `@gmail.com` não torna interno todo Gmail."""
++    dominios = {_dominio(e) for e in enderecos}
++    return frozenset(d for d in dominios if d and d.split(".", 1)[0] not in DOMINIOS_GENERICOS)
++
++
+ def dados_nfe(conteudo: bytes) -> tuple[str, str]:
+     """(nome do emitente, número da nota) de um XML de NF-e; vazios se não estiverem lá."""
+     emitente = numero = ""
+@@ -136,14 +153,23 @@
+     return TIPO_NOTA
+ 
+ 
++def _fornecedor(dados: DadosNome, emitente_do_anexo: str) -> str:
++    for emitente in (emitente_do_anexo, dados.emitente_mensagem):
++        if _rotulo(emitente):
++            return _rotulo(emitente)
++    for endereco in (*dados.remetentes_encaminhados, dados.remetente):
++        if _dominio(endereco) not in dados.internos:
++            return rotulo_do_endereco(endereco)
++    return FORNECEDOR_A_IDENTIFICAR
++
++
+ def nome_destino(dados: DadosNome) -> str:
+     """`<EMPRESA> - <FORNECEDOR>[ NF <n>] - <TIPO>.<ext>`, com a extensão original em minúsculas."""
+     empresa = _rotulo(dados.empresa) or rotulo_do_endereco(dados.remetente)
+-    fornecedor, numero = "", ""
++    emitente, numero = "", ""
+     if dados.classe == NFE_XML and dados.conteudo is not None:
+         emitente, numero = dados_nfe(dados.conteudo)
+-        fornecedor = _rotulo(emitente)
+-    fornecedor = fornecedor or rotulo_do_endereco(dados.remetente)
++    fornecedor = _fornecedor(dados, emitente)
+     numero = numero.lstrip("0") or _numero_nf(dados.nome_original, dados.assunto)
+     nota = f" NF {numero}" if numero else ""
+     _base, ext = _separar_extensao(dados.nome_original.strip())

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plano de correção · BUG-20260922-VBJD</title>
+<style>
+:root{color-scheme:dark}
+body{background:#111317;color:#e6e6e6;font:14px/1.55 system-ui,sans-serif;margin:0;padding:24px 16px}
+main{max-width:1100px;margin:0 auto}h1{font-size:22px;margin:0 0 4px}h2{font-size:16px;margin:28px 0 8px;color:#c9d1ff}
+.meta{color:#9aa0a6;font-size:12px;margin-bottom:16px}
+.cards{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px}.card{background:#1c1f26;border-radius:10px;padding:10px 14px;min-width:120px}.card b{display:block;font-size:18px}
+.box{background:#1c1f26;border-radius:10px;padding:12px 16px;margin:8px 0}
+.grafo{overflow-x:auto;background:#15171c;border-radius:10px;padding:8px}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:6px 8px;border-bottom:1px solid #2a2e37;vertical-align:top}
+th{color:#9aa0a6;font-weight:600}a{color:#8ab4f8}code{background:#23262e;padding:1px 5px;border-radius:4px;font-size:12px}
+.tag{display:inline-block;padding:1px 8px;border-radius:999px;font-size:11px;background:#2a2e37}
+.ok{color:#46a758}.warn{color:#f5a524}.bad{color:#e5484d}
+ol,ul{margin:4px 0 4px 20px;padding:0}li{margin:2px 0}
+</style></head>
+<body><main>
+<h1>Plano de correção · #1 · BUG-20260922-VBJD</h1>
+<div class="meta">contexto <code>email-nf-onedrive</code> · 2026-09-22 · gerado por /reversa-debugger-fix antes de qualquer alteração no projeto</div>
+<div class="cards">
+ <div class="card"><b class="bad">high</b>severidade</div>
+ <div class="card"><b>P1</b>prioridade</div>
+ <div class="card"><b class="warn">média</b>risco da mudança</div>
+ <div class="card"><b class="ok">confirmed</b>causa raiz</div>
+ <div class="card"><b>production-service</b>closure policy</div>
+</div>
+
+<h2>1. Defeito</h2>
+<div class="box">Documento encaminhado por alguém da própria empresa recebe como fornecedor o domínio desse remetente: <code>AFLA - AFLAPARTI - BOLETO.pdf</code>. Na primeira execução real, 41 dos 80 arquivos saíram assim, com colisões <code>_2</code> a <code>_10</code>. Em 7 dos 41, a mensagem trazia o XML da NF-e, cujo emitente não foi aproveitado pelo PDF irmão.</div>
+
+<h2>2. Causa raiz <span class="tag ok">confirmed</span></h2>
+<div class="box">
+O fornecedor sai de uma única fonte por anexo, <code>envio/nomeacao.py:146</code>: o emitente do próprio XML ou, na falta dele, o domínio do <code>From</code> de topo. Três lacunas se combinam:
+<ol>
+ <li>não existe a noção de domínio interno, então o domínio da empresa vira fornecedor;</li>
+ <li>cada anexo é nomeado isolado (<code>coleta/coleta.py:158</code>), e o PDF não herda o emitente do XML da mesma mensagem;</li>
+ <li><code>coleta/mime.py:77</code> guarda só o <code>From</code> de topo e descarta o remetente original do encaminhamento.</li>
+</ol>
+<b>Evidências:</b> reprodução determinística 5/5 com dados sintéticos (<a href="../evidence/reproduction.md">evidence/reproduction.md</a>); na VPS, 178 anexos com remetente do domínio da própria caixa, 109 deles com assunto <code>Fwd:</code> (encaminhamento em linha do Gmail, remetente original no corpo). O domínio <code>&lt;dominio-MINERION&gt;</code> foi verificado e é de fornecedor, e não do grupo; fica fora deste bug.
+</div>
+
+<h2>3. Estratégia escolhida: correção direta</h2>
+<div class="box">
+Escolhida pelo usuário, sem debate, porque não há hipóteses concorrentes. O fornecedor passa a seguir uma <b>ordem de fontes</b>, e a primeira que responder vence:
+<ol>
+ <li>emitente do XML de NF-e do próprio anexo (como hoje);</li>
+ <li>emitente do XML de NF-e de <b>outro anexo da mesma mensagem</b>;</li>
+ <li>remetente original do encaminhamento: <code>From</code> da mensagem embutida (<code>message/rfc822</code>) ou linha <code>De:</code>/<code>From:</code> com endereço no corpo de texto (Gmail PT/EN, Outlook), da mais antiga para a mais recente, <b>se não for interno</b>;</li>
+ <li>domínio do remetente de topo, <b>se não for interno</b> (como hoje para externos);</li>
+ <li><code>A IDENTIFICAR</code> (decisão do usuário).</li>
+</ol>
+<b>Domínios internos</b> são os domínios de todos os <code>EMAIL&lt;n&gt;</code> configurados, excluídos os provedores genéricos (<code>DOMINIOS_GENERICOS</code>): a caixa 5 é <code>@gmail.com</code> e não pode tornar interno todo remetente Gmail. Sem variável nova no <code>.env</code>: os domínios do grupo já são os das caixas (os três domínios das cinco caixas, fora o Gmail).<br>
+O campo <code>remetente</code> do registro continua sendo o <code>From</code> de topo (auditoria e logs inalterados).
+</div>
+
+<h2>4. Correction Change Set proposto</h2>
+<table>
+<tr><th>CHG</th><th>tipo</th><th>artefato</th><th>propósito</th></tr>
+<tr><td>CHG-001</td><td>code</td><td><code>src/email_nf_onedrive/coleta/mime.py</code></td><td>Novo campo <code>MensagemAnalisada.remetentes_encaminhados</code> (tupla, do original ao mais recente): <code>From</code> das partes <code>message/rfc822</code> e endereços em linhas <code>De:</code>/<code>From:</code> do corpo <code>text/plain</code>.</td></tr>
+<tr><td>CHG-002</td><td>code</td><td><code>src/email_nf_onedrive/coleta/coleta.py</code></td><td><code>AnexoParaEnvio</code> ganha <code>remetentes_encaminhados</code> e <code>emitente_mensagem</code> (emitente do primeiro XML de NF-e da mensagem), preenchidos nos dois caminhos (anexo novo e reenvio de pendente).</td></tr>
+<tr><td>CHG-003</td><td>code</td><td><code>src/email_nf_onedrive/configuracao/modelo.py</code></td><td>Propriedade <code>Configuracao.dominios_internos</code>: domínios das caixas, sem os genéricos.</td></tr>
+<tr><td>CHG-004</td><td>code</td><td><code>src/email_nf_onedrive/envio/nomeacao.py</code></td><td><code>DadosNome</code> recebe <code>emitente_mensagem</code>, <code>remetentes_encaminhados</code>, <code>internos</code>; <code>nome_destino</code> aplica a ordem de fontes; constante <code>FORNECEDOR_A_IDENTIFICAR</code>.</td></tr>
+<tr><td>CHG-005</td><td>code</td><td><code>src/email_nf_onedrive/envio/envio.py</code>, <code>execucao/ciclo.py</code></td><td><code>enviar_anexos(..., internos=)</code> repassa os domínios; o ciclo passa <code>config.dominios_internos</code>.</td></tr>
+<tr><td>CHG-006</td><td>specification</td><td><code>_reversa_sdd/addenda/bug-BUG-20260922-VBJD-v001.md</code></td><td>Adendo: registra na spec efetiva a convenção L-03 (a RF-01 ainda descreve a provisória) e a ordem de fontes do fornecedor, inclusive o encaminhamento interno. Sujeito ao veredito da etapa 7.</td></tr>
+<tr><td>CHG-007</td><td>data-repair</td><td>VPS: <code>var/registro.sqlite3</code>, pasta <code>CONTAS A PAGAR - TESTE</code></td><td>Depois da entrega: cron pausado, você esvazia a pasta de teste, backup verificado do sqlite, <b>dry-run</b> listando as linhas <code>enviado</code> daquele destino, e só então <code>estado='extraido'</code>, <code>caminho_destino=NULL</code>, <code>tentativas_envio=0</code>. O próximo ciclo recoleta e reenvia com os nomes certos. Rollback: restaurar o backup. Script em <code>fix/CHG-007-reparo.py</code>, rodado só com o seu OK.</td></tr>
+</table>
+
+<h2>5. Testes planejados</h2>
+<table>
+<tr><th>teste</th><th>intenção</th><th>arquivo</th><th>prova</th></tr>
+<tr><td>R1</td><td>reprodução</td><td><code>tests/unidade/test_nomeacao.py</code></td><td>Remetente interno sem outra fonte gera <code>ACME - A IDENTIFICAR - BOLETO.pdf</code>, e não <code>ACME - EMPRESA - …</code>.</td></tr>
+<tr><td>R2</td><td>reprodução</td><td><code>tests/unidade/test_nomeacao.py</code></td><td>PDF com <code>emitente_mensagem</code> recebe o emitente do XML irmão.</td></tr>
+<tr><td>R3</td><td>reprodução</td><td><code>tests/unidade/test_mime.py</code></td><td><code>encaminhada.eml</code> (rfc822) e encaminhamentos em linha (Gmail PT <code>De:</code>, Gmail EN <code>From:</code>) expõem o remetente original.</td></tr>
+<tr><td>R4</td><td>reprodução</td><td><code>tests/integracao/test_coleta.py</code></td><td>A coleta entrega ao envio o emitente do XML da mensagem e os remetentes encaminhados, e o registro mantém o <code>From</code> de topo.</td></tr>
+<tr><td>G1</td><td>regressão</td><td><code>tests/unidade/test_nomeacao.py</code></td><td>Remetente externo sem XML continua <code>ACME - FORNECEDOR - BOLETO.pdf</code>, com ou sem <code>internos</code>.</td></tr>
+<tr><td>G2</td><td>regressão</td><td><code>tests/unidade/test_configuracao.py</code></td><td><code>dominios_internos</code> exclui <code>gmail.com</code>; remetente <code>fulano@gmail.com</code> segue <code>FULANO</code>.</td></tr>
+<tr><td>G3</td><td>regressão</td><td><code>tests/unidade/test_nomeacao.py</code></td><td>Encaminhamento só entre internos (colega que encaminha colega) resulta em <code>A IDENTIFICAR</code>; externo encaminhado por interno vira o fornecedor externo.</td></tr>
+<tr><td>G4</td><td>regressão</td><td><code>tests/unidade/test_mime.py</code></td><td>Linha <code>De: 01/09 a 30/09</code> sem endereço não conta como remetente.</td></tr>
+<tr><td>G5</td><td>regressão</td><td>suíte inteira</td><td>Os testes existentes (nomeação, envio, ciclo) seguem verdes.</td></tr>
+</table>
+
+<h2>6. Riscos e fora do escopo</h2>
+<div class="box">
+<b>Risco da mudança: média.</b> Blast radius: nomes dos arquivos no destino, que são contrato visível para o financeiro; toca mime, coleta, configuração, nomeação e ciclo. Não há alteração de esquema do registro nem de dados, a correção é reversível por <code>git revert</code> e não há concorrência envolvida. A leitura do corpo é heurística: um falso positivo troca o fornecedor por um remetente citado, o que é mitigado por exigir endereço na linha e por pular os internos.<br>
+<b>Mudança deliberada:</b> remetente <b>externo</b> que manda XML e PDF juntos passa a ter no PDF o emitente do XML, em vez do domínio. É o comportamento da pasta oficial e o critério 2 do bug.<br>
+<b>Fora do escopo (Agent Notes):</b>
+<ul>
+ <li>fornecedor que envia por domínio de terceiro (<code>&lt;outro-emitente&gt;@&lt;dominio-MINERION&gt;</code>, com o emitente <code>&lt;outro emitente&gt;</code> no assunto): outro defeito, a registrar à parte;</li>
+ <li>número da NF do XML aproveitado pelo PDF irmão (só o emitente é compartilhado);</li>
+ <li>variável <code>DOMINIOS_INTERNOS</code>: dispensada, porque todos os domínios do grupo são de caixas;</li>
+ <li>gravação por vencimento (cartão 2 do kanban), também em <code>envio/</code>: sem conflito com esta mudança;</li>
+ <li>o reenvio da CHG-007 (84 arquivos mais os pendentes) pode esbarrar de novo no limite de 1200 s, que é o terreno do bug #2 (RWDA); o reenvio é idempotente e continua no ciclo seguinte.</li>
+</ul>
+</div>
+
+<h2>7. Mini-grafo do bug</h2>
+<div class="grafo"><svg width="1030" height="170" xmlns="http://www.w3.org/2000/svg" font-family="system-ui,sans-serif">
+<defs><marker id="s" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#6b7280"/></marker></defs>
+<a href="../../BUG-20260922-RWDA-resumo-zero-enviados-interrupcao/bug.md"><g><rect x="20" y="30" width="270" height="100" rx="10" fill="#1c1f26" stroke="#3a3f4b" stroke-width="1.5"/><text x="34" y="56" fill="#e6e6e6" font-size="14" font-weight="600">#2 · RWDA</text><text x="34" y="80" fill="#c9c9c9" font-size="12">Resumo com 0 enviados após</text><text x="34" y="96" fill="#c9c9c9" font-size="12">interrupção por tempo</text><text x="34" y="118" fill="#9aa0a6" font-size="11">medium · P2 · open</text></g></a>
+<a href="../bug.md"><g><rect x="380" y="20" width="290" height="120" rx="10" fill="#1c1f26" stroke="#e5484d" stroke-width="3"/><text x="396" y="48" fill="#e6e6e6" font-size="15" font-weight="700">#1 · VBJD</text><text x="396" y="72" fill="#c9c9c9" font-size="12">Fornecedor recebe o nome da</text><text x="396" y="88" fill="#c9c9c9" font-size="12">própria empresa em encaminhamento</text><text x="396" y="110" fill="#9aa0a6" font-size="11">high · P1 · envio-onedrive</text><text x="396" y="128" fill="#f5a524" font-size="11">active · diagnosing</text></g></a>
+<a href="../../BUG-20260922-2FVK-nf-sem-palavra-chave-retida/bug.md"><g><rect x="740" y="30" width="270" height="100" rx="10" fill="#1c1f26" stroke="#3a3f4b" stroke-width="1.5"/><text x="754" y="56" fill="#e6e6e6" font-size="14" font-weight="600">#3 · 2FVK</text><text x="754" y="80" fill="#c9c9c9" font-size="12">NF sem palavra-chave no nome</text><text x="754" y="96" fill="#c9c9c9" font-size="12">retida por engano</text><text x="754" y="118" fill="#9aa0a6" font-size="11">medium · P2 · open</text></g></a>
+<text x="515" y="162" fill="#9aa0a6" font-size="11" text-anchor="middle">sem relações registradas: os três bugs vêm do mesmo relato, com causas independentes</text>
+</svg></div>
+
+<h2>8. Matriz de relações</h2>
+<table>
+<tr><th>origem</th><th>tipo</th><th>destino</th><th>estado</th></tr>
+<tr><td><a href="../bug.md">#1 VBJD</a></td><td>nenhuma</td><td><a href="../../BUG-20260922-RWDA-resumo-zero-enviados-interrupcao/bug.md">#2 RWDA</a></td><td>não relacionada: a interação no reprocessamento é só operacional (ver riscos)</td></tr>
+<tr><td><a href="../bug.md">#1 VBJD</a></td><td>nenhuma</td><td><a href="../../BUG-20260922-2FVK-nf-sem-palavra-chave-retida/bug.md">#3 2FVK</a></td><td>não relacionada: classificação, não nomeação</td></tr>
+</table>
+
+<h2>9. Ordem</h2>
+<div class="box">Sessão de um bug só. Na sequência, sugiro o #2 (RWDA) antes do reenvio da CHG-007, para que o resumo do reprocessamento seja confiável.</div>
+</main></body></html>

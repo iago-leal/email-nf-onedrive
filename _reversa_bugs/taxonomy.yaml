@@ -1,0 +1,27 @@
+# Vocabulário controlado de area/module/feature do registro de bugs.
+# Sem extração de legado (architecture.md, domain.md): semeado a partir das specs greenfield
+# em _reversa_sdd/sdd/ e dos subpacotes de src/email_nf_onedrive/. Rode /reversa para ampliar.
+area:
+  - configuracao-caixas
+  - coleta-email
+  - envio-onedrive
+  - execucao-monitoramento
+  - autorizacao
+module:
+  - configuracao
+  - coleta
+  - envio
+  - execucao
+  - registro
+  - autorizacao
+  - cli
+feature:
+  - carregamento-env
+  - conexao-imap
+  - classificacao
+  - nomeacao
+  - envio-rclone
+  - resumo
+  - avisos
+  - trava-e-limite
+  - oauth
