@@ -10,7 +10,7 @@ import pytest
 
 from email_nf_onedrive.coleta.coleta import AnexoParaEnvio
 from email_nf_onedrive.configuracao.modelo import Caixa
-from email_nf_onedrive.envio.envio import TENTATIVAS_PARA_AVISO, enviar_anexos
+from email_nf_onedrive.envio.envio import TENTATIVAS_PARA_AVISO, ResultadoEnvio, enviar_anexos
 from email_nf_onedrive.envio.rclone import Rclone
 from email_nf_onedrive.envio import teste_onedrive
 from email_nf_onedrive.registro.banco import Registro
@@ -132,6 +132,15 @@ def test_simulacao_nao_envia_nem_altera_registro(registro, destino, novo_item):
     assert list(destino.iterdir()) == []
     assert _estado(registro, item).estado == "extraido"
     assert resultado.simulados == 1
+
+
+def test_resultado_de_quem_chama_e_preenchido_a_cada_envio(registro, destino, novo_item):
+    """BUG-20260922-RWDA: o chamador mantém a referência ao acumulador, e não só o retorno."""
+    meu = ResultadoEnvio()
+    devolvido = enviar_anexos([novo_item(b"%PDF A"), novo_item(b"%PDF B")], registro, Rclone(":local"), LOG,
+                              resultado=meu)
+    assert devolvido is meu
+    assert meu.enviados == 2
 
 
 def test_testar_onedrive(destino):

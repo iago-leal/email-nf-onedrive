@@ -95,6 +95,13 @@ def test_simulacao_nao_envia_nao_registra_nem_avisa(cenario):
     assert cenario.transporte.enviadas == []
 
 
+def test_simulacao_diz_no_resumo_quantos_anexos_avaliou(cenario):
+    """BUG-20260922-RWDA, CHG-003: a simulação encerrava sem dizer quanto tinha nomeado."""
+    cenario.entregar("boleto_simples.eml", "nfe_xml.eml")
+    assert cenario.executar("executar", "--simular") == 0
+    assert "resumo: 1 caixa, 2 extraídos, 0 enviados, 2 simulados, 0 falhas" in cenario.log()
+
+
 def test_simulacao_com_registro_existente_nao_o_altera(cenario):
     cenario.entregar("proposta_contrato.eml")
     assert cenario.executar("executar") == 0

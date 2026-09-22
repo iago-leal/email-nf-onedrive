@@ -57,13 +57,15 @@ def _falha_rclone(erro: ErroRclone, remote: str, destino: str) -> Falha | None:
 
 class Enviador:
     def __init__(self, registro: Registro, rclone: Rclone, logger: logging.Logger, *, simulacao: bool = False,
-                 internos: frozenset[str] = frozenset()) -> None:
+                 internos: frozenset[str] = frozenset(), resultado: ResultadoEnvio | None = None) -> None:
         self.registro = registro
         self.rclone = rclone
         self.log = logger
         self.simulacao = simulacao
         self.internos = internos
-        self.resultado = ResultadoEnvio()
+        # Quem chama pode fornecer o acumulador para ler as contagens mesmo que o envio seja
+        # interrompido no meio (BUG-20260922-RWDA): o retorno só existe quando a chamada termina.
+        self.resultado = resultado if resultado is not None else ResultadoEnvio()
         self._pastas: dict[str, bool] = {}
         self._erro_global: Falha | None = None
 
@@ -166,5 +168,7 @@ class Enviador:
 
 
 def enviar_anexos(itens: list[AnexoParaEnvio], registro: Registro, rclone: Rclone, logger: logging.Logger,
-                  *, simulacao: bool = False, internos: frozenset[str] = frozenset()) -> ResultadoEnvio:
-    return Enviador(registro, rclone, logger, simulacao=simulacao, internos=internos).enviar(itens)
+                  *, simulacao: bool = False, internos: frozenset[str] = frozenset(),
+                  resultado: ResultadoEnvio | None = None) -> ResultadoEnvio:
+    return Enviador(registro, rclone, logger, simulacao=simulacao, internos=internos,
+                    resultado=resultado).enviar(itens)

@@ -5,10 +5,13 @@ from __future__ import annotations
 import errno
 import os
 import time
+from pathlib import Path
 
 import pytest
 
 from email_nf_onedrive.cli import main
+from email_nf_onedrive.envio.rclone import ErroRclone, Rclone
+from email_nf_onedrive.execucao.trava import TempoEsgotado
 
 from .conftest import CAIXA_1, SENHA_1, TOKEN
 
@@ -179,3 +182,68 @@ def test_home_por_variavel_de_ambiente(cenario, monkeypatch, capsys):
     monkeypatch.setenv("EMAIL_NF_HOME", str(cenario.home))
     assert main(["verificar-config"]) == 0
     assert CAIXA_1 in capsys.readouterr().out
+
+
+# --- interrupção pelo limite de duração (BUG-20260922-RWDA) --------------------------
+
+ANEXOS_DE_TRES_MENSAGENS = ("encaminhada.eml", "encaminhada_em_linha.eml", "interna_nfe_e_danfe.eml")
+
+
+class _RcloneInterrompido(Rclone):
+    """Rclone real que falha ou estoura o tempo em cópias escolhidas.
+
+    `signal.alarm` só aceita segundos inteiros, de modo que disparar o limite pelo relógio
+    exigiria um ciclo de mais de um segundo e dependeria de o alarme cair no envio, e não na
+    coleta. `TempoEsgotado` é a mesma exceção que `limite_duracao` levanta a partir do SIGALRM,
+    aqui levantada no mesmo ponto: dentro do laço de `Enviador.enviar`.
+    """
+
+    def __init__(self, remote: str, *, estoura_na: int, falha_na: int = 0) -> None:
+        super().__init__(remote)
+        self.estoura_na = estoura_na
+        self.falha_na = falha_na
+        self.copias = 0
+
+    def copiar(self, local: Path, relativo: str) -> None:
+        self.copias += 1
+        if self.copias == self.falha_na:
+            raise ErroRclone("rede", "conexão recusada pelo destino")
+        if self.copias == self.estoura_na:
+            raise TempoEsgotado("execução passou de 1200 s")
+        super().copiar(local, relativo)
+
+
+def _deps_com_interrupcao(cenario, **kwargs):
+    deps = cenario.deps()
+    deps.criar_rclone = lambda remote: _RcloneInterrompido(remote, **kwargs)
+    return deps
+
+
+def test_interrupcao_por_tempo_conta_os_envios_ja_confirmados(cenario):
+    """BUG-20260922-RWDA: o resumo da execução interrompida conta o que foi mesmo enviado."""
+    cenario.entregar(*ANEXOS_DE_TRES_MENSAGENS)
+    assert cenario.executar("executar", deps=_deps_com_interrupcao(cenario, estoura_na=3)) == 2
+    log = cenario.log()
+    resumo = [linha for linha in log.splitlines() if "resumo: " in linha][-1]
+
+    assert "2 enviados" in resumo
+    assert log.count("enviado: ") == 2 == len(cenario.arquivos_no_destino())
+    assert cenario.estados().count("enviado") == 2
+
+
+def test_interrupcao_por_tempo_preserva_o_codigo_e_o_aviso(cenario):
+    cenario.entregar(*ANEXOS_DE_TRES_MENSAGENS)
+    assert cenario.executar("executar", deps=_deps_com_interrupcao(cenario, estoura_na=3)) == 2
+    assert "execução interrompida: execução passou de 1200 s" in cenario.log()
+    assert "execução interrompida após 20 min" in cenario.transporte.enviadas[0]
+
+
+def test_falha_de_anexo_antes_da_interrupcao_entra_no_resumo(cenario):
+    cenario.entregar(*ANEXOS_DE_TRES_MENSAGENS)
+    deps = _deps_com_interrupcao(cenario, falha_na=1, estoura_na=4)
+    assert cenario.executar("executar", deps=deps) == 2
+    resumo = [linha for linha in cenario.log().splitlines() if "resumo: " in linha][-1]
+
+    assert "2 enviados" in resumo
+    assert "2 falhas" in resumo  # a do anexo e a do tempo
+    assert cenario.estados().count("falha-envio") == 1

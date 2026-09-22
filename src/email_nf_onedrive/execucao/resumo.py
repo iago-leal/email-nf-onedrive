@@ -12,6 +12,7 @@ class ResumoExecucao:
     caixas_processadas: int = 0
     extraidos: int = 0
     enviados: int = 0
+    simulados: int = 0  # só em `executar --simular`, onde `enviados` é sempre 0 (BUG-20260922-RWDA)
     retidos: int = 0
     falhas: int = 0
     falhas_autorizacao: int = 0  # já incluídas em `falhas`; só as distingue na linha de resumo (feature 002, D-13)
@@ -32,6 +33,8 @@ class ResumoExecucao:
     def linha(self) -> str:
         caixas = f"{self.caixas_processadas} caixa" + ("" if self.caixas_processadas == 1 else "s")
         partes = [caixas, f"{self.extraidos} extraídos", f"{self.enviados} enviados"]
+        if self.simulados:
+            partes.append(f"{self.simulados} simulados")
         if self.retidos:
             partes.append(f"{self.retidos} retidos")
         partes.append(f"{self.falhas} falhas")
