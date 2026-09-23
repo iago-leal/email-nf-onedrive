@@ -19,7 +19,9 @@ from typing import Callable
 
 from email_nf_onedrive import segredos
 
-TIMEOUT_S = 120
+# Por chamada. O OneDrive, sob carga, pede espera (429 com Retry-After) que o Rclone cumpre dentro da
+# própria chamada; com 120 s o limite a cortava no meio da espera (adendo 005).
+TIMEOUT_S = 300
 SUBCOMANDOS = frozenset({"lsjson", "hashsum", "copyto", "lsf", "deletefile"})
 FLAGS_COMUNS = ("--retries", "3", "--low-level-retries", "10")
 NOME_TESTE = re.compile(r"(^|/)\.email-nf-onedrive-teste-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.txt$")

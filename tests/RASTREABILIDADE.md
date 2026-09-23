@@ -195,3 +195,10 @@ alarme cair no envio, e não na coleta.
 O dublê `_RcloneInterrompido` passou a disparar um SIGALRM real, que `limite_duracao` converte em
 `TempoEsgotado` na thread principal, e os três testes do `BUG-20260922-RWDA` rodam com um envio por
 vez (`Dependencias.envios_simultaneos = 1`), porque "a N-ésima cópia" só é determinística em série.
+
+# Adendo `005-timeout-rclone`
+
+| O que prova | Testes |
+|-------------|--------|
+| O limite padrão de 300 s chega ao processo do Rclone | `uni/rclone::test_limite_padrao_de_300_s_chega_ao_processo` |
+| Chamada que estoura o limite vira `ErroRclone` de causa `timeout` | `uni/rclone::test_chamada_que_estoura_o_limite_vira_falha_de_tempo` |
