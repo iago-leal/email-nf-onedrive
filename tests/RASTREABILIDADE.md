@@ -183,6 +183,13 @@ alarme cair no envio, e não na coleta.
 | O envio grava na subpasta, parcela só no primeiro vencimento, DANFE herda e boleto usa o próprio | `int/envio::test_nota_em_xml_vai_para_a_pasta_do_vencimento`, `test_nota_parcelada_vai_so_para_o_primeiro_vencimento`, `test_danfe_herda_o_vencimento_do_xml_da_mensagem_e_boleto_usa_o_proprio` |
 | Sem vencimento vai à raiz; subpasta ausente falha sem ser criada | `int/envio::test_pdf_sem_vencimento_fica_na_raiz`, `test_pasta_do_vencimento_ausente_nao_e_criada` |
 
+# Adendo `003-destino-por-vencimento-v002`
+
+| O que prova | Testes |
+|-------------|--------|
+| Linha digitável com dígitos colados ao fim do valor | `uni/vencimento::test_linha_digitavel_com_digitos_colados_ao_fim` |
+| Rótulo "duplicata(s)"; data colada ao rótulo vale no dia do recebimento, e a já vencida não | `uni/vencimento::test_vencimento_no_texto` |
+
 # Adendo `004-desempenho-coleta-envio`
 
 | O que prova | Testes |

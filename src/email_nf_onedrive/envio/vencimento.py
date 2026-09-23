@@ -35,14 +35,18 @@ _BASE_FATOR_2025 = date(2025, 2, 22)
 
 # Boleto bancário, 47 dígitos: AAABC.CCCCX DDDDD.DDDDDY EEEEE.EEEEEZ K FFFFVVVVVVVVVV.
 _LINHA_DIGITAVEL = re.compile(
-    r"(?<!\d)(\d{5})[. ]?(\d{4})(\d)\s*(\d{5})[. ]?(\d{5})(\d)\s*(\d{5})[. ]?(\d{5})(\d)\s*(\d)\s*(\d{4})(\d{10})(?!\d)"
+    r"(?<!\d)(\d{5})[. ]?(\d{4})(\d)\s*(\d{5})[. ]?(\d{5})(\d)\s*(\d{5})[. ]?(\d{5})(\d)\s*(\d)\s*(\d{4})(\d{10})"
 )
+# Sem âncora no fim: o extrator de texto às vezes cola dígitos ao valor, e os três dígitos
+# verificadores já descartam a sequência que não for linha digitável (adendo 003-v002).
 _DATA = r"(\d{2})[/.-](\d{2})[/.-](\d{4})"
-_ROTULO = re.compile(r"venc(?:imentos?|to|\.)?")
+_ROTULO = re.compile(r"venc(?:imentos?|to|\.)?|duplicatas?")
+_COLADA_AO_ROTULO = re.compile(r"[\s:.]*" + _DATA)
 _DATA_NO_TEXTO = re.compile(r"(?<!\d)" + _DATA + r"(?!\d)")
 ALCANCE_DO_ROTULO = 80
 # A emissão costuma vir ao lado do vencimento ("Data Emissão Data Vencimento" sobre
 # "22/09/2026 02/10/2026") e cai no dia do recebimento ou antes; por isso só vale data posterior a ele.
+# A exceção é a data colada ao rótulo ("Vencimento: 19/09/2026"), que vale mesmo no dia do recebimento.
 # O documento que chega já vencido perde esta fonte e fica na raiz, que é o destino seguro.
 
 logging.getLogger("pypdf").setLevel(logging.ERROR)  # PDFs malformados geram avisos que não interessam ao log
@@ -101,10 +105,16 @@ def vencimento_boleto(texto: str, referencia: date) -> date | None:
 
 
 def vencimento_texto(texto: str, referencia: date) -> date | None:
-    """Primeira data válida, posterior ao recebimento, logo após "vencimento" (ou "venc.", "vencto")."""
+    """Primeira data válida, posterior ao recebimento, logo após "vencimento" (ou "venc.", "vencto", "duplicata").
+
+    A data colada ao rótulo vale também quando cai no próprio dia do recebimento.
+    """
     normalizado = _sem_acentos(texto).lower()
     for rotulo in _ROTULO.finditer(normalizado):
         trecho = normalizado[rotulo.end(): rotulo.end() + ALCANCE_DO_ROTULO]
+        colada = _COLADA_AO_ROTULO.match(trecho)
+        if colada and (valida := _data(colada.group(3), colada.group(2), colada.group(1))) and valida >= referencia:
+            return valida
         for achada in _DATA_NO_TEXTO.finditer(trecho):
             valida = _data(achada.group(3), achada.group(2), achada.group(1))
             if valida and valida > referencia:

@@ -63,6 +63,10 @@ def test_linha_digitavel_sem_separadores():
     assert vencimento_boleto(linha, REFERENCIA) == date(2026, 10, 15)
 
 
+def test_linha_digitavel_com_digitos_colados_ao_fim():
+    assert vencimento_boleto(linha_digitavel(date(2026, 10, 15)) + "745", REFERENCIA) == date(2026, 10, 15)
+
+
 def test_sequencia_com_digito_verificador_errado_nao_e_linha_digitavel():
     assert vencimento_boleto(linha_digitavel(date(2026, 10, 15), valida=False), REFERENCIA) is None
 
@@ -77,6 +81,10 @@ def test_sequencia_com_digito_verificador_errado_nao_e_linha_digitavel():
     ("Emissão 01/09/2026", None),
     ("Vencimento 01/01/2026", None),   # antes do recebimento: não é o vencimento deste documento
     ("Vencimento\nBeneficiário X\nData de Emissão\n18/09/2026", None),   # a emissão, no dia do recebimento
+    ("VENCIMENTO: 18/09/2026", date(2026, 9, 18)),   # colada ao rótulo, vale no dia do recebimento
+    ("Vencimento: 17/09/2026", None),                # colada, mas já vencida
+    ("DUPLICATAS\n001\n18/10/2026 1.200,00", date(2026, 10, 18)),
+    ("Duplicata 002 - 05/11/2026", date(2026, 11, 5)),
 ])
 def test_vencimento_no_texto(texto, esperado):
     assert vencimento_texto(texto, REFERENCIA) == esperado
