@@ -74,7 +74,10 @@ def _agora() -> str:
 
 
 def _anexo(linha: sqlite3.Row) -> Anexo:
-    dados = dict(linha)
+    return _anexo_de_dict(dict(linha))
+
+
+def _anexo_de_dict(dados: dict) -> Anexo:
     for descartado in ("criado_em", "atualizado_em"):
         dados.pop(descartado)
     dados["data_mensagem"] = _dt(dados["data_mensagem"])
@@ -236,6 +239,34 @@ class Registro:
             (caixa, caixa, caixa, *ESTADOS_PENDENTES),
         ).fetchall()
         return {linha[0] for linha in linhas}
+
+    # --- sumário da raiz (feature 006) -------------------------------------------
+
+    def registrar_motivo_raiz(self, anexo_id: int, motivo: str) -> None:
+        self._con.execute(
+            "INSERT OR REPLACE INTO sem_vencimento (anexo_id, motivo) VALUES (?, ?)", (anexo_id, motivo)
+        )
+
+    def enviados_na_pasta(self, pasta: str) -> dict[str, tuple[Anexo, str | None]]:
+        """Anexos enviados direto em `pasta` (sem subpastas), por nome, com o motivo de estarem nela.
+
+        Quando o mesmo arquivo foi reconhecido idêntico para mais de um anexo, vale o mais antigo.
+        """
+        prefixo = pasta.rstrip("/") + "/"
+        linhas = self._con.execute(
+            """SELECT a.*, s.motivo AS motivo_raiz FROM anexos a LEFT JOIN sem_vencimento s ON s.anexo_id = a.id
+               WHERE a.estado = 'enviado' AND substr(a.caminho_destino, 1, ?) = ?
+               ORDER BY a.data_mensagem DESC, a.id DESC""",
+            (len(prefixo), prefixo),
+        ).fetchall()
+        achados: dict[str, tuple[Anexo, str | None]] = {}
+        for linha in linhas:
+            nome = linha["caminho_destino"][len(prefixo):]
+            if "/" not in nome:
+                dados = dict(linha)
+                motivo = dados.pop("motivo_raiz")
+                achados[nome] = (_anexo_de_dict(dados), motivo)
+        return achados
 
     # --- ocorrências e meta -------------------------------------------------------
 

@@ -29,6 +29,7 @@ from email_nf_onedrive.coleta.coleta import Falha, FabricaIMAP, coletar, fabrica
 from email_nf_onedrive.configuracao.carregar import carregar_configuracao
 from email_nf_onedrive.configuracao.modelo import MODO_OAUTH, Configuracao, ErroConfiguracao
 from email_nf_onedrive.envio.envio import ENVIOS_SIMULTANEOS, ResultadoEnvio, enviar_anexos
+from email_nf_onedrive.envio.leiame import atualizar_leiame
 from email_nf_onedrive.envio.rclone import Rclone
 from email_nf_onedrive.execucao import telegram
 from email_nf_onedrive.execucao.avisos import TITULO, GerenciadorAvisos, Transporte
@@ -164,16 +165,28 @@ class _Ciclo:
                 self._falhar(resultado.falha.causa, resultado.falha.mensagem)
 
         envio = ResultadoEnvio()
+        rclone = self.deps.criar_rclone(config.rclone_remote)
         try:
-            enviar_anexos(itens, self.registro, self.deps.criar_rclone(config.rclone_remote), self.log,
+            enviar_anexos(itens, self.registro, rclone, self.log,
                           simulacao=self.simulacao, internos=config.dominios_internos, resultado=envio,
                           simultaneos=self.deps.envios_simultaneos)
         finally:  # a interrupção por tempo não pode levar as contagens consigo (BUG-20260922-RWDA)
             self._contabilizar_envio(envio, resumo)
+        self._atualizar_leiames(config, rclone)
 
         if resumo.caixas_processadas == 0:
             return 2
         return 1 if self.falhas else 0
+
+    def _atualizar_leiames(self, config: Configuracao, rclone: Rclone) -> None:
+        """Sumário da raiz de cada destino (feature 006); sem OneDrive utilizável, fica para a próxima."""
+        if any(f.causa in ("onedrive:token", "config:RCLONE_REMOTE") for f in self.falhas):
+            return
+        for destino in dict.fromkeys(caixa.destino.rstrip("/") for caixa in config.caixas):
+            falha = atualizar_leiame(destino, self.registro, rclone, self.trabalho, self.log,
+                                     agora=self.deps.agora(), simulacao=self.simulacao)
+            if falha is not None:
+                self._falhar(falha.causa, falha.mensagem)
 
     def _contabilizar_envio(self, envio: ResultadoEnvio, resumo: ResumoExecucao) -> None:
         """Passa ao resumo o que o envio já confirmou, tenha ele terminado ou sido interrompido."""

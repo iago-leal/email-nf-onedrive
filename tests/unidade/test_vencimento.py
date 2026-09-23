@@ -7,6 +7,8 @@ from datetime import date, timedelta
 import pytest
 
 from email_nf_onedrive.envio.vencimento import (
+    MOTIVO_A_VISTA, MOTIVO_DANFE, MOTIVO_FORMATO, MOTIVO_ILEGIVEL, MOTIVO_NAO_LOCALIZADO, MOTIVO_SEM_FATURA,
+    MOTIVO_SERVICO, Leitura, ler,
     PASTA_VENCIMENTOS, _dv_modulo10, data_do_fator, pasta_vencimento, texto_pdf, vencimento, vencimento_boleto, vencimento_da_mensagem,
     vencimento_nfe, vencimento_texto,
 )
@@ -144,3 +146,41 @@ def test_vencimento_da_mensagem_prefere_o_xml_e_cai_no_boleto():
     assert vencimento_da_mensagem([danfe, boleto, xml], REFERENCIA) == date(2026, 10, 20)
     assert vencimento_da_mensagem([danfe, boleto, ("nota.xml", nfe_com_vencimentos())], REFERENCIA) == date(2026, 11, 10)
     assert vencimento_da_mensagem([danfe], REFERENCIA) is None
+
+
+# --- motivo de ir à raiz (feature 006) ------------------------------------------------
+
+def _ler(tmp_path, conteudo: bytes, nome: str, vencimento_mensagem=None):
+    arquivo = tmp_path / nome
+    arquivo.write_bytes(conteudo)
+    return ler(arquivo, xml=nome.endswith(".xml"), vencimento_mensagem=vencimento_mensagem, referencia=REFERENCIA)
+
+
+PALAVRAS = "Prefeitura Municipal emitiu este documento para o tomador indicado abaixo conforme contrato vigente"
+
+
+@pytest.mark.parametrize("conteudo, nome, motivo", [
+    (nfe_com_vencimentos(a_vista=True), "nota.xml", MOTIVO_A_VISTA),
+    (nfe_com_vencimentos(), "nota.xml", MOTIVO_SEM_FATURA),
+    (pdf_com_texto("NFS-e Nota Fiscal de Servico Eletronica", PALAVRAS), "nfse.pdf", MOTIVO_SERVICO),
+    (pdf_com_texto("DANF-E Documento Auxiliar da Nota Fiscal Eletronica", PALAVRAS), "danfe.pdf", MOTIVO_DANFE),
+    (pdf_com_texto("/0/1 /2 /3 /4 /5 /6 /3 /7"), "fonte.pdf", MOTIVO_ILEGIVEL),
+    (b"nao e pdf", "digitalizado.pdf", MOTIVO_ILEGIVEL),
+    (b"\x89PNG", "foto.png", MOTIVO_FORMATO),
+    (pdf_com_texto("Proposta comercial", PALAVRAS), "proposta.pdf", MOTIVO_NAO_LOCALIZADO),
+    (pdf_com_texto("Boleto", "Vencimento: 10/09/2026", PALAVRAS), "boleto.pdf", "já chegou vencido: venceu em 10/09/2026"),
+    (pdf_com_texto("DANFE", "DUPLICATAS", "001", "10/09/2026", PALAVRAS), "danfe.pdf",
+     "já chegou vencido: venceu em 10/09/2026"),
+])
+def test_motivo_de_ficar_na_raiz(tmp_path, conteudo, nome, motivo):
+    assert _ler(tmp_path, conteudo, nome) == Leitura(None, motivo)
+
+
+def test_data_solta_anterior_nao_e_tomada_como_vencida(tmp_path):
+    leitura = _ler(tmp_path, pdf_com_texto("DANFE", "Vencimento Valor", "Emissao 10/09/2026", PALAVRAS), "danfe.pdf")
+    assert leitura == Leitura(None, MOTIVO_DANFE)
+
+
+def test_com_vencimento_nao_ha_motivo(tmp_path):
+    assert _ler(tmp_path, nfe_com_vencimentos("2026-10-05"), "nota.xml") == Leitura(date(2026, 10, 5))
+    assert _ler(tmp_path, b"\x89PNG", "foto.png", date(2026, 10, 5)) == Leitura(date(2026, 10, 5))

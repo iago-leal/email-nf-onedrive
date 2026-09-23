@@ -4,7 +4,8 @@
 cópia de um arquivo para nome exato e exclusão do arquivo de teste do
 `testar-onedrive`; `sync`, `delete`, `purge`, `move` e afins são recusados antes
 de executar (RN-02). O upload usa `--ignore-existing`: se o nome já existir no
-destino, o Rclone não o sobrescreve.
+destino, o Rclone não o sobrescreve. A única exceção é o sumário LEIAME da raiz
+(feature 006), refeito a cada mudança, que só pode ter o nome exato `NOME_LEIAME`.
 """
 
 from __future__ import annotations
@@ -25,6 +26,7 @@ TIMEOUT_S = 300
 SUBCOMANDOS = frozenset({"lsjson", "hashsum", "copyto", "lsf", "deletefile"})
 FLAGS_COMUNS = ("--retries", "3", "--low-level-retries", "10")
 NOME_TESTE = re.compile(r"(^|/)\.email-nf-onedrive-teste-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.txt$")
+NOME_LEIAME = "00 - LEIAME - DOCUMENTOS SEM VENCIMENTO.xlsx"
 LIMITE_DETALHE = 500
 CODIGO_NAO_ENCONTRADO = 3
 
@@ -129,6 +131,12 @@ class Rclone:
     def copiar(self, local: Path, relativo: str) -> None:
         """Envia um arquivo para o nome exato, sem nunca sobrescrever (`--ignore-existing`)."""
         self._executar("copyto", "--ignore-existing", str(local), self.caminho(relativo))
+
+    def publicar_leiame(self, local: Path, relativo: str) -> None:
+        """Envia o sumário da raiz substituindo o anterior; recusa qualquer outro nome."""
+        if relativo.rsplit("/", 1)[-1] != NOME_LEIAME:
+            raise SubcomandoProibido(f"só o sumário {NOME_LEIAME} pode ser sobrescrito: {relativo}")
+        self._executar("copyto", str(local), self.caminho(relativo))
 
     def apagar_arquivo_de_teste(self, relativo: str) -> None:
         if not NOME_TESTE.search(relativo):

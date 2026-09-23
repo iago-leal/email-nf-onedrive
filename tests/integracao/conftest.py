@@ -12,6 +12,7 @@ import pytest
 
 from email_nf_onedrive.cli import main
 from email_nf_onedrive.coleta.imap import ClienteIMAP
+from email_nf_onedrive.envio.rclone import NOME_LEIAME
 from email_nf_onedrive.execucao.ciclo import Dependencias
 from email_nf_onedrive.execucao.logs import NOME_LOGGER
 
@@ -114,7 +115,8 @@ class Cenario:
         return caminho.read_text(encoding="utf-8") if caminho.exists() else ""
 
     def arquivos_no_destino(self) -> list[str]:
-        return sorted(p.name for p in self.destino.iterdir())
+        """Documentos no destino, sem o sumário LEIAME, coberto à parte em `test_leiame`."""
+        return sorted(p.name for p in self.destino.iterdir() if p.name != NOME_LEIAME)
 
     def estados(self) -> list[str]:
         with sqlite3.connect(self.home / "var" / "registro.sqlite3") as con:

@@ -96,10 +96,13 @@ def pdf_com_texto(*linhas: str) -> bytes:
     return bytes(saida)
 
 
-def nfe_com_vencimentos(*datas: str, emitente: str = "FORNECEDOR FICTICIO LTDA", numero: str = "1234") -> bytes:
-    """XML de NF-e sintético com uma duplicata por data `AAAA-MM-DD` (feature 003)."""
+def nfe_com_vencimentos(*datas: str, emitente: str = "FORNECEDOR FICTICIO LTDA", numero: str = "1234",
+                        a_vista: bool = False) -> bytes:
+    """XML de NF-e sintético com uma duplicata por data `AAAA-MM-DD` (feature 003); `a_vista` põe o pagamento à vista."""
     duplicatas = "".join(f"<dup><nDup>{i:03d}</nDup><dVenc>{d}</dVenc></dup>" for i, d in enumerate(datas, 1))
     cobranca = f"<cobr>{duplicatas}</cobr>" if datas else ""
+    if a_vista:
+        cobranca += "<pag><detPag><indPag>0</indPag><tPag>01</tPag><vPag>10.00</vPag></detPag></pag>"
     return (
         '<?xml version="1.0" encoding="UTF-8"?>'
         '<nfeProc xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00"><NFe><infNFe versao="4.00">'

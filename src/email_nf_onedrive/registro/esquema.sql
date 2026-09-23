@@ -46,3 +46,10 @@ CREATE TABLE IF NOT EXISTS meta (
     chave TEXT PRIMARY KEY,
     valor TEXT NOT NULL
 );
+
+-- Feature 006: motivo de o anexo ter ficado na raiz do destino, lido pelo sumário LEIAME.
+-- Tabela à parte, e não coluna em `anexos`, para que o registro existente não precise de migração.
+CREATE TABLE IF NOT EXISTS sem_vencimento (
+    anexo_id INTEGER PRIMARY KEY REFERENCES anexos (id),
+    motivo   TEXT NOT NULL
+);

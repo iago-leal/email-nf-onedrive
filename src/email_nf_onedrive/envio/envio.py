@@ -63,6 +63,7 @@ class _Desfecho:
 
     item: AnexoParaEnvio
     destino: str
+    motivo_raiz: str = ""  # por que ficou sem vencimento, para o sumário LEIAME (feature 006)
     caminho: str = ""
     identico: bool = False
     duracao: float = 0.0
@@ -100,12 +101,11 @@ class Enviador:
 
     # --- preparação (thread principal) ------------------------------------------
 
-    def _preparar(self, item: AnexoParaEnvio) -> tuple[str, str]:
-        """(pasta de destino, caminho padronizado) do anexo, calculados sem tocar no OneDrive."""
-        quando = vencimento.vencimento(item.caminho_local, xml=item.classe == NFE_XML,
-                                       vencimento_mensagem=item.vencimento_mensagem,
-                                       referencia=item.data_mensagem.date())
-        destino = vencimento.pasta_vencimento(item.caixa.destino, quando)
+    def _preparar(self, item: AnexoParaEnvio) -> tuple[str, str, str]:
+        """(pasta de destino, caminho padronizado, motivo de ir à raiz) do anexo, sem tocar no OneDrive."""
+        leitura = vencimento.ler(item.caminho_local, xml=item.classe == NFE_XML,
+                                 vencimento_mensagem=item.vencimento_mensagem, referencia=item.data_mensagem.date())
+        destino = vencimento.pasta_vencimento(item.caixa.destino, leitura.quando)
         caminho = nomeacao.caminho_destino(destino, nomeacao.DadosNome(
             empresa=item.caixa.empresa, remetente=item.remetente, nome_original=item.nome_original,
             assunto=item.assunto, classe=item.classe,
@@ -113,7 +113,7 @@ class Enviador:
             emitente_mensagem=item.emitente_mensagem, remetentes_encaminhados=item.remetentes_encaminhados,
             internos=self.internos,
         ))
-        return destino, caminho
+        return destino, caminho, leitura.motivo
 
     # --- trabalho remoto (threads) ----------------------------------------------
 
@@ -140,8 +140,8 @@ class Enviador:
             return False
         return remoto.quickxor is None or remoto.quickxor.lower() == hash_local.lower()
 
-    def _remoto(self, item: AnexoParaEnvio, destino: str, caminho: str) -> _Desfecho:
-        desfecho = _Desfecho(item, destino)
+    def _remoto(self, item: AnexoParaEnvio, destino: str, caminho: str, motivo_raiz: str) -> _Desfecho:
+        desfecho = _Desfecho(item, destino, motivo_raiz)
         if self._erro_global is not None:
             desfecho.motivo = f"envio suspenso nesta execução: {self._erro_global.causa}"
             return desfecho
@@ -171,8 +171,8 @@ class Enviador:
         desfecho.duracao = time.monotonic() - inicio
         return desfecho
 
-    def _remoto_em_sequencia(self, grupo: list[tuple[AnexoParaEnvio, str, str]]) -> list[_Desfecho]:
-        return [self._remoto(item, destino, caminho) for item, destino, caminho in grupo]
+    def _remoto_em_sequencia(self, grupo: list[tuple[AnexoParaEnvio, str, str, str]]) -> list[_Desfecho]:
+        return [self._remoto(*preparado) for preparado in grupo]
 
     # --- registro (thread principal) --------------------------------------------
 
@@ -206,6 +206,8 @@ class Enviador:
             self.resultado.simulados += 1
             return
         self.registro.marcar_enviado(item.anexo_id, desfecho.caminho)
+        if desfecho.motivo_raiz:
+            self.registro.registrar_motivo_raiz(item.anexo_id, desfecho.motivo_raiz)
         self.registro.commit()
         item.caminho_local.unlink(missing_ok=True)
         self.resultado.enviados += 1
@@ -216,10 +218,10 @@ class Enviador:
         if not itens:
             self.log.info("nada a enviar")
             return self.resultado
-        grupos: dict[str, list[tuple[AnexoParaEnvio, str, str]]] = {}
+        grupos: dict[str, list[tuple[AnexoParaEnvio, str, str, str]]] = {}
         for item in itens:
-            destino, caminho = self._preparar(item)
-            grupos.setdefault(caminho.casefold(), []).append((item, destino, caminho))
+            destino, caminho, motivo_raiz = self._preparar(item)
+            grupos.setdefault(caminho.casefold(), []).append((item, destino, caminho, motivo_raiz))
         pool = ThreadPoolExecutor(max_workers=self.simultaneos, thread_name_prefix="envio")
         try:
             futuros = [pool.submit(self._remoto_em_sequencia, grupo) for grupo in grupos.values()]

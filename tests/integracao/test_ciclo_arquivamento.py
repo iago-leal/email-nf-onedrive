@@ -109,3 +109,19 @@ def test_simulacao_com_registro_existente_nao_o_altera(cenario):
     assert cenario.executar("executar", "--simular") == 0
     assert cenario.estados() == ["retido"]
     assert cenario.arquivos_no_destino() == []
+
+
+def test_execucao_mantem_o_sumario_leiame_da_raiz(cenario):
+    from openpyxl import load_workbook
+
+    from email_nf_onedrive.envio.rclone import NOME_LEIAME
+
+    cenario.entregar("boleto_simples.eml")
+    assert cenario.executar("executar", "--simular") == 0
+    assert not (cenario.destino / NOME_LEIAME).exists()
+    assert cenario.executar("executar") == 0
+    folha = load_workbook(cenario.destino / NOME_LEIAME)["Documentos"]
+    assert [linha[0] for linha in folha.iter_rows(min_row=6, values_only=True)] == [BOLETO]
+    cenario.relogio.avancar(minutes=30)
+    assert cenario.executar("executar") == 0
+    assert cenario.log().count(f"sumário {NOME_LEIAME} refeito") == 1   # a raiz não mudou

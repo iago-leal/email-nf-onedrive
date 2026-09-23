@@ -251,3 +251,23 @@ def test_mensagens_resolvidas(tmp_path):
         reg.registrar_ocorrencia("caixa@empresa.example", "<m5>", "sem-anexo")
         assert reg.mensagens_resolvidas("caixa@empresa.example") == {"<m1>", "<m2>", "<m5>"}
         assert reg.mensagens_resolvidas("outra@empresa.example") == set()
+
+
+def test_enviados_na_pasta_com_motivo_so_da_raiz_e_o_mais_antigo(tmp_path):
+    with Registro.abrir(tmp_path / "r.sqlite3") as reg:
+        def enviado(n: int, dia: int, caminho: str):
+            anexo = reg.registrar_anexo(**_campos(message_id=f"<m{n}>", sha256=f"{n:064d}", data_mensagem=_dt(dia)))
+            reg.marcar_enviado(anexo.id, caminho)
+            return anexo
+
+        antigo = enviado(1, 2, "D_X/a.pdf")
+        reg.registrar_motivo_raiz(antigo.id, "nota fiscal de serviço: não traz vencimento")
+        enviado(2, 5, "D_X/a.pdf")                                   # o mesmo arquivo, reconhecido idêntico
+        enviado(3, 3, "D_X/b.pdf")                                   # sem motivo: enviado antes da feature 006
+        enviado(4, 3, "D_X/NOTAS E BOLETOS POR VENCIMENTO/DIA 5/202X-10/c.pdf")
+        enviado(5, 3, "D_Y/d.pdf")                                   # outra pasta que começa igual
+        achados = reg.enviados_na_pasta("D_X/")
+        assert sorted(achados) == ["a.pdf", "b.pdf"]
+        assert achados["a.pdf"][0].id == antigo.id
+        assert achados["a.pdf"][1] == "nota fiscal de serviço: não traz vencimento"
+        assert achados["b.pdf"][1] is None

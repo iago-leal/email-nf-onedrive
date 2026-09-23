@@ -11,7 +11,8 @@ com dia e mês do vencimento e o ano literalmente `202X`, porque a grade se repe
 4. uma data junto da palavra "vencimento" no texto do PDF.
 
 As fontes do próprio anexo vêm antes das da mensagem para que o boleto de uma parcela não
-herde o vencimento da primeira. Sem vencimento, o documento fica na raiz do destino.
+herde o vencimento da primeira. Sem vencimento, o documento fica na raiz do destino, com o
+motivo apurado para o sumário LEIAME da raiz (feature 006).
 """
 
 from __future__ import annotations
@@ -21,6 +22,7 @@ import logging
 import re
 import unicodedata
 import xml.etree.ElementTree as ET
+from dataclasses import dataclass
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -48,6 +50,19 @@ ALCANCE_DO_ROTULO = 80
 # "22/09/2026 02/10/2026") e cai no dia do recebimento ou antes; por isso só vale data posterior a ele.
 # A exceção é a data colada ao rótulo ("Vencimento: 19/09/2026"), que vale mesmo no dia do recebimento.
 # O documento que chega já vencido perde esta fonte e fica na raiz, que é o destino seguro.
+
+# Motivos da raiz, na linguagem do financeiro, que os lê no sumário LEIAME (feature 006).
+MOTIVO_A_VISTA = "nota paga à vista: não há parcela a vencer"
+MOTIVO_SEM_FATURA = "nota fiscal sem fatura: o XML não traz vencimento"
+MOTIVO_SERVICO = "nota fiscal de serviço: não traz vencimento"
+MOTIVO_DANFE = "nota fiscal (DANFE) sem vencimento identificável"
+MOTIVO_ILEGIVEL = "documento sem texto legível (digitalizado ou com fonte embutida): o vencimento só seria lido com OCR"
+MOTIVO_FORMATO = "imagem ou formato sem texto: o vencimento não é lido"
+MOTIVO_NAO_LOCALIZADO = "vencimento não localizado no documento"
+MINIMO_DE_PALAVRAS = 10  # abaixo disso o PDF é imagem, ou a fonte não tem mapa de caracteres ("/0/1 /2 /3")
+_PALAVRA = re.compile(r"[a-z]{3,}")
+_SERVICO = re.compile(r"nfs-?e|nota fiscal (?:eletronica )?de servicos?|prestacao de servicos?|prestador de servicos?")
+_DANFE = re.compile(r"danf-?e|documento auxiliar da nota")
 
 logging.getLogger("pypdf").setLevel(logging.ERROR)  # PDFs malformados geram avisos que não interessam ao log
 
@@ -133,12 +148,72 @@ def texto_pdf(origem: Path | bytes) -> str:
         return ""
 
 
+@dataclass(frozen=True)
+class Leitura:
+    """Vencimento do anexo ou, sem ele, o motivo pelo qual o documento fica na raiz."""
+
+    quando: date | None
+    motivo: str = ""
+
+
+def _nfe_a_vista(conteudo: bytes) -> bool:
+    try:
+        for _evento, elemento in ET.iterparse(io.BytesIO(conteudo), events=("end",)):
+            if elemento.tag == f"{{{NAMESPACE_NFE}}}indPag" and (elemento.text or "").strip() == "0":
+                return True
+    except ET.ParseError:
+        pass
+    return False
+
+
+def vencido_ao_chegar(texto: str, referencia: date) -> date | None:
+    """Vencimento anterior ao recebimento: o documento já chegou vencido.
+
+    Vale a data colada a "vencimento" e a primeira data do quadro de duplicatas; a data solta
+    perto de "vencimento" pode ser a emissão, e por isso não é tomada como vencida.
+    """
+    normalizado = _sem_acentos(texto).lower()
+    for rotulo in _ROTULO.finditer(normalizado):
+        if rotulo.group().startswith("duplicata"):
+            achada = _DATA_NO_TEXTO.search(normalizado[rotulo.end(): rotulo.end() + ALCANCE_DO_ROTULO])
+        else:
+            achada = _COLADA_AO_ROTULO.match(normalizado, rotulo.end())
+        if achada and (valida := _data(achada.group(3), achada.group(2), achada.group(1))) and valida < referencia:
+            return valida
+    return None
+
+
+def _motivo_pdf(texto: str, referencia: date) -> str:
+    normalizado = _sem_acentos(texto).lower()
+    if len(_PALAVRA.findall(normalizado)) < MINIMO_DE_PALAVRAS:
+        return MOTIVO_ILEGIVEL
+    if vencido := vencido_ao_chegar(texto, referencia):
+        return f"já chegou vencido: venceu em {vencido:%d/%m/%Y}"
+    if _SERVICO.search(normalizado):
+        return MOTIVO_SERVICO
+    if _DANFE.search(normalizado):
+        return MOTIVO_DANFE
+    return MOTIVO_NAO_LOCALIZADO
+
+
+def ler(caminho: Path, *, xml: bool, vencimento_mensagem: date | None, referencia: date) -> Leitura:
+    """Vencimento do anexo pelas fontes, em ordem, ou o motivo de não haver nenhum."""
+    if xml:
+        conteudo = caminho.read_bytes()
+        if quando := vencimento_nfe(conteudo) or vencimento_mensagem:
+            return Leitura(quando)
+        return Leitura(None, MOTIVO_A_VISTA if _nfe_a_vista(conteudo) else MOTIVO_SEM_FATURA)
+    if caminho.suffix.lower() != ".pdf":
+        return Leitura(vencimento_mensagem, "" if vencimento_mensagem else MOTIVO_FORMATO)
+    texto = texto_pdf(caminho)
+    if quando := vencimento_boleto(texto, referencia) or vencimento_mensagem or vencimento_texto(texto, referencia):
+        return Leitura(quando)
+    return Leitura(None, _motivo_pdf(texto, referencia))
+
+
 def vencimento(caminho: Path, *, xml: bool, vencimento_mensagem: date | None, referencia: date) -> date | None:
     """Vencimento do anexo pelas fontes, em ordem; None se nenhuma o revelar."""
-    if xml:
-        return vencimento_nfe(caminho.read_bytes()) or vencimento_mensagem
-    texto = texto_pdf(caminho) if caminho.suffix.lower() == ".pdf" else ""
-    return vencimento_boleto(texto, referencia) or vencimento_mensagem or vencimento_texto(texto, referencia)
+    return ler(caminho, xml=xml, vencimento_mensagem=vencimento_mensagem, referencia=referencia).quando
 
 
 def vencimento_da_mensagem(anexos: list[tuple[str, bytes]], referencia: date) -> date | None:

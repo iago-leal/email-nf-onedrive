@@ -8,7 +8,7 @@ Nos exemplos, `<Empresa> Financeiro/CONTAS A PAGAR` é a pasta de destino, `<con
 
 A cada execução, ela lê as caixas de e-mail configuradas, extrai os anexos PDF e XML que parecem nota fiscal ou boleto e os grava na pasta do OneDrive, com nome padronizado. Os anexos que ela não reconhece ficam **retidos para revisão**: aparecem no log, mas não vão para o OneDrive.
 
-Ela **nunca** altera as caixas de e-mail: não marca como lida, não move, não apaga, não responde. Também **nunca** apaga nem sobrescreve arquivos no OneDrive: se já existir arquivo com o mesmo nome e outro conteúdo, o novo recebe o sufixo `_2`, `_3` e assim por diante.
+Ela **nunca** altera as caixas de e-mail: não marca como lida, não move, não apaga, não responde. Também **nunca** apaga nem sobrescreve arquivos no OneDrive: se já existir arquivo com o mesmo nome e outro conteúdo, o novo recebe o sufixo `_2`, `_3` e assim por diante. A única exceção é a planilha `00 - LEIAME - DOCUMENTOS SEM VENCIMENTO.xlsx`, gerada pela própria ferramenta na raiz do destino: ela lista os documentos que ficaram fora da grade por vencimento, com o motivo de cada um, e é refeita sempre que a raiz muda. Não a edite, porque as alterações se perdem.
 
 ## 2. Requisitos da VPS
 

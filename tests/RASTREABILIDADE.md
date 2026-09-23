@@ -209,3 +209,15 @@ vez (`Dependencias.envios_simultaneos = 1`), porque "a N-ésima cópia" só é d
 |-------------|--------|
 | O limite padrão de 300 s chega ao processo do Rclone | `uni/rclone::test_limite_padrao_de_300_s_chega_ao_processo` |
 | Chamada que estoura o limite vira `ErroRclone` de causa `timeout` | `uni/rclone::test_chamada_que_estoura_o_limite_vira_falha_de_tempo` |
+
+# Adendo `006-sumario-leiame-da-raiz`
+
+| O que prova | Testes |
+|-------------|--------|
+| Motivo de ir à raiz por tipo de documento; data solta anterior não é tomada como vencida | `uni/vencimento::test_motivo_de_ficar_na_raiz`, `test_data_solta_anterior_nao_e_tomada_como_vencida`, `test_com_vencimento_nao_ha_motivo` |
+| Registro: anexos enviados direto na pasta, com motivo, o mais antigo quando idênticos | `uni/registro::test_enviados_na_pasta_com_motivo_so_da_raiz_e_o_mais_antigo` |
+| Só o LEIAME é enviado sem `--ignore-existing`; qualquer outro nome é recusado | `uni/rclone::test_so_o_leiame_e_publicado_sem_ignore_existing` |
+| Planilha com arquivo, empresa, fornecedor, motivo, recebimento em Brasília, remetente, assunto e resumo | `int/leiame::test_sumario_lista_a_raiz_com_o_motivo_de_cada_documento` |
+| Refeita só quando a raiz muda (inclusive à mão) ou quando some | `int/leiame::test_sumario_so_e_refeito_quando_a_raiz_muda_ou_ele_some` |
+| Enviado antes da feature, simulação e falha do OneDrive | `int/leiame::test_documento_enviado_antes_da_feature_aparece_sem_motivo_apurado`, `test_simulacao_nao_escreve_o_sumario`, `test_falha_no_onedrive_vira_aviso_e_tenta_de_novo` |
+| Ponta a ponta pelo `executar` | `int/ciclo_arquivamento::test_execucao_mantem_o_sumario_leiame_da_raiz` |
