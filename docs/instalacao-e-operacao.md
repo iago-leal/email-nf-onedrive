@@ -128,7 +128,7 @@ Preencha, no mínimo:
 | `SENHA_EMAIL1` | a senha de app da seção 5, sem espaços; dispensada se a caixa usar OAuth (seção 16) |
 | `PASTA_EMAIL1` | pasta ou marcador monitorado; `INBOX` se omitida |
 | `RCLONE_REMOTE` | o nome do remote da seção 6, sem os dois-pontos |
-| `DESTINO_ONEDRIVE` | a pasta de destino, relativa ao remote |
+| `DESTINO_ONEDRIVE` | a pasta de destino, relativa ao remote; cada documento vai para `NOTAS E BOLETOS POR VENCIMENTO/DIA <d>/202X-<mm>/` dentro dela, pelo vencimento, ou fica na raiz quando o vencimento não é identificado |
 | `DATA_INICIAL` | primeira data considerada, `AAAA-MM-DD`; uma data antiga envia todo o histórico |
 | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` | seção 8; sem elas, as falhas ficam só no log |
 
@@ -260,7 +260,7 @@ Depois de alterar, reinstale (`.venv/bin/pip install ./app`) e rode `executar --
 | `caixa N: autorização OAuth ...`, `serviço de autorização do Google indisponível` ou `credenciais do cliente OAuth recusadas` | falha do acesso por OAuth | ver a tabela da seção 16.6 |
 | `OneDrive: reautorize o remote` | token da Microsoft expirado ou revogado (troca de senha, ação do administrador, longa inatividade) | refaça 6.1: `rclone authorize "onedrive"` na máquina com navegador e, na VPS, `rclone config`, edite o remote e cole o novo token; confirme com `testar-onedrive` |
 | `acesso negado ... (403)` | a pasta deixou de estar compartilhada com permissão de edição | peça à `<conta-admin>` que restaure o compartilhamento |
-| `destino não encontrado` | a pasta foi renomeada ou movida | corrija `DESTINO_ONEDRIVE`; a ferramenta nunca cria a pasta |
+| `destino não encontrado` | a pasta, ou uma subpasta `DIA <d>/202X-<mm>` da grade por vencimento, foi renomeada, movida ou não existe | corrija `DESTINO_ONEDRIVE` ou recrie a subpasta; a ferramenta nunca cria pastas |
 | aviso no Telegram deixou de chegar | token do bot revogado no BotFather ou bot removido do grupo | gere novo token com `/revoke` no BotFather e atualize `TELEGRAM_BOT_TOKEN` |
 
 Depois de trocar qualquer credencial, a próxima execução com sucesso envia a mensagem de recuperação.

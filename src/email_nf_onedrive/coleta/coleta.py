@@ -23,6 +23,7 @@ from email_nf_onedrive.coleta.janela import data_de_corte
 from email_nf_onedrive.coleta.mime import AnexoExtraido, MensagemAnalisada, analisar_mensagem
 from email_nf_onedrive.configuracao.modelo import MODO_OAUTH, Caixa
 from email_nf_onedrive.envio.nomeacao import dados_nfe
+from email_nf_onedrive.envio.vencimento import vencimento_da_mensagem
 from email_nf_onedrive.registro.banco import ESTADOS_PENDENTES, Registro
 
 PROGRESSO_A_CADA = 50
@@ -49,6 +50,7 @@ class AnexoParaEnvio:
     classe: str = ""
     emitente_mensagem: str = ""  # emitente do XML de NF-e da mensagem, que nomeia também os PDFs irmãos
     remetentes_encaminhados: tuple[str, ...] = ()
+    vencimento_mensagem: date | None = None  # do XML de NF-e ou do boleto irmão (feature 003)
 
 
 @dataclass(frozen=True)
@@ -133,6 +135,7 @@ class _ColetorCaixa:
         msg = analisar_mensagem(bruto)
         data = msg.data or datetime.now(timezone.utc)
         emitente = _emitente_da_mensagem(msg)
+        vencimento = vencimento_da_mensagem([(a.nome, a.conteudo) for a in msg.anexos], data.date())
         for nome in msg.compactados:
             self._ocorrencia(msg, "compactado", f"anexo compactado ignorado ({nome})")
         if not msg.anexos and contem_palavra_chave(msg.assunto):
@@ -142,7 +145,7 @@ class _ColetorCaixa:
             existente = self.registro.buscar(self.caixa.endereco, msg.message_id, anexo.sha256)
             if existente is not None:
                 if existente.estado in ESTADOS_PENDENTES:  # fluxo alternativo A: nova tentativa de envio
-                    self._para_envio(existente.id, anexo, msg, data, existente.classe, emitente)
+                    self._para_envio(existente.id, anexo, msg, data, existente.classe, emitente, vencimento)
                 continue
             classe = classificar(anexo.nome, msg.assunto, anexo.conteudo)
             self.resultado.classes[classe] += 1
@@ -160,10 +163,10 @@ class _ColetorCaixa:
             novo = self.registro.registrar_anexo(**campos, estado="extraido")
             self.log.info("extraído: %s (%s, sha256 %s, remetente %s, assunto %r)", anexo.nome, classe,
                           anexo.sha256, msg.remetente, msg.assunto, extra=self.extra)
-            self._para_envio(novo.id, anexo, msg, data, classe, emitente)
+            self._para_envio(novo.id, anexo, msg, data, classe, emitente, vencimento)
 
     def _para_envio(self, anexo_id: int, anexo: AnexoExtraido, msg: MensagemAnalisada, data: datetime,
-                    classe: str, emitente: str) -> None:
+                    classe: str, emitente: str, vencimento: date | None = None) -> None:
         if anexo_id in self._enfileirados:  # mesmo anexo repetido na mensagem ou na pasta
             return
         self._enfileirados.add(anexo_id)
@@ -171,7 +174,7 @@ class _ColetorCaixa:
             anexo_id=anexo_id, caminho_local=self._gravar(anexo_id, anexo), caixa=self.caixa,
             nome_original=anexo.nome, remetente=msg.remetente, data_mensagem=data, sha256=anexo.sha256,
             assunto=msg.assunto, classe=classe, emitente_mensagem=emitente,
-            remetentes_encaminhados=msg.remetentes_encaminhados,
+            remetentes_encaminhados=msg.remetentes_encaminhados, vencimento_mensagem=vencimento,
         ))
 
     def executar(self, fabrica: FabricaIMAP, data_inicial: date, provedor: Provedor | None = None) -> ResultadoCaixa:

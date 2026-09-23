@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import logging
 import shutil
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
+from pathlib import Path
 
 import pytest
 
@@ -13,7 +14,10 @@ from email_nf_onedrive.configuracao.modelo import Caixa
 from email_nf_onedrive.envio.envio import TENTATIVAS_PARA_AVISO, ResultadoEnvio, enviar_anexos
 from email_nf_onedrive.envio.rclone import Rclone
 from email_nf_onedrive.envio import teste_onedrive
+from email_nf_onedrive.envio.vencimento import PASTA_VENCIMENTOS
 from email_nf_onedrive.registro.banco import Registro
+from tests.conftest import nfe_com_vencimentos, pdf_com_texto
+from tests.unidade.test_vencimento import linha_digitavel
 
 pytestmark = [
     pytest.mark.integracao,
@@ -44,17 +48,19 @@ def novo_item(home, registro, destino):
     trabalho.mkdir(parents=True)
     contador = iter(range(1, 1000))
 
-    def _novo(conteudo: bytes, nome="boleto.pdf", remetente="cobranca@fornecedor.example", pasta_destino=None):
+    def _novo(conteudo: bytes, nome="boleto.pdf", remetente="cobranca@fornecedor.example", pasta_destino=None,
+              classe="palavra-chave", vencimento_mensagem=None):
         n = next(contador)
         caixa = Caixa(1, "financeiro@empresa.example", "s", "INBOX", "imap", str(pasta_destino or destino), empresa="ACME")
         anexo = registro.registrar_anexo(
             caixa_endereco=caixa.endereco, caixa_indice=1, message_id=f"<m{n}>", sha256=f"{n:064d}",
             nome_original=nome, remetente=remetente, assunto="Boleto", data_mensagem=RECEBIDO,
-            classe="palavra-chave",
+            classe=classe,
         )
-        local = trabalho / f"{anexo.id}.pdf"
+        local = trabalho / f"{anexo.id}{Path(nome).suffix.lower()}"
         local.write_bytes(conteudo)
-        return AnexoParaEnvio(anexo.id, local, caixa, nome, remetente, RECEBIDO, anexo.sha256)
+        return AnexoParaEnvio(anexo.id, local, caixa, nome, remetente, RECEBIDO, anexo.sha256, assunto="Boleto",
+                              classe=classe, vencimento_mensagem=vencimento_mensagem)
 
     return _novo
 
@@ -154,3 +160,52 @@ def test_testar_onedrive_destino_ausente(tmp_path):
     ok, mensagem = teste_onedrive.testar_onedrive(Rclone(":local"), str(tmp_path / "nao-existe"))
     assert not ok
     assert "destino não encontrado" in mensagem
+
+
+# Destino por vencimento (feature 003, cartão 2)
+
+def _grade(destino, *folhas: tuple[int, int]):
+    for dia, mes in folhas:
+        (destino / PASTA_VENCIMENTOS / f"DIA {dia}" / f"202X-{mes:02d}").mkdir(parents=True)
+
+
+def test_nota_em_xml_vai_para_a_pasta_do_vencimento(registro, destino, novo_item):
+    _grade(destino, (10, 10))
+    item = novo_item(nfe_com_vencimentos("2026-10-10"), nome="nota.xml", classe="nfe-xml")
+    enviar_anexos([item], registro, Rclone(":local"), LOG)
+    pasta = destino / PASTA_VENCIMENTOS / "DIA 10" / "202X-10"
+    assert [p.name for p in pasta.iterdir()] == ["ACME - FORNECEDOR FICTICIO LTDA NF 1234 - REF.xml"]
+    assert _estado(registro, item).caminho_destino.startswith(f"{pasta}/")
+
+
+def test_nota_parcelada_vai_so_para_o_primeiro_vencimento(registro, destino, novo_item):
+    _grade(destino, (10, 10), (10, 11), (10, 12))
+    item = novo_item(nfe_com_vencimentos("2026-11-10", "2026-10-10", "2026-12-10"), nome="nota.xml", classe="nfe-xml")
+    enviar_anexos([item], registro, Rclone(":local"), LOG)
+    arquivos = sorted(p.relative_to(destino).as_posix() for p in destino.rglob("*") if p.is_file())
+    assert arquivos == [f"{PASTA_VENCIMENTOS}/DIA 10/202X-10/ACME - FORNECEDOR FICTICIO LTDA NF 1234 - REF.xml"]
+
+
+def test_danfe_herda_o_vencimento_do_xml_da_mensagem_e_boleto_usa_o_proprio(registro, destino, novo_item):
+    _grade(destino, (10, 10), (10, 11))
+    danfe = novo_item(pdf_com_texto("DANFE"), nome="danfe.pdf", vencimento_mensagem=date(2026, 10, 10))
+    boleto = novo_item(pdf_com_texto(linha_digitavel(date(2026, 11, 10))), nome="boleto parcela 2.pdf",
+                       vencimento_mensagem=date(2026, 10, 10))
+    enviar_anexos([danfe, boleto], registro, Rclone(":local"), LOG)
+    assert _estado(registro, danfe).caminho_destino.startswith(f"{destino}/{PASTA_VENCIMENTOS}/DIA 10/202X-10/")
+    assert _estado(registro, boleto).caminho_destino.startswith(f"{destino}/{PASTA_VENCIMENTOS}/DIA 10/202X-11/")
+
+
+def test_pdf_sem_vencimento_fica_na_raiz(registro, destino, novo_item):
+    _grade(destino, (10, 10))
+    item = novo_item(pdf_com_texto("Nota de servico sem data"), nome="nota.pdf")
+    enviar_anexos([item], registro, Rclone(":local"), LOG)
+    assert _estado(registro, item).caminho_destino == f"{destino}/ACME - FORNECEDOR - BOLETO.pdf"
+
+
+def test_pasta_do_vencimento_ausente_nao_e_criada(registro, destino, novo_item):
+    item = novo_item(pdf_com_texto("Vencimento: 05/11/2026"), nome="boleto.pdf")
+    resultado = enviar_anexos([item], registro, Rclone(":local"), LOG)
+    assert not (destino / PASTA_VENCIMENTOS).exists()
+    assert _estado(registro, item).estado != "enviado"
+    assert [f.causa for f in resultado.falhas] == ["onedrive:destino"]

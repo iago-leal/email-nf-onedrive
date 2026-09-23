@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 
 from email_nf_onedrive.coleta.classificacao import NFE_XML
 from email_nf_onedrive.coleta.coleta import AnexoParaEnvio, Falha
-from email_nf_onedrive.envio import nomeacao
+from email_nf_onedrive.envio import nomeacao, vencimento
 from email_nf_onedrive.envio.rclone import ACESSO, CONFIG, TOKEN, ErroRclone, ObjetoRemoto, Rclone
 from email_nf_onedrive.registro.banco import Registro
 
@@ -111,14 +111,18 @@ class Enviador:
 
     def _enviar_um(self, item: AnexoParaEnvio) -> None:
         extra = {"caixa": item.caixa.indice}
-        destino = item.caixa.destino
         if self._erro_global is not None:
             self._falhar(item, f"envio suspenso nesta execução: {self._erro_global.causa}")
             return
+        quando = vencimento.vencimento(item.caminho_local, xml=item.classe == NFE_XML,
+                                       vencimento_mensagem=item.vencimento_mensagem,
+                                       referencia=item.data_mensagem.date())
+        destino = vencimento.pasta_vencimento(item.caixa.destino, quando)
         if not self._pasta_existe(destino):
             self._falhar(item, f"destino não encontrado: {destino}",
                          Falha("onedrive:destino", f"OneDrive: destino não encontrado: {destino}. "
-                                                   "Ação: confira DESTINO_ONEDRIVE; a pasta não é criada automaticamente."))
+                                                   "Ação: confira DESTINO_ONEDRIVE e a grade de pastas por "
+                                                   "vencimento; a pasta não é criada automaticamente."))
             return
         inicio = time.monotonic()
         tamanho = item.caminho_local.stat().st_size

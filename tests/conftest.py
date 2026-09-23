@@ -68,3 +68,41 @@ def _limpar_segredos():
     segredos.limpar()
     yield
     segredos.limpar()
+
+
+def pdf_com_texto(*linhas: str) -> bytes:
+    """PDF mínimo de uma página com as linhas em texto extraível (feature 003)."""
+    texto = " ".join(
+        f"({linha.replace(chr(92), chr(92) * 2).replace('(', r'\(').replace(')', r'\)')}) Tj 0 -14 Td" for linha in linhas
+    )
+    fluxo = f"BT /F1 10 Tf 40 800 Td {texto} ET".encode("latin-1")
+    objetos = [
+        b"<< /Type /Catalog /Pages 2 0 R >>",
+        b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R "
+        b"/Resources << /Font << /F1 5 0 R >> >> >>",
+        b"<< /Length %d >>\nstream\n" % len(fluxo) + fluxo + b"\nendstream",
+        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+    ]
+    saida = bytearray(b"%PDF-1.4\n")
+    posicoes = []
+    for n, corpo in enumerate(objetos, 1):
+        posicoes.append(len(saida))
+        saida += b"%d 0 obj\n" % n + corpo + b"\nendobj\n"
+    xref = len(saida)
+    saida += b"xref\n0 %d\n0000000000 65535 f \n" % (len(objetos) + 1)
+    saida += b"".join(b"%010d 00000 n \n" % p for p in posicoes)
+    saida += b"trailer\n<< /Size %d /Root 1 0 R >>\nstartxref\n%d\n%%%%EOF\n" % (len(objetos) + 1, xref)
+    return bytes(saida)
+
+
+def nfe_com_vencimentos(*datas: str, emitente: str = "FORNECEDOR FICTICIO LTDA", numero: str = "1234") -> bytes:
+    """XML de NF-e sintético com uma duplicata por data `AAAA-MM-DD` (feature 003)."""
+    duplicatas = "".join(f"<dup><nDup>{i:03d}</nDup><dVenc>{d}</dVenc></dup>" for i, d in enumerate(datas, 1))
+    cobranca = f"<cobr>{duplicatas}</cobr>" if datas else ""
+    return (
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        '<nfeProc xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00"><NFe><infNFe versao="4.00">'
+        f"<ide><nNF>{numero}</nNF></ide><emit><CNPJ>00000000000191</CNPJ><xNome>{emitente}</xNome></emit>"
+        f"{cobranca}</infNFe></NFe></nfeProc>"
+    ).encode()

@@ -165,3 +165,20 @@ O dublê `_RcloneInterrompido`, em `e2e/fal`, estende o Rclone real e levanta `T
 N-ésima cópia: a mesma exceção que `limite_duracao` levanta a partir do SIGALRM, no mesmo ponto do
 laço de envio. `signal.alarm` só aceita segundos inteiros, e um teste por relógio dependeria de o
 alarme cair no envio, e não na coleta.
+
+# Feature `003-destino-por-vencimento`
+
+> Adendo: `_reversa_sdd/addenda/003-destino-por-vencimento.md` (RF-15). Fixtures sintéticas em
+> `tests/conftest.py`: `pdf_com_texto` e `nfe_com_vencimentos`.
+
+| O que prova | Testes |
+|-------------|--------|
+| XML: primeiro `dVenc` entre as parcelas; sem cobrança, sem vencimento | `uni/vencimento::test_nfe_devolve_o_primeiro_vencimento_das_parcelas`, `test_nfe_sem_cobranca_nao_tem_vencimento` |
+| Fator de vencimento nos dois ciclos Febraban e fator zero | `uni/vencimento::test_fator_de_vencimento_escolhe_o_ciclo_mais_proximo`, `test_fator_zero_e_boleto_sem_vencimento`, `test_fator_do_ciclo_antigo_vale_para_documento_antigo` |
+| Linha digitável com e sem separadores; dígito verificador errado não conta | `uni/vencimento::test_boleto_pela_linha_digitavel`, `test_linha_digitavel_sem_separadores`, `test_sequencia_com_digito_verificador_errado_nao_e_linha_digitavel` |
+| Data no texto, com emissão ao lado e data anterior ao recebimento descartadas | `uni/vencimento::test_vencimento_no_texto` |
+| Ordem das fontes para PDF, XML e imagem | `uni/vencimento::test_ordem_das_fontes_para_pdf`, `test_ordem_das_fontes_para_xml`, `test_imagem_so_tem_o_vencimento_da_mensagem` |
+| Vencimento da mensagem: XML irmão antes de boleto irmão | `uni/vencimento::test_vencimento_da_mensagem_prefere_o_xml_e_cai_no_boleto`, `test_coleta_toma_o_vencimento_do_xml_irmao` |
+| Caminho `NOTAS E BOLETOS POR VENCIMENTO/DIA <d>/202X-<mm>` e raiz sem vencimento | `uni/vencimento::test_pasta_por_vencimento`, `test_sem_vencimento_fica_na_raiz_do_destino` |
+| O envio grava na subpasta, parcela só no primeiro vencimento, DANFE herda e boleto usa o próprio | `int/envio::test_nota_em_xml_vai_para_a_pasta_do_vencimento`, `test_nota_parcelada_vai_so_para_o_primeiro_vencimento`, `test_danfe_herda_o_vencimento_do_xml_da_mensagem_e_boleto_usa_o_proprio` |
+| Sem vencimento vai à raiz; subpasta ausente falha sem ser criada | `int/envio::test_pdf_sem_vencimento_fica_na_raiz`, `test_pasta_do_vencimento_ausente_nao_e_criada` |
