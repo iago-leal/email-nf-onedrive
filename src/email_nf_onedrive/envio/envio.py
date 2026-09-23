@@ -1,6 +1,6 @@
 """Envio dos anexos ao OneDrive (spec envio-onedrive, interfaces/rclone-onedrive.md).
 
-Protocolo por anexo: confirma que a pasta de destino existe (sem criá-la), escolhe
+Protocolo por anexo, com até ENVIOS_SIMULTANEOS anexos em paralelo: confirma que a pasta de destino existe (sem criá-la), escolhe
 o nome livre ou reconhece arquivo idêntico já presente, envia sem sobrescrever e
 só marca `enviado` depois de confirmar tamanho e hash no destino (RN-04). A cópia
 local é apagada logo após a confirmação (RN-07).
@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import logging
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 
 from email_nf_onedrive.coleta.classificacao import NFE_XML
@@ -20,6 +21,7 @@ from email_nf_onedrive.registro.banco import Registro
 
 MAX_SUFIXO = 99
 TENTATIVAS_PARA_AVISO = 5
+ENVIOS_SIMULTANEOS = 4
 
 
 class _Conflito(Exception):
@@ -55,22 +57,68 @@ def _falha_rclone(erro: ErroRclone, remote: str, destino: str) -> Falha | None:
     return None
 
 
+@dataclass
+class _Desfecho:
+    """O que o trabalho remoto de um anexo apurou; o registro é gravado depois, na thread principal."""
+
+    item: AnexoParaEnvio
+    destino: str
+    caminho: str = ""
+    identico: bool = False
+    duracao: float = 0.0
+    motivo: str = ""
+    falha: Falha | None = None
+
+    @property
+    def falhou(self) -> bool:
+        return bool(self.motivo)
+
+
 class Enviador:
+    """Envia os anexos em até `simultaneos` threads (o gargalo é a ida e volta ao OneDrive).
+
+    As threads só falam com o Rclone; registro, contagens e cópia local ficam na thread principal,
+    que também recebe a interrupção do limite de tempo. Anexos com o mesmo caminho de destino,
+    comparado sem caixa como faz o OneDrive, vão juntos, em sequência, para que a escolha do
+    sufixo `_n` continue vendo o arquivo que o anterior acabou de enviar.
+    """
+
     def __init__(self, registro: Registro, rclone: Rclone, logger: logging.Logger, *, simulacao: bool = False,
-                 internos: frozenset[str] = frozenset(), resultado: ResultadoEnvio | None = None) -> None:
+                 internos: frozenset[str] = frozenset(), resultado: ResultadoEnvio | None = None,
+                 simultaneos: int = ENVIOS_SIMULTANEOS) -> None:
         self.registro = registro
         self.rclone = rclone
         self.log = logger
         self.simulacao = simulacao
         self.internos = internos
+        self.simultaneos = max(1, simultaneos)
         # Quem chama pode fornecer o acumulador para ler as contagens mesmo que o envio seja
         # interrompido no meio (BUG-20260922-RWDA): o retorno só existe quando a chamada termina.
         self.resultado = resultado if resultado is not None else ResultadoEnvio()
         self._pastas: dict[str, bool] = {}
         self._erro_global: Falha | None = None
 
+    # --- preparação (thread principal) ------------------------------------------
+
+    def _preparar(self, item: AnexoParaEnvio) -> tuple[str, str]:
+        """(pasta de destino, caminho padronizado) do anexo, calculados sem tocar no OneDrive."""
+        quando = vencimento.vencimento(item.caminho_local, xml=item.classe == NFE_XML,
+                                       vencimento_mensagem=item.vencimento_mensagem,
+                                       referencia=item.data_mensagem.date())
+        destino = vencimento.pasta_vencimento(item.caixa.destino, quando)
+        caminho = nomeacao.caminho_destino(destino, nomeacao.DadosNome(
+            empresa=item.caixa.empresa, remetente=item.remetente, nome_original=item.nome_original,
+            assunto=item.assunto, classe=item.classe,
+            conteudo=item.caminho_local.read_bytes() if item.classe == NFE_XML else None,
+            emitente_mensagem=item.emitente_mensagem, remetentes_encaminhados=item.remetentes_encaminhados,
+            internos=self.internos,
+        ))
+        return destino, caminho
+
+    # --- trabalho remoto (threads) ----------------------------------------------
+
     def _pasta_existe(self, destino: str) -> bool:
-        if destino not in self._pastas:
+        if destino not in self._pastas:  # duas threads podem consultar a mesma pasta; a leitura é inofensiva
             self._pastas[destino] = self.rclone.pasta_existe(destino)
         return self._pastas[destino]
 
@@ -92,6 +140,42 @@ class Enviador:
             return False
         return remoto.quickxor is None or remoto.quickxor.lower() == hash_local.lower()
 
+    def _remoto(self, item: AnexoParaEnvio, destino: str, caminho: str) -> _Desfecho:
+        desfecho = _Desfecho(item, destino)
+        if self._erro_global is not None:
+            desfecho.motivo = f"envio suspenso nesta execução: {self._erro_global.causa}"
+            return desfecho
+        inicio = time.monotonic()
+        try:
+            if not self._pasta_existe(destino):
+                desfecho.motivo = f"destino não encontrado: {destino}"
+                desfecho.falha = Falha("onedrive:destino", f"OneDrive: destino não encontrado: {destino}. "
+                                                           "Ação: confira DESTINO_ONEDRIVE e a grade de pastas por "
+                                                           "vencimento; a pasta não é criada automaticamente.")
+                return desfecho
+            tamanho = item.caminho_local.stat().st_size
+            hash_local = self.rclone.hash_local(item.caminho_local)
+            desfecho.caminho, desfecho.identico = self._escolher_nome(caminho, tamanho, hash_local)
+            if not self.simulacao and not desfecho.identico:
+                self.rclone.copiar(item.caminho_local, desfecho.caminho)
+                remoto = self.rclone.estatistica(desfecho.caminho)
+                if remoto is None or not self._confere(remoto, tamanho, hash_local):
+                    raise _Divergente("tamanho divergente no destino após o envio")
+        except ErroRclone as erro:
+            desfecho.falha = _falha_rclone(erro, self.rclone.remote, item.caixa.destino)
+            if desfecho.falha is not None and desfecho.falha.causa in ("onedrive:token", "config:RCLONE_REMOTE"):
+                self._erro_global = desfecho.falha  # os demais envios falhariam pelo mesmo motivo
+            desfecho.motivo = f"{erro.causa}: {erro.detalhe}"
+        except (_Conflito, _Divergente) as erro:
+            desfecho.motivo = str(erro)
+        desfecho.duracao = time.monotonic() - inicio
+        return desfecho
+
+    def _remoto_em_sequencia(self, grupo: list[tuple[AnexoParaEnvio, str, str]]) -> list[_Desfecho]:
+        return [self._remoto(item, destino, caminho) for item, destino, caminho in grupo]
+
+    # --- registro (thread principal) --------------------------------------------
+
     def _falhar(self, item: AnexoParaEnvio, motivo: str, falha: Falha | None = None) -> None:
         extra = {"caixa": item.caixa.indice}
         self.log.error("falha no envio de %s: %s", item.nome_original, motivo, extra=extra)
@@ -109,70 +193,48 @@ class Enviador:
                 f"{tentativas} tentativas de envio falharam. Ação: ver log.",
             ))
 
-    def _enviar_um(self, item: AnexoParaEnvio) -> None:
+    def _concluir(self, desfecho: _Desfecho) -> None:
+        item = desfecho.item
+        if desfecho.falhou:
+            self._falhar(item, desfecho.motivo, desfecho.falha)
+            return
         extra = {"caixa": item.caixa.indice}
-        if self._erro_global is not None:
-            self._falhar(item, f"envio suspenso nesta execução: {self._erro_global.causa}")
-            return
-        quando = vencimento.vencimento(item.caminho_local, xml=item.classe == NFE_XML,
-                                       vencimento_mensagem=item.vencimento_mensagem,
-                                       referencia=item.data_mensagem.date())
-        destino = vencimento.pasta_vencimento(item.caixa.destino, quando)
-        if not self._pasta_existe(destino):
-            self._falhar(item, f"destino não encontrado: {destino}",
-                         Falha("onedrive:destino", f"OneDrive: destino não encontrado: {destino}. "
-                                                   "Ação: confira DESTINO_ONEDRIVE e a grade de pastas por "
-                                                   "vencimento; a pasta não é criada automaticamente."))
-            return
-        inicio = time.monotonic()
-        tamanho = item.caminho_local.stat().st_size
-        hash_local = self.rclone.hash_local(item.caminho_local)
-        caminho = nomeacao.caminho_destino(destino, nomeacao.DadosNome(
-            empresa=item.caixa.empresa, remetente=item.remetente, nome_original=item.nome_original,
-            assunto=item.assunto, classe=item.classe,
-            conteudo=item.caminho_local.read_bytes() if item.classe == NFE_XML else None,
-            emitente_mensagem=item.emitente_mensagem, remetentes_encaminhados=item.remetentes_encaminhados,
-            internos=self.internos,
-        ))
-        caminho, identico = self._escolher_nome(caminho, tamanho, hash_local)
-        nome_final = caminho.rsplit("/", 1)[1]
-
+        nome_final = desfecho.caminho.rsplit("/", 1)[1]
         if self.simulacao:
-            acao = "já existe idêntico" if identico else "enviaria"
-            self.log.info("simulação: %s %s -> %s", acao, nome_final, destino, extra=extra)
+            acao = "já existe idêntico" if desfecho.identico else "enviaria"
+            self.log.info("simulação: %s %s -> %s", acao, nome_final, desfecho.destino, extra=extra)
             self.resultado.simulados += 1
             return
-        if not identico:
-            self.rclone.copiar(item.caminho_local, caminho)
-            remoto = self.rclone.estatistica(caminho)
-            if remoto is None or not self._confere(remoto, tamanho, hash_local):
-                raise _Divergente("tamanho divergente no destino após o envio")
-        self.registro.marcar_enviado(item.anexo_id, caminho)
+        self.registro.marcar_enviado(item.anexo_id, desfecho.caminho)
         self.registro.commit()
         item.caminho_local.unlink(missing_ok=True)
         self.resultado.enviados += 1
-        situacao = "já existia idêntico" if identico else "enviado"
-        self.log.info("%s: %s -> %s (%.1f s)", situacao, nome_final, destino, time.monotonic() - inicio, extra=extra)
+        situacao = "já existia idêntico" if desfecho.identico else "enviado"
+        self.log.info("%s: %s -> %s (%.1f s)", situacao, nome_final, desfecho.destino, desfecho.duracao, extra=extra)
 
     def enviar(self, itens: list[AnexoParaEnvio]) -> ResultadoEnvio:
         if not itens:
             self.log.info("nada a enviar")
             return self.resultado
+        grupos: dict[str, list[tuple[AnexoParaEnvio, str, str]]] = {}
         for item in itens:
-            try:
-                self._enviar_um(item)
-            except ErroRclone as erro:
-                falha = _falha_rclone(erro, self.rclone.remote, item.caixa.destino)
-                if falha is not None and falha.causa in ("onedrive:token", "config:RCLONE_REMOTE"):
-                    self._erro_global = falha  # os demais envios falhariam pelo mesmo motivo
-                self._falhar(item, f"{erro.causa}: {erro.detalhe}", falha)
-            except (_Conflito, _Divergente) as erro:
-                self._falhar(item, str(erro))
+            destino, caminho = self._preparar(item)
+            grupos.setdefault(caminho.casefold(), []).append((item, destino, caminho))
+        pool = ThreadPoolExecutor(max_workers=self.simultaneos, thread_name_prefix="envio")
+        try:
+            futuros = [pool.submit(self._remoto_em_sequencia, grupo) for grupo in grupos.values()]
+            for futuro in as_completed(futuros):
+                for desfecho in futuro.result():
+                    self._concluir(desfecho)
+        finally:
+            # Na interrupção pelo limite de tempo, nada novo começa; o que já está em curso termina
+            # sem registro, e a execução seguinte o reconhece no destino pelo hash (já existia idêntico).
+            pool.shutdown(wait=False, cancel_futures=True)
         return self.resultado
 
 
 def enviar_anexos(itens: list[AnexoParaEnvio], registro: Registro, rclone: Rclone, logger: logging.Logger,
                   *, simulacao: bool = False, internos: frozenset[str] = frozenset(),
-                  resultado: ResultadoEnvio | None = None) -> ResultadoEnvio:
-    return Enviador(registro, rclone, logger, simulacao=simulacao, internos=internos,
-                    resultado=resultado).enviar(itens)
+                  resultado: ResultadoEnvio | None = None, simultaneos: int = ENVIOS_SIMULTANEOS) -> ResultadoEnvio:
+    return Enviador(registro, rclone, logger, simulacao=simulacao, internos=internos, resultado=resultado,
+                    simultaneos=simultaneos).enviar(itens)

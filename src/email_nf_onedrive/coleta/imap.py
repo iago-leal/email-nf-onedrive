@@ -1,8 +1,8 @@
 """Cliente IMAP restrito à leitura (D-05, interfaces/imap-gmail.md).
 
 Só expõe LOGIN ou AUTHENTICATE XOAUTH2 (feature 002, D-07), LIST, EXAMINE,
-SEARCH SINCE, FETCH BODY.PEEK[] e LOGOUT. A pasta
-é aberta com `select(readonly=True)`, que emite EXAMINE, e as mensagens são
+SEARCH SINCE, FETCH BODY.PEEK[] (e BODY.PEEK[HEADER.FIELDS (MESSAGE-ID)]) e LOGOUT.
+A pasta é aberta com `select(readonly=True)`, que emite EXAMINE, e as mensagens são
 lidas com BODY.PEEK[], que não altera a flag \\Seen (RN-01).
 """
 
@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import imaplib
 import re
+from email import message_from_bytes, policy
 from datetime import date
 from typing import Callable
 
@@ -25,6 +26,8 @@ LIMITE_DESAFIO = 200
 PASTA = "pasta"
 CONEXAO = "conexao"
 
+IDENTIFICADORES_POR_FETCH = 200
+_NUMERO_NO_FETCH = re.compile(rb"^(\d+) ")
 _NOME_NA_LISTA = re.compile(rb'(?:"((?:[^"\\]|\\.)*)"|(\S+))\s*$')
 
 
@@ -120,6 +123,18 @@ class ClienteIMAP:
     def buscar_desde(self, dia: date) -> list[bytes]:
         dados = self._chamar(self._imap.search, None, "SINCE", formatar_since(dia))
         return (dados[0] or b"").split() if dados else []
+
+    def identificadores(self, numeros: list[bytes]) -> dict[bytes, str]:
+        """`Message-ID` de cada mensagem, em lotes, sem baixar o corpo; vazio se a mensagem não o tiver."""
+        achados: dict[bytes, str] = {}
+        for inicio in range(0, len(numeros), IDENTIFICADORES_POR_FETCH):
+            lote = b",".join(numeros[inicio: inicio + IDENTIFICADORES_POR_FETCH])
+            dados = self._chamar(self._imap.fetch, lote, "(BODY.PEEK[HEADER.FIELDS (MESSAGE-ID)])")
+            for item in dados or []:
+                if isinstance(item, tuple) and len(item) == 2 and (numero := _NUMERO_NO_FETCH.match(item[0])):
+                    cabecalho = message_from_bytes(item[1], policy=policy.default)
+                    achados[numero.group(1)] = str(cabecalho.get("Message-ID", "")).strip()
+        return achados
 
     def obter(self, numero: bytes) -> bytes:
         """Mensagem completa, sem marcar como lida (BODY.PEEK[])."""

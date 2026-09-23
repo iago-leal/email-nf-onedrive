@@ -226,6 +226,17 @@ class Registro:
         ).fetchone()[0]
         return _dt(valor)
 
+    def mensagens_resolvidas(self, caixa_endereco: str) -> set[str]:
+        """Mensagens já lidas sem nada pendente: todos os anexos em estado terminal, ou só ocorrência."""
+        caixa = caixa_endereco.lower()
+        linhas = self._con.execute(
+            """SELECT message_id FROM anexos WHERE caixa_endereco = ?
+               UNION SELECT message_id FROM ocorrencias WHERE caixa_endereco = ?
+               EXCEPT SELECT message_id FROM anexos WHERE caixa_endereco = ? AND estado IN (?, ?)""",
+            (caixa, caixa, caixa, *ESTADOS_PENDENTES),
+        ).fetchall()
+        return {linha[0] for linha in linhas}
+
     # --- ocorrências e meta -------------------------------------------------------
 
     def registrar_ocorrencia(self, caixa_endereco: str, message_id: str, tipo: str) -> bool:

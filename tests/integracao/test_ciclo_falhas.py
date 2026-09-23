@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import errno
 import os
+import signal
 import time
 from pathlib import Path
 
@@ -11,7 +12,6 @@ import pytest
 
 from email_nf_onedrive.cli import main
 from email_nf_onedrive.envio.rclone import ErroRclone, Rclone
-from email_nf_onedrive.execucao.trava import TempoEsgotado
 
 from .conftest import CAIXA_1, SENHA_1, TOKEN
 
@@ -190,12 +190,13 @@ ANEXOS_DE_TRES_MENSAGENS = ("encaminhada.eml", "encaminhada_em_linha.eml", "inte
 
 
 class _RcloneInterrompido(Rclone):
-    """Rclone real que falha ou estoura o tempo em cópias escolhidas.
+    """Rclone real que falha ou faz disparar o limite de tempo em cópias escolhidas.
 
-    `signal.alarm` só aceita segundos inteiros, de modo que disparar o limite pelo relógio
-    exigiria um ciclo de mais de um segundo e dependeria de o alarme cair no envio, e não na
-    coleta. `TempoEsgotado` é a mesma exceção que `limite_duracao` levanta a partir do SIGALRM,
-    aqui levantada no mesmo ponto: dentro do laço de `Enviador.enviar`.
+    `signal.alarm` só aceita segundos inteiros, de modo que esperar o alarme pelo relógio
+    exigiria um ciclo de mais de um segundo e dependeria de ele cair no envio, e não na coleta.
+    O dublê dispara o mesmo SIGALRM na N-ésima cópia: `limite_duracao` o converte em
+    `TempoEsgotado` na thread principal, como em produção, enquanto a cópia corre numa thread de
+    envio. A cópia interrompida não chega ao destino.
     """
 
     def __init__(self, remote: str, *, estoura_na: int, falha_na: int = 0) -> None:
@@ -209,13 +210,16 @@ class _RcloneInterrompido(Rclone):
         if self.copias == self.falha_na:
             raise ErroRclone("rede", "conexão recusada pelo destino")
         if self.copias == self.estoura_na:
-            raise TempoEsgotado("execução passou de 1200 s")
+            signal.raise_signal(signal.SIGALRM)
+            time.sleep(1)  # a thread principal trata o sinal antes de esta cópia terminar
+            raise ErroRclone("rede", "cópia cortada pelo fim da execução")
         super().copiar(local, relativo)
 
 
 def _deps_com_interrupcao(cenario, **kwargs):
     deps = cenario.deps()
     deps.criar_rclone = lambda remote: _RcloneInterrompido(remote, **kwargs)
+    deps.envios_simultaneos = 1  # a "N-ésima cópia" só é determinística com um envio por vez
     return deps
 
 
@@ -247,3 +251,17 @@ def test_falha_de_anexo_antes_da_interrupcao_entra_no_resumo(cenario):
     assert "2 enviados" in resumo
     assert "2 falhas" in resumo  # a do anexo e a do tempo
     assert cenario.estados().count("falha-envio") == 1
+
+
+def test_interrupcao_com_envios_em_paralelo_nao_duplica_na_execucao_seguinte(cenario):
+    """Cópias em curso na interrupção terminam sem registro; a execução seguinte as reconhece pelo hash."""
+    cenario.entregar(*ANEXOS_DE_TRES_MENSAGENS)
+    deps = _deps_com_interrupcao(cenario, estoura_na=2)
+    deps.envios_simultaneos = 4
+    assert cenario.executar("executar", deps=deps) == 2
+    resumo = [linha for linha in cenario.log().splitlines() if "resumo: " in linha][-1]
+    assert f"{cenario.estados().count('enviado')} enviados" in resumo  # o resumo conta o que o registro confirmou
+
+    assert cenario.executar("executar") == 0
+    assert set(cenario.estados()) == {"enviado"}
+    assert len(cenario.arquivos_no_destino()) == len(cenario.estados())  # nenhum _2 de arquivo idêntico

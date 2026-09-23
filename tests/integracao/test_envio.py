@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import logging
 import shutil
+import threading
+import time
 from datetime import date, datetime, timezone
 from pathlib import Path
 
@@ -209,3 +211,50 @@ def test_pasta_do_vencimento_ausente_nao_e_criada(registro, destino, novo_item):
     assert not (destino / PASTA_VENCIMENTOS).exists()
     assert _estado(registro, item).estado != "enviado"
     assert [f.causa for f in resultado.falhas] == ["onedrive:destino"]
+
+
+# Envio em paralelo
+
+class _RcloneLento(Rclone):
+    """Rclone real com cópia lenta, que mede quantas cópias correm ao mesmo tempo."""
+
+    def __init__(self) -> None:
+        super().__init__(":local")
+        self._trava = threading.Lock()
+        self.em_curso = self.maximo = 0
+
+    def copiar(self, local, relativo) -> None:
+        with self._trava:
+            self.em_curso += 1
+            self.maximo = max(self.maximo, self.em_curso)
+        time.sleep(0.3)
+        super().copiar(local, relativo)
+        with self._trava:
+            self.em_curso -= 1
+
+
+def test_envios_correm_em_paralelo(registro, destino, novo_item):
+    itens = [novo_item(b"%PDF " + bytes([n]), remetente=f"cobranca@fornecedor{n}.example") for n in range(8)]
+    rclone = _RcloneLento()
+    resultado = enviar_anexos(itens, registro, rclone, LOG, simultaneos=4)
+    assert resultado.enviados == 8 and resultado.falhas == []
+    assert rclone.maximo == 4
+    assert all(_estado(registro, item).estado == "enviado" for item in itens)
+    assert len(list(destino.iterdir())) == 8
+
+
+def test_mesmo_nome_em_paralelo_recebe_sufixos_sem_colisao(registro, destino, novo_item):
+    itens = [novo_item(b"%PDF conteudo " + bytes([n])) for n in range(5)]
+    resultado = enviar_anexos(itens, registro, _RcloneLento(), LOG, simultaneos=4)
+    assert resultado.enviados == 5
+    assert sorted(p.name for p in destino.iterdir()) == [
+        "ACME - FORNECEDOR - BOLETO.pdf", *(f"ACME - FORNECEDOR - BOLETO_{n}.pdf" for n in range(2, 6))]
+
+
+def test_nomes_que_so_diferem_na_caixa_vao_na_mesma_fila(registro, destino, novo_item):
+    """O OneDrive não distingue maiúsculas; o agrupamento também não."""
+    a = novo_item(b"%PDF A", remetente="cobranca@fornecedor.example")
+    b = novo_item(b"%PDF B", remetente="COBRANCA@FORNECEDOR.EXAMPLE")
+    enviar_anexos([a, b], registro, _RcloneLento(), LOG, simultaneos=4)
+    assert sorted(p.name for p in destino.iterdir()) == ["ACME - FORNECEDOR - BOLETO.pdf",
+                                                         "ACME - FORNECEDOR - BOLETO_2.pdf"]

@@ -182,3 +182,16 @@ alarme cair no envio, e não na coleta.
 | Caminho `NOTAS E BOLETOS POR VENCIMENTO/DIA <d>/202X-<mm>` e raiz sem vencimento | `uni/vencimento::test_pasta_por_vencimento`, `test_sem_vencimento_fica_na_raiz_do_destino` |
 | O envio grava na subpasta, parcela só no primeiro vencimento, DANFE herda e boleto usa o próprio | `int/envio::test_nota_em_xml_vai_para_a_pasta_do_vencimento`, `test_nota_parcelada_vai_so_para_o_primeiro_vencimento`, `test_danfe_herda_o_vencimento_do_xml_da_mensagem_e_boleto_usa_o_proprio` |
 | Sem vencimento vai à raiz; subpasta ausente falha sem ser criada | `int/envio::test_pdf_sem_vencimento_fica_na_raiz`, `test_pasta_do_vencimento_ausente_nao_e_criada` |
+
+# Adendo `004-desempenho-coleta-envio`
+
+| O que prova | Testes |
+|-------------|--------|
+| Mensagens resolvidas: anexos terminais ou só ocorrência, sem nenhum pendente | `uni/registro::test_mensagens_resolvidas` |
+| A coleta lê o `Message-ID` e não baixa de novo a mensagem resolvida; a sem `Message-ID` e a com pendente seguem sendo baixadas | `int/coleta::test_mensagem_resolvida_nao_e_baixada_de_novo`, `test_mensagem_com_pendente_continua_sendo_baixada`, `test_so_comandos_de_leitura_e_body_peek` |
+| O envio usa até 4 threads, e o mesmo nome (também só na caixa) recebe sufixos sem colisão | `int/envio::test_envios_correm_em_paralelo`, `test_mesmo_nome_em_paralelo_recebe_sufixos_sem_colisao`, `test_nomes_que_so_diferem_na_caixa_vao_na_mesma_fila` |
+| Interrupção com envios em curso: resumo igual ao registro, e a execução seguinte não duplica | `e2e/fal::test_interrupcao_com_envios_em_paralelo_nao_duplica_na_execucao_seguinte` |
+
+O dublê `_RcloneInterrompido` passou a disparar um SIGALRM real, que `limite_duracao` converte em
+`TempoEsgotado` na thread principal, e os três testes do `BUG-20260922-RWDA` rodam com um envio por
+vez (`Dependencias.envios_simultaneos = 1`), porque "a N-ésima cópia" só é determinística em série.

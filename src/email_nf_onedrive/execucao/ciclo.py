@@ -28,7 +28,7 @@ from email_nf_onedrive.autorizacao.servico import Enderecos
 from email_nf_onedrive.coleta.coleta import Falha, FabricaIMAP, coletar, fabrica_imap_padrao
 from email_nf_onedrive.configuracao.carregar import carregar_configuracao
 from email_nf_onedrive.configuracao.modelo import MODO_OAUTH, Configuracao, ErroConfiguracao
-from email_nf_onedrive.envio.envio import ResultadoEnvio, enviar_anexos
+from email_nf_onedrive.envio.envio import ENVIOS_SIMULTANEOS, ResultadoEnvio, enviar_anexos
 from email_nf_onedrive.envio.rclone import Rclone
 from email_nf_onedrive.execucao import telegram
 from email_nf_onedrive.execucao.avisos import TITULO, GerenciadorAvisos, Transporte
@@ -55,6 +55,7 @@ class Dependencias:
     criar_transporte: Callable[[str, str], Transporte] = telegram.criar_transporte
     agora: Callable[[], datetime] = _agora_utc
     limite_s: int = LIMITE_DURACAO_S
+    envios_simultaneos: int = ENVIOS_SIMULTANEOS
     # Feature 002, D-14: os endereços do Google só mudam por aqui, nunca pelo .env.
     servico_autorizacao: Enderecos = field(default_factory=Enderecos)
     # Chamado pelo `autorizar-caixa` com o endereço de consentimento já impresso; os testes simulam o navegador.
@@ -165,7 +166,8 @@ class _Ciclo:
         envio = ResultadoEnvio()
         try:
             enviar_anexos(itens, self.registro, self.deps.criar_rclone(config.rclone_remote), self.log,
-                          simulacao=self.simulacao, internos=config.dominios_internos, resultado=envio)
+                          simulacao=self.simulacao, internos=config.dominios_internos, resultado=envio,
+                          simultaneos=self.deps.envios_simultaneos)
         finally:  # a interrupção por tempo não pode levar as contagens consigo (BUG-20260922-RWDA)
             self._contabilizar_envio(envio, resumo)
 

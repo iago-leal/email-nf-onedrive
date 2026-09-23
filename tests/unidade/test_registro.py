@@ -234,3 +234,20 @@ def test_banco_corrompido_aborta(caminho):
     with pytest.raises(RegistroCorrompido):
         Registro.abrir(caminho)
     assert caminho.read_bytes().startswith(b"isto nao e")
+
+
+def test_mensagens_resolvidas(tmp_path):
+    from datetime import datetime, timezone
+
+    with Registro.abrir(tmp_path / "r.sqlite3") as reg:
+        base = dict(caixa_endereco="Caixa@Empresa.example", caixa_indice=1, nome_original="a.pdf", remetente="x@y",
+                    assunto="NF", data_mensagem=datetime(2026, 9, 1, tzinfo=timezone.utc), classe="palavra-chave")
+        enviado = reg.registrar_anexo(**base, message_id="<m1>", sha256="1")
+        reg.marcar_enviado(enviado.id, "D/a.pdf")
+        reg.registrar_anexo(**base, message_id="<m2>", sha256="2", estado="retido")
+        reg.registrar_anexo(**base, message_id="<m3>", sha256="3")                      # pendente
+        reg.registrar_anexo(**base, message_id="<m4>", sha256="4", estado="retido")
+        reg.registrar_anexo(**base, message_id="<m4>", sha256="5")                      # mesma mensagem, pendente
+        reg.registrar_ocorrencia("caixa@empresa.example", "<m5>", "sem-anexo")
+        assert reg.mensagens_resolvidas("caixa@empresa.example") == {"<m1>", "<m2>", "<m5>"}
+        assert reg.mensagens_resolvidas("outra@empresa.example") == set()

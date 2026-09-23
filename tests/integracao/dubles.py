@@ -5,6 +5,7 @@ from __future__ import annotations
 import base64
 import imaplib
 import json
+import re
 import threading
 import time
 from datetime import date
@@ -123,12 +124,22 @@ class ConexaoFalsa:
         ]
         return "OK", [b" ".join(numeros)]
 
-    def fetch(self, numero: bytes, partes: str):
-        self._registrar("FETCH", numero, partes)
-        bruto = self.pasta[int(numero) - 1]
-        if "PEEK" not in partes:
-            self.servidor.lidas.add((self.usuario, int(numero)))
-        return "OK", [(numero + b" (BODY[] {%d}" % len(bruto), bruto), b")"]
+    def fetch(self, numeros: bytes, partes: str):
+        self._registrar("FETCH", numeros, partes)
+        resposta = []
+        for numero in numeros.split(b","):
+            bruto = self.pasta[int(numero) - 1]
+            if "PEEK" not in partes:
+                self.servidor.lidas.add((self.usuario, int(numero)))
+            if "HEADER.FIELDS" in partes:
+                cabecalhos = re.split(rb"\r?\n\r?\n", bruto, maxsplit=1)[0]
+                cabecalho = b"".join(
+                    linha + b"\r\n" for linha in cabecalhos.splitlines() if linha.lower().startswith(b"message-id:")
+                ) + b"\r\n"
+                resposta += [(numero + b" (BODY[HEADER.FIELDS (MESSAGE-ID)] {%d}" % len(cabecalho), cabecalho), b")"]
+            else:
+                resposta += [(numero + b" (BODY[] {%d}" % len(bruto), bruto), b")"]
+        return "OK", resposta
 
     def logout(self):
         self._registrar("LOGOUT")

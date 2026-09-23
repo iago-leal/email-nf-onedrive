@@ -62,7 +62,7 @@ def test_so_comandos_de_leitura_e_body_peek(servidor, dados, ambiente):
     assert servidor.nomes_de_comandos() <= COMANDOS_PERMITIDOS
     assert "SELECT" not in servidor.nomes_de_comandos()
     fetches = [c for c in servidor.comandos if c[0] == "FETCH"]
-    assert fetches and all(c[2] == "(BODY.PEEK[])" for c in fetches)
+    assert fetches and all(c[2] in ("(BODY.PEEK[])", "(BODY.PEEK[HEADER.FIELDS (MESSAGE-ID)])") for c in fetches)
     assert servidor.lidas == set()
 
 
@@ -243,3 +243,28 @@ def test_xoauth2_recusado_responde_ao_desafio_e_falha_por_autorizacao(servidor, 
                                  "Ação: rode autorizar-caixa 2 e confira se o IMAP está ativo na conta.")
     assert '"status": "400"' in caplog.text  # o desafio decodificado vai ao log
     assert "ya29.recusada" not in caplog.text
+
+
+def test_mensagem_resolvida_nao_e_baixada_de_novo(servidor, dados, ambiente):
+    """Só o Message-ID das mensagens resolvidas é lido; o corpo, nunca mais (coleta sem download repetido)."""
+    _entregar(servidor, dados, "boleto_simples.eml", "proposta_contrato.eml", "sem_message_id.eml")
+    (primeira,), registro = ambiente()
+    boleto = next(i for i in primeira.para_envio if i.nome_original == "Boleto Set.pdf")
+    registro.marcar_enviado(boleto.anexo_id, "Destino/ACME - FORNECEDOR - BOLETO.pdf")
+    registro.commit()
+    servidor.comandos.clear()
+
+    (segunda,), _ = ambiente()
+    corpos = [c[1] for c in servidor.comandos if c[0] == "FETCH" and c[2] == "(BODY.PEEK[])"]
+    assert corpos == [b"3"]  # boleto enviado e proposta retida ficam de fora; sem Message-ID, não há como saber
+    assert [i.anexo_id for i in segunda.para_envio] == [i.anexo_id for i in primeira.para_envio if i is not boleto]
+
+
+def test_mensagem_com_pendente_continua_sendo_baixada(servidor, dados, ambiente):
+    _entregar(servidor, dados, "boleto_simples.eml", "proposta_contrato.eml")
+    ambiente()
+    servidor.comandos.clear()
+    (segunda,), _ = ambiente()
+    corpos = [c[1] for c in servidor.comandos if c[0] == "FETCH" and c[2] == "(BODY.PEEK[])"]
+    assert corpos == [b"1"]
+    assert [i.nome_original for i in segunda.para_envio] == ["Boleto Set.pdf"]

@@ -198,6 +198,7 @@ class _ColetorCaixa:
             numeros = cliente.buscar_desde(corte)
             self.log.info("caixa %d: %d mensagens desde %s", caixa.indice, len(numeros), corte.isoformat(),
                           extra=self.extra)
+            numeros = self._sem_as_resolvidas(cliente, numeros)
             for posicao, numero in enumerate(numeros, start=1):
                 self.processar(cliente.obter(numero))
                 self.registro.commit()
@@ -215,6 +216,22 @@ class _ColetorCaixa:
             cliente.encerrar()
         self._resumir()
         return self.resultado
+
+    def _sem_as_resolvidas(self, cliente: ClienteIMAP, numeros: list[bytes]) -> list[bytes]:
+        """Descarta, sem baixar o corpo, as mensagens já lidas que não têm nada pendente.
+
+        A janela recua até o anexo pendente mais antigo, e sem este filtro cada execução baixaria
+        de novo todas as mensagens desde então, com anexos, só para reencontrar os pendentes.
+        """
+        if not numeros:
+            return numeros
+        resolvidas = self.registro.mensagens_resolvidas(self.caixa.endereco)
+        identificadores = cliente.identificadores(numeros)
+        restantes = [n for n in numeros if not identificadores.get(n) or identificadores[n] not in resolvidas]
+        if len(restantes) < len(numeros):
+            self.log.info("caixa %d: %d já lidas sem pendência, %d a baixar", self.caixa.indice,
+                          len(numeros) - len(restantes), len(restantes), extra=self.extra)
+        return restantes
 
     def _resumir(self) -> None:
         classes = self.resultado.classes
