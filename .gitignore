@@ -26,3 +26,6 @@ autorizacoes/
 docs/onedrive/*.txt
 docs/onedrive/*.tsv
 .vscode/
+
+#Precificação do Reversa: perfil de cobrança, estimativas e a página precificacao.html
+_reversa_sdd/_pricing/
