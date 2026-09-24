@@ -1,0 +1,143 @@
+{
+  "schemaVersion": 1,
+  "startedAt": "2026-09-24T19:38:14+00:00",
+  "completedAgents": [
+    "mapper",
+    "analyst",
+    "storyteller",
+    "publisher"
+  ],
+  "pendingAgents": [],
+  "pages": {
+    "arquitetura.html": {
+      "status": "created",
+      "agent": "reversa-docs-mapper",
+      "hash": "sha256:71f7b9d4bea806ca89448bca5673a2a8c7ff1f3d81cb6339b666e18d6f073a2a"
+    },
+    "modulos.html": {
+      "status": "created",
+      "agent": "reversa-docs-mapper",
+      "hash": "sha256:0fd16ab17d7cdc5919097e6489174617143a7c4bf191294aabaa94b027221214"
+    },
+    "metricas.html": {
+      "status": "created",
+      "agent": "reversa-docs-analyst",
+      "hash": "sha256:48c815aad36f4c88841b5f75cca481458d8d6eac95d253817313d34d86a1590d"
+    },
+    "timeline.html": {
+      "status": "created",
+      "agent": "reversa-docs-analyst",
+      "hash": "sha256:202bf158c44969711e5bd71505522c9765c9c6922b9a2934b089edbbe2c6ae81"
+    },
+    "glossario.html": {
+      "status": "created",
+      "agent": "reversa-docs-storyteller",
+      "hash": "sha256:1825a90592de152853bf5323c3e05f23aed13a2a0749498a0d1591e35247d993"
+    },
+    "deck.html": {
+      "status": "created",
+      "agent": "reversa-docs-storyteller",
+      "hash": "sha256:9f3f866adf9f95b1de485f0b053605307fdcfc26e6c3af78d47cc1ce4cf9f117"
+    },
+    "features/configuracao-caixas.html": {
+      "status": "created",
+      "agent": "reversa-docs-storyteller",
+      "hash": "sha256:22b400d0b6e70ffba593c3359c10cde5877b621e150964c1f1699aa545779b17"
+    },
+    "features/coleta-email.html": {
+      "status": "created",
+      "agent": "reversa-docs-storyteller",
+      "hash": "sha256:2527d21eaa78c26cc2823dc1ceab55618f7afcedcdb6aa8082de91f3e9a1bbaa"
+    },
+    "features/envio-onedrive.html": {
+      "status": "created",
+      "agent": "reversa-docs-storyteller",
+      "hash": "sha256:b17bd2b83b4eec857c42bc23c615f3cc40880790e6da28b33e9a8127ea43258f"
+    },
+    "features/execucao-monitoramento.html": {
+      "status": "created",
+      "agent": "reversa-docs-storyteller",
+      "hash": "sha256:8e32bfc3526d3a19dffa8081ea2c78afe2e831fc926358998184e51d1fd61016"
+    },
+    "index.html": {
+      "status": "created",
+      "agent": "reversa-docs-publisher",
+      "hash": "sha256:9a38e879ec7474c7d0345b871e8aa14c6ba9d8b060a69daef870ce884b9ed65e"
+    },
+    "topologia.html": {
+      "status": "placeholder",
+      "agent": "reversa-docs-publisher",
+      "hash": "sha256:980b6cd847d110eb844b87c58f392ad8dd22163f28ac1a4642d299a57f462cac"
+    }
+  },
+  "pagesGenerated": [
+    "index.html",
+    "arquitetura.html",
+    "modulos.html",
+    "metricas.html",
+    "timeline.html",
+    "glossario.html",
+    "deck.html",
+    "features/configuracao-caixas.html",
+    "features/coleta-email.html",
+    "features/envio-onedrive.html",
+    "features/execucao-monitoramento.html"
+  ],
+  "pagesOmitted": [
+    {
+      "page": "topologia.html",
+      "reason": "topology not detected: _reversa_sdd/architecture.md ausente"
+    }
+  ],
+  "lastCheckpoint": "2026-09-24T19:52:31+00:00",
+  "timelineSource": "git log + addenda + _reversa_bugs (chronicle.md ausente)",
+  "storytellerAdaptations": [
+    "glossario derivado de prd.md + specs + adendos (soul.md ausente)",
+    "features a partir de _reversa_sdd/sdd/*.md (layout plano, sem */requirements.md)"
+  ],
+  "pipelineDurationMs": 1060853,
+  "placeholders": [
+    "topologia.html"
+  ],
+  "auxiliaryHtmls": [],
+  "auxiliaryHtmlsDiscovered": 0,
+  "auxiliaryDiscoveryAborted": false,
+  "cdnFallbackUsed": true,
+  "cdnFallbackDetails": [
+    {
+      "lib": "highcharts",
+      "primary": "https://code.highcharts.com/11.4.8/highcharts.js",
+      "used": "https://cdn.jsdelivr.net/npm/highcharts@11.4.8/highcharts.js"
+    },
+    {
+      "lib": "highcharts_accessibility",
+      "primary": "https://code.highcharts.com/11.4.8/modules/accessibility.js",
+      "used": "https://cdn.jsdelivr.net/npm/highcharts@11.4.8/modules/accessibility.js"
+    },
+    {
+      "lib": "highcharts_exporting",
+      "primary": "https://code.highcharts.com/11.4.8/modules/exporting.js",
+      "used": "https://cdn.jsdelivr.net/npm/highcharts@11.4.8/modules/exporting.js"
+    },
+    {
+      "lib": "highcharts_treemap",
+      "primary": "https://code.highcharts.com/11.4.8/modules/treemap.js",
+      "used": "https://cdn.jsdelivr.net/npm/highcharts@11.4.8/modules/treemap.js"
+    },
+    {
+      "lib": "highcharts_sankey",
+      "primary": "https://code.highcharts.com/11.4.8/modules/sankey.js",
+      "used": "https://cdn.jsdelivr.net/npm/highcharts@11.4.8/modules/sankey.js"
+    },
+    {
+      "lib": "highcharts_timeline",
+      "primary": "https://code.highcharts.com/11.4.8/modules/timeline.js",
+      "used": "https://cdn.jsdelivr.net/npm/highcharts@11.4.8/modules/timeline.js"
+    }
+  ],
+  "vendorMissing": [],
+  "sealPattern": "particle-orbit",
+  "smokeTestFailed": false,
+  "smokeTestErrors": [],
+  "brokenLinks": []
+}

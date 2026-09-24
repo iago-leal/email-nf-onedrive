@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coleta de e-mail | afla-nfes</title>
+
+    <!-- Meta-tags do Reversa para auto-discovery -->
+    <meta name="reversa-category" content="diagram">
+    <meta name="reversa-template" content="feature">
+    <meta name="reversa-source-md" content="_reversa_sdd/sdd/coleta-email.md">
+    <meta name="reversa-producer-agent" content="reversa-docs-storyteller">
+    <meta name="reversa-generated-at" content="2026-09-24T19:51:23+00:00">
+    <meta name="reversa-schema-version" content="1">
+
+    <link rel="icon" type="image/svg+xml" href="../assets/img/seal-mini.svg">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/site.css">
+    
+</head>
+<body data-style="sober" data-page="feature-coleta-email">
+
+    <header class="reversa-doc-header">
+        <a class="reversa-doc-logo" href="../index.html" aria-label="Início">
+            <span class="seal" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" class="seal-mini" role="img" aria-label="Selo do projeto afla-nfes"><circle cx="32.0" cy="32.0" r="32.0" fill="#f5f3ee"/><ellipse cx="32.0" cy="32.0" rx="15.6" ry="5.7" fill="none" stroke="#3d4a5c" stroke-opacity="0.55" stroke-width="3.94" transform="rotate(124.1 32.0 32.0)"/><circle cx="41.6" cy="24.8" r="2.9" fill="#3d4a5c"/><ellipse cx="32.0" cy="32.0" rx="22.2" ry="17.1" fill="none" stroke="#3d4a5c" stroke-opacity="0.55" stroke-width="3.94" transform="rotate(170.5 32.0 32.0)"/><circle cx="35.3" cy="48.7" r="2.9" fill="#3d4a5c"/><ellipse cx="32.0" cy="32.0" rx="28.8" ry="11.8" fill="none" stroke="#7c8a99" stroke-opacity="0.55" stroke-width="3.94" transform="rotate(86.4 32.0 32.0)"/><circle cx="35.6" cy="60.3" r="2.9" fill="#3d4a5c"/><circle cx="32.0" cy="32.0" r="5.1" fill="#1e2937"/><circle cx="32.0" cy="32.0" r="2.2" fill="#a06b4a"/><circle cx="32.0" cy="32.0" r="29.53846153846154" fill="none" stroke="#1e2937" stroke-width="3.69"/></svg></span>
+            <span class="project-name">afla-nfes</span>
+        </a>
+        <nav class="reversa-doc-nav" aria-label="Seções da documentação">
+            <a href="../index.html" data-page-id="index">Visão geral</a><a href="../arquitetura.html" data-page-id="arquitetura">Arquitetura</a><a href="../modulos.html" data-page-id="modulos">Módulos</a><a href="../metricas.html" data-page-id="metricas">Métricas</a><a href="../timeline.html" data-page-id="timeline">Linha do tempo</a><a href="../glossario.html" data-page-id="glossario">Glossário</a><a href="../deck.html" data-page-id="deck">Apresentação</a><a href="../index.html#funcionalidades" data-page-id="features">Funcionalidades</a>
+        </nav>
+        <div class="reversa-doc-toolbar">
+            <button type="button" class="theme-toggle" aria-label="Alternar tema">
+                <span class="theme-toggle-label">Tema</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="reversa-doc-main" role="main">
+        <div class="reversa-doc-payload">
+            <h1 class="reversa-doc-title">Coleta de e-mail</h1>
+            
+<section class="feature-tldr">
+  <h2>Em poucas palavras</h2>
+  <p>Entra em cada caixa somente para ler, encontra as mensagens novas, separa os anexos PDF e XML, inclusive os de encaminhamentos, e decide quais são notas fiscais ou boletos. Nada na caixa muda.</p>
+</section>
+<section class="kpis"><div class="kpi"><strong>0</strong><span>mensagens alteradas nas caixas</span></div><div class="kpi"><strong>3</strong><span>classes de anexo</span></div><div class="kpi"><strong>53</strong><span>testes da coleta</span></div></section>
+<p class="prose muted"><b>Por que existe.</b> Quatro pessoas liam a mesma caixa e nenhuma assumia salvar o anexo. A coleta substitui esse passo manual sem alterar a rotina de quem continua usando o e-mail.</p>
+<details class="acc" open><summary>Regras que importam</summary><div><ul><li><b>Somente leitura.</b> A pasta é aberta de modo que nenhuma mensagem é marcada como lida, movida, apagada ou respondida.</li><li><b>Janela com sobreposição.</b> Cada execução relê os dois últimos dias e tudo o que ainda está pendente, para não perder e-mails com data atrasada. A repetição é eliminada pelo registro.</li><li><b>Só o que importa é baixado.</b> Desde 23/09, mensagens já resolvidas são reconhecidas pelo identificador, sem baixar de novo o conteúdo.</li><li><b>PDF e XML, inclusive encaminhados.</b> Imagens, assinaturas e outros formatos são ignorados; arquivos compactados são registrados no log.</li><li><b>Três classes.</b> XML de NF-e (reconhecido pela estrutura oficial), documento com palavra-chave no assunto ou no nome, e sem classificação.</li><li><b>O que não é reconhecido fica retido.</b> Propostas, contratos e afins não vão para o OneDrive; ficam registrados para revisão humana. A decisão, de 18/09, trocou a ideia inicial de enviar todo PDF.</li><li><b>Nunca duas vezes.</b> Cada anexo é identificado pela caixa, pela mensagem e pela assinatura do conteúdo.</li><li><b>Uma caixa não derruba as outras.</b> Se uma caixa recusa o acesso, as seguintes são processadas normalmente.</li></ul></div></details>
+<details class="acc"><summary>Quando algo dá errado</summary><div><div class="table-wrap"><table class="data"><thead><tr><th>Situação</th><th>O que acontece</th></tr></thead><tbody><tr><td>Acesso recusado pela caixa</td><td>A caixa é pulada nesta rodada e o operador recebe o aviso com a causa provável.</td></tr><tr><td>Pasta de e-mail inexistente</td><td>A caixa é pulada; o log lista as pastas que existem.</td></tr><tr><td>Servidor lento ou fora do ar</td><td>A caixa é pulada; a próxima execução recupera o período pela janela de busca.</td></tr><tr><td>Mensagem com link, sem anexo</td><td>Registrada no log como possível documento sem anexo, para conferência manual.</td></tr><tr><td>Registro de processados ilegível</td><td>A execução para antes de qualquer envio, para não duplicar documentos.</td></tr></tbody></table></div></div></details>
+
+<details class="acc"><summary>Como evoluiu</summary><div><ol class="tl-list"><li style="--dot:#3f7cac"><time datetime="2026-09-18">18/09</time><p><b>Primeira versão.</b> Leitura somente de consulta, extração, classificação e retenção dos não reconhecidos.</p><p class=small><code>_reversa_sdd/addenda/001-mvp-email-nf-onedrive.md</code></p></li><li style="--dot:#3f7cac"><time datetime="2026-09-21">21/09</time><p><b>Entrada por OAuth.</b> A conexão aceita a autorização OAuth, mantendo a lista fechada de comandos de leitura.</p><p class=small><code>_reversa_sdd/addenda/002-oauth-gmail-google-cloud.md</code></p></li><li style="--dot:#3f7cac"><time datetime="2026-09-22">22/09</time><p><b>Remetente original do encaminhamento.</b> A coleta passa a extrair o remetente original de mensagens encaminhadas, dentro ou no corpo do e-mail.</p><p class=small><code>_reversa_sdd/addenda/bug-BUG-20260922-VBJD-v001.md</code></p></li><li style="--dot:#3f7cac"><time datetime="2026-09-23">23/09</time><p><b>Sem download repetido.</b> Antes, cada rodada baixava de novo toda a janela, cerca de 8 minutos; agora lê só os identificadores das mensagens resolvidas.</p><p class=small><code>_reversa_sdd/addenda/004-desempenho-coleta-envio.md</code></p></li></ol></div></details>
+<details class="acc"><summary>Onde está no código (6 arquivos, 53 testes)</summary><div><div class="table-wrap"><table class="data"><thead><tr><th>Arquivo</th><th>O que faz</th><th class=num>Linhas</th></tr></thead><tbody><tr><td><code>coleta/coleta.py</code></td><td>Coleta dos anexos de cada caixa (spec coleta-email).</td><td class=num>219</td></tr><tr><td><code>coleta/imap.py</code></td><td>Cliente IMAP restrito à leitura (D-05, interfaces/imap-gmail.md).</td><td class=num>129</td></tr><tr><td><code>coleta/mime.py</code></td><td>Extração de anexos PDF e XML de uma mensagem (D-06, CE RF-04).</td><td class=num>115</td></tr><tr><td><code>coleta/classificacao.py</code></td><td>Classificação dos anexos em nfe-xml, palavra-chave ou sem-classificacao (D-07).</td><td class=num>51</td></tr><tr><td><code>coleta/utf7.py</code></td><td>UTF-7 modificado para nomes de pasta IMAP (RFC 3501, seção 5.1.3).</td><td class=num>43</td></tr><tr><td><code>coleta/janela.py</code></td><td>Janela de busca de mensagens (CE RF-03).</td><td class=num>21</td></tr></tbody></table></div></div></details>
+<section class="callout"><p>Em aberto: uma nota fiscal cujo nome e assunto não têm palavra-chave pode ser retida por engano (BUG-20260922-2FVK, prioridade média).</p></section>
+<p class="small muted">Especificação completa: <code>_reversa_sdd/sdd/coleta-email.md</code>. Os adendos listados em “Como evoluiu” prevalecem sobre o texto original da especificação.</p>
+
+        </div>
+    </main>
+
+    <aside class="reversa-doc-sidebar" aria-label="Controles" data-page="feature-coleta-email"></aside>
+
+    <footer class="reversa-doc-footer">
+        <span class="reversa-doc-footer-text">
+            Gerado por Reversa em <time datetime="2026-09-24T19:51:23+00:00">24 de setembro de 2026, 16:51</time>
+        </span>
+        <span class="reversa-doc-footer-sep" aria-hidden="true">·</span>
+        <a href="../../_reversa_sdd/sdd/coleta-email.md" class="reversa-doc-source-link">Fonte: _reversa_sdd/sdd/coleta-email.md</a>
+    </footer>
+
+    <script src="../assets/js/data.js"></script>
+    <script src="../assets/js/nav.js"></script>
+    <script src="../assets/js/sidebar.js"></script>
+    
+</body>
+</html>

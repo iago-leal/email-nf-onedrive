@@ -1,0 +1,488 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-24T19:51:23+00:00",
+  "source": "_reversa_sdd/prd.md + _reversa_sdd/sdd/*.md + addenda (soul.md ausente)",
+  "sections": {
+    "Propósito": "Arquivar no OneDrive, sem ação manual, as notas fiscais e os boletos que chegam por e-mail às caixas do financeiro."
+  },
+  "categories": [
+    "Documentos fiscais",
+    "E-mail",
+    "Acesso às caixas",
+    "OneDrive",
+    "Operação"
+  ],
+  "concepts": [
+    {
+      "term": "NF-e",
+      "slug": "nf-e",
+      "category": "Documentos fiscais",
+      "definition": "Nota fiscal eletrônica de venda de mercadorias. Existe oficialmente como um arquivo XML assinado; o PDF que costuma acompanhá-la é o DANFE.",
+      "related": [
+        "xml-da-nf-e",
+        "danfe"
+      ]
+    },
+    {
+      "term": "XML da NF-e",
+      "slug": "xml-da-nf-e",
+      "category": "Documentos fiscais",
+      "definition": "O arquivo oficial da nota eletrônica. O sistema o reconhece com segurança pela estrutura, mesmo que o arquivo se chame apenas arquivo.xml, e dele lê o número da nota, o emitente e, quando há, o vencimento das duplicatas.",
+      "related": [
+        "nf-e",
+        "emitente"
+      ]
+    },
+    {
+      "term": "DANFE",
+      "slug": "danfe",
+      "category": "Documentos fiscais",
+      "definition": "Versão impressa (PDF) da NF-e. Quando chega junto do XML na mesma mensagem, recebe o mesmo fornecedor e o mesmo vencimento, para que os dois fiquem lado a lado na pasta.",
+      "related": [
+        "nf-e"
+      ]
+    },
+    {
+      "term": "NFS-e",
+      "slug": "nfs-e",
+      "category": "Documentos fiscais",
+      "definition": "Nota fiscal de serviço, emitida pelas prefeituras. Muitas não trazem data de vencimento, por isso formam o maior grupo de documentos que ficam na raiz do destino.",
+      "related": [
+        "raiz-do-destino"
+      ]
+    },
+    {
+      "term": "Boleto",
+      "slug": "boleto",
+      "category": "Documentos fiscais",
+      "definition": "Documento de cobrança bancária. O sistema lê o vencimento diretamente da linha digitável, sem depender do texto ao redor.",
+      "related": [
+        "linha-digitavel"
+      ]
+    },
+    {
+      "term": "Linha digitável",
+      "slug": "linha-digitavel",
+      "category": "Documentos fiscais",
+      "definition": "A sequência de números do boleto. Nela está codificado o fator de vencimento, que o sistema converte em data; os dígitos verificadores confirmam que a leitura está correta.",
+      "related": [
+        "boleto",
+        "vencimento"
+      ]
+    },
+    {
+      "term": "Duplicata",
+      "slug": "duplicata",
+      "category": "Documentos fiscais",
+      "definition": "Parcela de pagamento prevista na nota. No XML da NF-e, a primeira duplicata indica o vencimento usado para escolher a pasta.",
+      "related": [
+        "vencimento"
+      ]
+    },
+    {
+      "term": "Emitente",
+      "slug": "emitente",
+      "category": "Documentos fiscais",
+      "definition": "Quem emitiu a nota. É a fonte preferida para o nome do fornecedor no arquivo.",
+      "related": [
+        "fornecedor"
+      ]
+    },
+    {
+      "term": "Fornecedor",
+      "slug": "fornecedor",
+      "category": "Documentos fiscais",
+      "definition": "Parte do nome do arquivo. Vem, nesta ordem, do emitente do XML, do remetente original de um encaminhamento ou do remetente externo da mensagem. Sem nenhuma fonte, o arquivo recebe A IDENTIFICAR.",
+      "related": [
+        "emitente",
+        "a-identificar",
+        "dominio-interno"
+      ]
+    },
+    {
+      "term": "Vencimento",
+      "slug": "vencimento",
+      "category": "Documentos fiscais",
+      "definition": "Data em que a conta deve ser paga. Define a subpasta do OneDrive. É procurado no XML, na linha digitável, em outro anexo da mesma mensagem e, por fim, no texto do PDF, logo após a palavra vencimento.",
+      "related": [
+        "grade-por-vencimento",
+        "linha-digitavel"
+      ]
+    },
+    {
+      "term": "Caixa",
+      "slug": "caixa",
+      "category": "E-mail",
+      "definition": "Uma conta de e-mail acompanhada pelo sistema, como a do financeiro de cada empresa. Cada caixa é declarada na configuração com um número.",
+      "related": [
+        "configuracao-env"
+      ]
+    },
+    {
+      "term": "IMAP",
+      "slug": "imap",
+      "category": "E-mail",
+      "definition": "O protocolo padrão de leitura de e-mails usado para acessar as caixas do Google Workspace, sempre por conexão criptografada.",
+      "related": [
+        "somente-leitura"
+      ]
+    },
+    {
+      "term": "Somente leitura",
+      "slug": "somente-leitura",
+      "category": "E-mail",
+      "definition": "Garantia central do sistema: a pasta de e-mail é aberta de um modo que não altera nada. Nenhuma mensagem é marcada como lida, movida, apagada ou respondida; a equipe vê a caixa exatamente como antes.",
+      "related": [
+        "imap"
+      ]
+    },
+    {
+      "term": "Pasta monitorada",
+      "slug": "pasta-monitorada",
+      "category": "E-mail",
+      "definition": "A pasta de cada caixa que o sistema lê. Por padrão, a caixa de entrada.",
+      "related": [
+        "caixa"
+      ]
+    },
+    {
+      "term": "Janela de busca",
+      "slug": "janela-de-busca",
+      "category": "E-mail",
+      "definition": "O período de mensagens examinado a cada execução: desde a data inicial, na primeira vez; depois, desde dois dias antes da última mensagem registrada, ou desde o documento pendente mais antigo. A sobreposição evita perder e-mails com data atrasada.",
+      "related": [
+        "registro-de-processados"
+      ]
+    },
+    {
+      "term": "Anexo",
+      "slug": "anexo",
+      "category": "E-mail",
+      "definition": "Arquivo que acompanha a mensagem. O sistema considera apenas PDF e XML, inclusive os que estão dentro de mensagens encaminhadas.",
+      "related": [
+        "classificacao"
+      ]
+    },
+    {
+      "term": "Mensagem encaminhada",
+      "slug": "mensagem-encaminhada",
+      "category": "E-mail",
+      "definition": "Quando um colega repassa à caixa a nota que recebeu. O sistema procura o remetente original no encaminhamento para não usar o nome da própria empresa como fornecedor.",
+      "related": [
+        "fornecedor",
+        "dominio-interno"
+      ]
+    },
+    {
+      "term": "Domínio interno",
+      "slug": "dominio-interno",
+      "category": "E-mail",
+      "definition": "O endereço de e-mail das próprias empresas do grupo, deduzido das caixas configuradas. Um remetente desses domínios nunca é tratado como fornecedor.",
+      "related": [
+        "fornecedor"
+      ]
+    },
+    {
+      "term": "Classificação",
+      "slug": "classificacao",
+      "category": "E-mail",
+      "definition": "Decisão sobre cada anexo: NF-e em XML, documento com palavra-chave (nota fiscal, boleto, fatura, duplicata e afins) ou sem classificação. Só os dois primeiros seguem para o OneDrive.",
+      "related": [
+        "palavra-chave",
+        "documento-retido"
+      ]
+    },
+    {
+      "term": "Palavra-chave",
+      "slug": "palavra-chave",
+      "category": "E-mail",
+      "definition": "Termos como nf, nota fiscal, danfe, boleto, fatura, cobrança e duplicata, procurados no assunto e no nome do arquivo, sem diferenciar maiúsculas nem acentos.",
+      "related": [
+        "classificacao"
+      ]
+    },
+    {
+      "term": "Documento retido",
+      "slug": "documento-retido",
+      "category": "E-mail",
+      "definition": "Anexo que não foi reconhecido como nota ou boleto, como propostas e contratos. Não vai para o OneDrive e fica registrado para revisão humana.",
+      "related": [
+        "classificacao"
+      ]
+    },
+    {
+      "term": "Documento sem anexo",
+      "slug": "documento-sem-anexo",
+      "category": "E-mail",
+      "definition": "Mensagem com cara de nota ou boleto, mas sem PDF ou XML, como os avisos de NFS-e com link para portal. O sistema não segue links; registra a mensagem no log para conferência manual.",
+      "related": [
+        "log"
+      ]
+    },
+    {
+      "term": "Senha de app",
+      "slug": "senha-de-app",
+      "category": "Acesso às caixas",
+      "definition": "Senha específica que o Google gera para um aplicativo acessar a caixa. Exige verificação em duas etapas ativa na conta.",
+      "related": [
+        "oauth-2-0"
+      ]
+    },
+    {
+      "term": "OAuth 2.0",
+      "slug": "oauth-2-0",
+      "category": "Acesso às caixas",
+      "definition": "Forma de autorizar o acesso sem guardar a senha da conta: o titular aprova uma vez no navegador, e o sistema recebe uma autorização própria, que pode ser revogada a qualquer momento.",
+      "related": [
+        "autorizacao-da-caixa",
+        "credencial-temporaria"
+      ]
+    },
+    {
+      "term": "Autorização da caixa",
+      "slug": "autorizacao-da-caixa",
+      "category": "Acesso às caixas",
+      "definition": "Arquivo protegido gerado pelo comando autorizar-caixa, um por caixa em modo OAuth. É o único segredo novo que fica guardado no servidor.",
+      "related": [
+        "oauth-2-0"
+      ]
+    },
+    {
+      "term": "Credencial temporária",
+      "slug": "credencial-temporaria",
+      "category": "Acesso às caixas",
+      "definition": "Chave de curta duração obtida a partir da autorização a cada execução. Existe só na memória e nunca é gravada.",
+      "related": [
+        "oauth-2-0"
+      ]
+    },
+    {
+      "term": "Mascaramento",
+      "slug": "mascaramento",
+      "category": "Acesso às caixas",
+      "definition": "Senhas, tokens e autorizações aparecem como asteriscos no log, nos avisos e na tela. Nenhum segredo é exibido.",
+      "related": [
+        "log"
+      ]
+    },
+    {
+      "term": "OneDrive for Business",
+      "slug": "onedrive-for-business",
+      "category": "OneDrive",
+      "definition": "O armazenamento de arquivos do Microsoft 365 onde fica a pasta de contas a pagar de cada empresa, e onde a equipe financeira trabalha.",
+      "related": [
+        "contas-a-pagar"
+      ]
+    },
+    {
+      "term": "CONTAS A PAGAR",
+      "slug": "contas-a-pagar",
+      "category": "OneDrive",
+      "definition": "A pasta de trabalho do financeiro no OneDrive. É o destino dos documentos; o sistema nunca a cria, renomeia ou reorganiza.",
+      "related": [
+        "destino",
+        "grade-por-vencimento"
+      ]
+    },
+    {
+      "term": "Destino",
+      "slug": "destino",
+      "category": "OneDrive",
+      "definition": "A pasta do OneDrive que recebe os documentos de uma caixa. Cada empresa pode ter o seu destino.",
+      "related": [
+        "contas-a-pagar"
+      ]
+    },
+    {
+      "term": "Grade por vencimento",
+      "slug": "grade-por-vencimento",
+      "category": "OneDrive",
+      "definition": "A organização que o financeiro já usava: uma pasta para cada dia do mês (DIA 1 a DIA 31) e, dentro dela, uma por mês. O documento vai para a combinação do seu vencimento.",
+      "related": [
+        "vencimento",
+        "raiz-do-destino"
+      ]
+    },
+    {
+      "term": "Raiz do destino",
+      "slug": "raiz-do-destino",
+      "category": "OneDrive",
+      "definition": "O nível principal da pasta de destino. Recebe os documentos cujo vencimento não pôde ser identificado.",
+      "related": [
+        "planilha-leiame"
+      ]
+    },
+    {
+      "term": "Planilha LEIAME",
+      "slug": "planilha-leiame",
+      "category": "OneDrive",
+      "definition": "Planilha 00 - LEIAME - DOCUMENTOS SEM VENCIMENTO, no topo da raiz. Lista cada documento que ficou ali e explica o motivo em linguagem de financeiro, como nota de serviço, DANFE sem vencimento ou documento já vencido. É refeita automaticamente.",
+      "related": [
+        "raiz-do-destino"
+      ]
+    },
+    {
+      "term": "Convenção de nomes",
+      "slug": "convencao-de-nomes",
+      "category": "OneDrive",
+      "definition": "O padrão de nome que a pasta já usava: EMPRESA - FORNECEDOR NF número - BOLETO ou REF. O número da nota só aparece quando é conhecido.",
+      "related": [
+        "fornecedor"
+      ]
+    },
+    {
+      "term": "A IDENTIFICAR",
+      "slug": "a-identificar",
+      "category": "OneDrive",
+      "definition": "Texto que ocupa o lugar do fornecedor quando nenhuma fonte o revela. Sinaliza que o documento merece conferência.",
+      "related": [
+        "fornecedor"
+      ]
+    },
+    {
+      "term": "Sufixo _2",
+      "slug": "sufixo-2",
+      "category": "OneDrive",
+      "definition": "Quando já existe na pasta um arquivo com o mesmo nome e conteúdo diferente, o novo recebe _2, _3 e assim por diante. Nada é substituído.",
+      "related": [
+        "conferencia-de-integridade"
+      ]
+    },
+    {
+      "term": "Conferência de integridade",
+      "slug": "conferencia-de-integridade",
+      "category": "OneDrive",
+      "definition": "Depois de cada envio, o sistema compara o tamanho e a assinatura digital (hash) do arquivo no OneDrive com a do original. Só então o documento conta como entregue.",
+      "related": [
+        "registro-de-processados"
+      ]
+    },
+    {
+      "term": "Rclone",
+      "slug": "rclone",
+      "category": "OneDrive",
+      "definition": "Ferramenta gratuita e consolidada que faz a transferência dos arquivos para o OneDrive. O sistema só lhe permite um conjunto fechado de operações, nenhuma delas capaz de apagar documentos.",
+      "related": [
+        "onedrive-for-business"
+      ]
+    },
+    {
+      "term": "VPS",
+      "slug": "vps",
+      "category": "Operação",
+      "definition": "O servidor na nuvem onde o sistema roda, sem tela nem intervenção humana.",
+      "related": [
+        "agendamento"
+      ]
+    },
+    {
+      "term": "Agendamento",
+      "slug": "agendamento",
+      "category": "Operação",
+      "definition": "O sistema é disparado automaticamente a cada 30 minutos, nos minutos 0 e 30 de cada hora.",
+      "related": [
+        "execucao"
+      ]
+    },
+    {
+      "term": "Execução",
+      "slug": "execucao",
+      "category": "Operação",
+      "definition": "Uma rodada completa: ler a configuração, coletar os e-mails de todas as caixas, enviar os documentos, gravar o resumo e avisar se algo falhou.",
+      "related": [
+        "resumo-da-execucao",
+        "trava"
+      ]
+    },
+    {
+      "term": "Trava",
+      "slug": "trava",
+      "category": "Operação",
+      "definition": "Impede que duas execuções rodem ao mesmo tempo. Se a anterior ainda não terminou, a nova sai imediatamente.",
+      "related": [
+        "limite-de-duracao"
+      ]
+    },
+    {
+      "term": "Limite de duração",
+      "slug": "limite-de-duracao",
+      "category": "Operação",
+      "definition": "Nenhuma execução passa de 20 minutos. O que não coube fica para a próxima, sem perda nem duplicação.",
+      "related": [
+        "trava"
+      ]
+    },
+    {
+      "term": "Registro de processados",
+      "slug": "registro-de-processados",
+      "category": "Operação",
+      "definition": "Banco de dados local que lembra cada anexo já tratado e em que estado ele está. É o que impede enviar o mesmo documento duas vezes. Guarda só dados sobre os arquivos, nunca o conteúdo.",
+      "related": [
+        "conferencia-de-integridade"
+      ]
+    },
+    {
+      "term": "Envio em paralelo",
+      "slug": "envio-em-paralelo",
+      "category": "Operação",
+      "definition": "Até quatro documentos seguem para o OneDrive ao mesmo tempo, com estimativa de reduzir a cerca de um quarto o tempo de envio de um lote grande.",
+      "related": [
+        "execucao"
+      ]
+    },
+    {
+      "term": "Log",
+      "slug": "log",
+      "category": "Operação",
+      "definition": "Diário de bordo em arquivo, uma linha por acontecimento, com um arquivo por dia e retenção de 30 dias.",
+      "related": [
+        "resumo-da-execucao"
+      ]
+    },
+    {
+      "term": "Resumo da execução",
+      "slug": "resumo-da-execucao",
+      "category": "Operação",
+      "definition": "Linha final de cada execução com caixas processadas, documentos extraídos, enviados, retidos, falhas e duração.",
+      "related": [
+        "log"
+      ]
+    },
+    {
+      "term": "Aviso no Telegram",
+      "slug": "aviso-no-telegram",
+      "category": "Operação",
+      "definition": "Mensagem ao operador quando uma execução falha, com a causa e a ação sugerida. Uma falha que persiste é lembrada no máximo a cada 6 horas, e a volta ao normal também é avisada.",
+      "related": [
+        "operador"
+      ]
+    },
+    {
+      "term": "Simulação",
+      "slug": "simulacao",
+      "category": "Operação",
+      "definition": "Modo de teste que coleta e classifica sem enviar nada, sem alterar o registro e sem avisar. Mostra o que seria feito.",
+      "related": [
+        "execucao"
+      ]
+    },
+    {
+      "term": "Configuração (.env)",
+      "slug": "configuracao-env",
+      "category": "Operação",
+      "definition": "Arquivo do servidor com as caixas, os destinos, o nome de cada empresa e as credenciais. Acrescentar uma caixa é acrescentar linhas nele, sem mexer no programa.",
+      "related": [
+        "caixa"
+      ]
+    },
+    {
+      "term": "Operador",
+      "slug": "operador",
+      "category": "Operação",
+      "definition": "A pessoa técnica responsável pela ferramenta: instala, recebe os avisos e renova credenciais. Todo o procedimento está no guia de instalação e operação.",
+      "related": [
+        "aviso-no-telegram"
+      ]
+    }
+  ]
+}

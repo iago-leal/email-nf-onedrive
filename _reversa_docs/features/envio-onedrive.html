@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Envio ao OneDrive | afla-nfes</title>
+
+    <!-- Meta-tags do Reversa para auto-discovery -->
+    <meta name="reversa-category" content="diagram">
+    <meta name="reversa-template" content="feature">
+    <meta name="reversa-source-md" content="_reversa_sdd/sdd/envio-onedrive.md">
+    <meta name="reversa-producer-agent" content="reversa-docs-storyteller">
+    <meta name="reversa-generated-at" content="2026-09-24T19:51:23+00:00">
+    <meta name="reversa-schema-version" content="1">
+
+    <link rel="icon" type="image/svg+xml" href="../assets/img/seal-mini.svg">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/site.css">
+    
+</head>
+<body data-style="sober" data-page="feature-envio-onedrive">
+
+    <header class="reversa-doc-header">
+        <a class="reversa-doc-logo" href="../index.html" aria-label="Início">
+            <span class="seal" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" class="seal-mini" role="img" aria-label="Selo do projeto afla-nfes"><circle cx="32.0" cy="32.0" r="32.0" fill="#f5f3ee"/><ellipse cx="32.0" cy="32.0" rx="15.6" ry="5.7" fill="none" stroke="#3d4a5c" stroke-opacity="0.55" stroke-width="3.94" transform="rotate(124.1 32.0 32.0)"/><circle cx="41.6" cy="24.8" r="2.9" fill="#3d4a5c"/><ellipse cx="32.0" cy="32.0" rx="22.2" ry="17.1" fill="none" stroke="#3d4a5c" stroke-opacity="0.55" stroke-width="3.94" transform="rotate(170.5 32.0 32.0)"/><circle cx="35.3" cy="48.7" r="2.9" fill="#3d4a5c"/><ellipse cx="32.0" cy="32.0" rx="28.8" ry="11.8" fill="none" stroke="#7c8a99" stroke-opacity="0.55" stroke-width="3.94" transform="rotate(86.4 32.0 32.0)"/><circle cx="35.6" cy="60.3" r="2.9" fill="#3d4a5c"/><circle cx="32.0" cy="32.0" r="5.1" fill="#1e2937"/><circle cx="32.0" cy="32.0" r="2.2" fill="#a06b4a"/><circle cx="32.0" cy="32.0" r="29.53846153846154" fill="none" stroke="#1e2937" stroke-width="3.69"/></svg></span>
+            <span class="project-name">afla-nfes</span>
+        </a>
+        <nav class="reversa-doc-nav" aria-label="Seções da documentação">
+            <a href="../index.html" data-page-id="index">Visão geral</a><a href="../arquitetura.html" data-page-id="arquitetura">Arquitetura</a><a href="../modulos.html" data-page-id="modulos">Módulos</a><a href="../metricas.html" data-page-id="metricas">Métricas</a><a href="../timeline.html" data-page-id="timeline">Linha do tempo</a><a href="../glossario.html" data-page-id="glossario">Glossário</a><a href="../deck.html" data-page-id="deck">Apresentação</a><a href="../index.html#funcionalidades" data-page-id="features">Funcionalidades</a>
+        </nav>
+        <div class="reversa-doc-toolbar">
+            <button type="button" class="theme-toggle" aria-label="Alternar tema">
+                <span class="theme-toggle-label">Tema</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="reversa-doc-main" role="main">
+        <div class="reversa-doc-payload">
+            <h1 class="reversa-doc-title">Envio ao OneDrive</h1>
+            
+<section class="feature-tldr">
+  <h2>Em poucas palavras</h2>
+  <p>Dá a cada documento o nome que o financeiro já usava, escolhe a subpasta pelo vencimento e o envia ao OneDrive, conferindo tamanho e assinatura do arquivo antes de considerá-lo entregue. Nunca apaga nem substitui o que já está lá.</p>
+</section>
+<section class="kpis"><div class="kpi"><strong>62%</strong><span>documentos com vencimento identificado no lote real</span></div><div class="kpi"><strong>4</strong><span>envios simultâneos</span></div><div class="kpi"><strong>0</strong><span>arquivos existentes substituídos</span></div></section>
+<p class="prose muted"><b>Por que existe.</b> A pasta CONTAS A PAGAR é a fonte de trabalho do financeiro. O documento só existe para a equipe quando está lá, com o nome certo e no dia certo da grade de pagamentos.</p>
+<details class="acc" open><summary>Regras que importam</summary><div><ul><li><b>Nome no padrão da pasta.</b> <code>EMPRESA - FORNECEDOR NF 123 - BOLETO.pdf</code> ou <code>... - REF.pdf</code>; o número da nota só aparece quando é conhecido.</li><li><b>Fornecedor pela melhor fonte.</b> Emitente do XML, depois remetente original de um encaminhamento, depois remetente externo; sem fonte, A IDENTIFICAR.</li><li><b>Pasta pelo vencimento.</b> O documento vai para <code>DIA d/202X-mm</code>, a grade que o financeiro já usava. Nota, DANFE e boleto da mesma mensagem ficam juntos.</li><li><b>Sem vencimento, na raiz, com explicação.</b> A planilha LEIAME, no topo da raiz, diz por que cada documento ficou ali.</li><li><b>Nunca cria pastas.</b> Se a subpasta do vencimento não existe, o documento fica pendente e o operador é avisado.</li><li><b>Nunca sobrescreve.</b> Nome ocupado por outro conteúdo gera sufixo _2, _3; conteúdo idêntico já presente conta como entregue, sem cópia.</li><li><b>Entrega conferida.</b> Tamanho e assinatura digital do arquivo no OneDrive precisam bater com o original.</li><li><b>Até 4 envios simultâneos</b>, com até 300 segundos de tolerância por operação.</li><li><b>Sem sobras no servidor.</b> A cópia local é apagada assim que a entrega é confirmada, o que reduz dados fiscais e pessoais em repouso (LGPD).</li></ul></div></details>
+<details class="acc"><summary>Quando algo dá errado</summary><div><div class="table-wrap"><table class="data"><thead><tr><th>Situação</th><th>O que acontece</th></tr></thead><tbody><tr><td>Autorização do OneDrive expirada</td><td>Os envios da rodada ficam pendentes e o operador recebe o comando para reautorizar.</td></tr><tr><td>Pasta renomeada ou apagada pela equipe</td><td>Nada é criado; o documento fica pendente com o aviso de destino não encontrado.</td></tr><tr><td>OneDrive lento ou limitando requisições</td><td>Novas tentativas automáticas; persistindo, o documento volta na próxima execução.</td></tr><tr><td>Mesmo documento falhando 5 vezes</td><td>Aviso específico ao operador; as tentativas continuam.</td></tr></tbody></table></div></div></details>
+<details class="acc"><summary>Por que documentos ficam na raiz</summary><div><div class="table-wrap"><table class="data"><thead><tr><th>Motivo</th><th class=num>Documentos</th></tr></thead><tbody><tr><td>Nota fiscal de serviço</td><td class=num>50</td></tr><tr><td>DANFE sem vencimento identificável</td><td class=num>32</td></tr><tr><td>Nota sem fatura (XML)</td><td class=num>18</td></tr><tr><td>Documento sem texto legível</td><td class=num>12</td></tr><tr><td>Nota paga à vista</td><td class=num>10</td></tr><tr><td>Vencimento não localizado</td><td class=num>2</td></tr><tr><td>Já chegou vencido</td><td class=num>1</td></tr></tbody></table></div><p class="small muted" style="margin-top:8px">Medição sobre os 125 documentos sem vencimento da janela de 23/09/2026, após a revisão da leitura (adendo 006). No lote de 22/09, 62% dos documentos tiveram o vencimento identificado.</p></div></details>
+<details class="acc"><summary>Como evoluiu</summary><div><ol class="tl-list"><li style="--dot:#2f8f6b"><time datetime="2026-09-18">18/09</time><p><b>Primeira versão.</b> Envio sem sobrescrita, conferência de tamanho e hash, e comando testar-onedrive.</p><p class=small><code>_reversa_sdd/addenda/001-mvp-email-nf-onedrive.md</code></p></li><li style="--dot:#2f8f6b"><time datetime="2026-09-21">21/09</time><p><b>Convenção de nomes do financeiro.</b> Os arquivos passam a seguir o padrão já usado na pasta CONTAS A PAGAR.</p><p class=small><code>docs/onedrive/estrutura-contas-a-pagar.md</code></p></li><li style="--dot:#2f8f6b"><time datetime="2026-09-22">22/09</time><p><b>Fornecedor correto.</b> Na primeira execução real, cerca de metade dos arquivos saiu com o nome da própria empresa como fornecedor; a ordem de fontes corrigiu isso.</p><p class=small><code>_reversa_sdd/addenda/bug-BUG-20260922-VBJD-v001.md</code></p></li><li style="--dot:#2f8f6b"><time datetime="2026-09-23">23/09</time><p><b>Pasta por vencimento.</b> Documentos passam a ir para a subpasta do dia e do mês do vencimento.</p><p class=small><code>_reversa_sdd/addenda/003-destino-por-vencimento.md</code></p></li><li style="--dot:#2f8f6b"><time datetime="2026-09-23">23/09</time><p><b>Envio em paralelo.</b> O envio, que levava cerca de 52 minutos num lote de 528 arquivos, passa a usar 4 envios simultâneos, com estimativa de cerca de 13 minutos.</p><p class=small><code>_reversa_sdd/addenda/004-desempenho-coleta-envio.md</code></p></li><li style="--dot:#2f8f6b"><time datetime="2026-09-23">23/09</time><p><b>Tolerância de 300 s.</b> Operações lentas do OneDrive passam a ter mais tempo antes de contar como falha.</p><p class=small><code>_reversa_sdd/addenda/005-timeout-rclone.md</code></p></li><li style="--dot:#2f8f6b"><time datetime="2026-09-23">23/09</time><p><b>Leitura de vencimento revisada.</b> Boletos com dígitos colados, rótulo duplicata e vencimento no próprio dia passam a ser lidos.</p><p class=small><code>_reversa_sdd/addenda/003-destino-por-vencimento-v002.md</code></p></li><li style="--dot:#2f8f6b"><time datetime="2026-09-23">23/09</time><p><b>Planilha LEIAME.</b> A raiz ganha a planilha que explica os documentos sem vencimento.</p><p class=small><code>_reversa_sdd/addenda/006-sumario-leiame-da-raiz.md</code></p></li></ol></div></details>
+<details class="acc"><summary>Onde está no código (6 arquivos, 89 testes)</summary><div><div class="table-wrap"><table class="data"><thead><tr><th>Arquivo</th><th>O que faz</th><th class=num>Linhas</th></tr></thead><tbody><tr><td><code>envio/envio.py</code></td><td>Envio dos anexos ao OneDrive (spec envio-onedrive, interfaces/rclone-onedrive.md).</td><td class=num>206</td></tr><tr><td><code>envio/vencimento.py</code></td><td>Vencimento do documento e subpasta por vencimento (feature 003, cartão 2 do kanban).</td><td class=num>188</td></tr><tr><td><code>envio/nomeacao.py</code></td><td>Convenção de nomes no OneDrive (D-12), fechada na L-03 em 2026-09-21.</td><td class=num>145</td></tr><tr><td><code>envio/leiame.py</code></td><td>Sumário LEIAME da raiz do destino (feature 006).</td><td class=num>125</td></tr><tr><td><code>envio/rclone.py</code></td><td>Fachada do Rclone com lista branca de subcomandos (D-10, interfaces/rclone-onedrive.md).</td><td class=num>116</td></tr><tr><td><code>envio/teste_onedrive.py</code></td><td>Comando `testar-onedrive`: prova de escrita no destino (EO RF-09).</td><td class=num>28</td></tr></tbody></table></div></div></details>
+<section class="callout"><p>Fora da regra automática: as subpastas especiais de contratos e serviços e a de fatura de cartão de crédito continuam a ser preenchidas à mão pelo financeiro.</p></section>
+<p class="small muted">Especificação completa: <code>_reversa_sdd/sdd/envio-onedrive.md</code>. Os adendos listados em “Como evoluiu” prevalecem sobre o texto original da especificação.</p>
+
+        </div>
+    </main>
+
+    <aside class="reversa-doc-sidebar" aria-label="Controles" data-page="feature-envio-onedrive"></aside>
+
+    <footer class="reversa-doc-footer">
+        <span class="reversa-doc-footer-text">
+            Gerado por Reversa em <time datetime="2026-09-24T19:51:23+00:00">24 de setembro de 2026, 16:51</time>
+        </span>
+        <span class="reversa-doc-footer-sep" aria-hidden="true">·</span>
+        <a href="../../_reversa_sdd/sdd/envio-onedrive.md" class="reversa-doc-source-link">Fonte: _reversa_sdd/sdd/envio-onedrive.md</a>
+    </footer>
+
+    <script src="../assets/js/data.js"></script>
+    <script src="../assets/js/nav.js"></script>
+    <script src="../assets/js/sidebar.js"></script>
+    
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Execução e monitoramento | afla-nfes</title>
+
+    <!-- Meta-tags do Reversa para auto-discovery -->
+    <meta name="reversa-category" content="diagram">
+    <meta name="reversa-template" content="feature">
+    <meta name="reversa-source-md" content="_reversa_sdd/sdd/execucao-monitoramento.md">
+    <meta name="reversa-producer-agent" content="reversa-docs-storyteller">
+    <meta name="reversa-generated-at" content="2026-09-24T19:51:23+00:00">
+    <meta name="reversa-schema-version" content="1">
+
+    <link rel="icon" type="image/svg+xml" href="../assets/img/seal-mini.svg">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/site.css">
+    
+</head>
+<body data-style="sober" data-page="feature-execucao-monitoramento">
+
+    <header class="reversa-doc-header">
+        <a class="reversa-doc-logo" href="../index.html" aria-label="Início">
+            <span class="seal" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" class="seal-mini" role="img" aria-label="Selo do projeto afla-nfes"><circle cx="32.0" cy="32.0" r="32.0" fill="#f5f3ee"/><ellipse cx="32.0" cy="32.0" rx="15.6" ry="5.7" fill="none" stroke="#3d4a5c" stroke-opacity="0.55" stroke-width="3.94" transform="rotate(124.1 32.0 32.0)"/><circle cx="41.6" cy="24.8" r="2.9" fill="#3d4a5c"/><ellipse cx="32.0" cy="32.0" rx="22.2" ry="17.1" fill="none" stroke="#3d4a5c" stroke-opacity="0.55" stroke-width="3.94" transform="rotate(170.5 32.0 32.0)"/><circle cx="35.3" cy="48.7" r="2.9" fill="#3d4a5c"/><ellipse cx="32.0" cy="32.0" rx="28.8" ry="11.8" fill="none" stroke="#7c8a99" stroke-opacity="0.55" stroke-width="3.94" transform="rotate(86.4 32.0 32.0)"/><circle cx="35.6" cy="60.3" r="2.9" fill="#3d4a5c"/><circle cx="32.0" cy="32.0" r="5.1" fill="#1e2937"/><circle cx="32.0" cy="32.0" r="2.2" fill="#a06b4a"/><circle cx="32.0" cy="32.0" r="29.53846153846154" fill="none" stroke="#1e2937" stroke-width="3.69"/></svg></span>
+            <span class="project-name">afla-nfes</span>
+        </a>
+        <nav class="reversa-doc-nav" aria-label="Seções da documentação">
+            <a href="../index.html" data-page-id="index">Visão geral</a><a href="../arquitetura.html" data-page-id="arquitetura">Arquitetura</a><a href="../modulos.html" data-page-id="modulos">Módulos</a><a href="../metricas.html" data-page-id="metricas">Métricas</a><a href="../timeline.html" data-page-id="timeline">Linha do tempo</a><a href="../glossario.html" data-page-id="glossario">Glossário</a><a href="../deck.html" data-page-id="deck">Apresentação</a><a href="../index.html#funcionalidades" data-page-id="features">Funcionalidades</a>
+        </nav>
+        <div class="reversa-doc-toolbar">
+            <button type="button" class="theme-toggle" aria-label="Alternar tema">
+                <span class="theme-toggle-label">Tema</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="reversa-doc-main" role="main">
+        <div class="reversa-doc-payload">
+            <h1 class="reversa-doc-title">Execução e monitoramento</h1>
+            
+<section class="feature-tldr">
+  <h2>Em poucas palavras</h2>
+  <p>Coloca o processo para rodar sozinho a cada 30 minutos, impede que duas execuções se atropelem, registra tudo em log e avisa o operador pelo Telegram quando algo falha e quando volta a funcionar.</p>
+</section>
+<section class="kpis"><div class="kpi"><strong>30 min</strong><span>intervalo entre execuções</span></div><div class="kpi"><strong>20 min</strong><span>duração máxima de uma execução</span></div><div class="kpi"><strong>6 h</strong><span>intervalo mínimo entre lembretes da mesma falha</span></div></section>
+<p class="prose muted"><b>Por que existe.</b> Uma automação que falha em silêncio recria o esquecimento de contas que deveria eliminar. Além disso, a ferramenta precisa ser entregue à empresa com operação documentada.</p>
+<details class="acc" open><summary>Regras que importam</summary><div><ul><li><b>A cada 30 minutos</b>, nos minutos 0 e 30 de cada hora, sem intervenção humana.</li><li><b>Uma execução por vez.</b> Se a anterior ainda roda, a nova sai de imediato; uma trava esquecida há mais de 25 minutos é descartada.</li><li><b>No máximo 20 minutos por execução.</b> O que não coube continua na próxima, sem perda nem duplicação.</li><li><b>Resultado em código.</b> 0 quando tudo deu certo, 1 quando algo falhou em parte, 2 quando houve erro de configuração ou falha total.</li><li><b>Avisos que não viram ruído.</b> Só falhas e recuperações geram mensagem; uma falha que persiste é lembrada no máximo a cada 6 horas.</li><li><b>Resumo fiel.</b> Toda execução termina com a contagem do que de fato aconteceu, inclusive quando é interrompida pelo limite de tempo.</li><li><b>Log diário</b> com retenção de 30 dias.</li><li><b>Modo de simulação</b> para testar sem enviar, sem registrar e sem avisar.</li><li><b>Pronto para entrega.</b> Guia de instalação e operação e modelo de configuração acompanham o código.</li></ul></div></details>
+<details class="acc"><summary>Quando algo dá errado</summary><div><div class="table-wrap"><table class="data"><thead><tr><th>Situação</th><th>O que acontece</th></tr></thead><tbody><tr><td>Execução anterior ainda rodando</td><td>A nova sai imediatamente, sem erro.</td></tr><tr><td>Telegram fora do ar</td><td>O log registra aviso não entregue, e a próxima execução tenta de novo.</td></tr><tr><td>Servidor desligado por horas</td><td>Na volta, a janela de busca recupera os e-mails do período.</td></tr><tr><td>Disco cheio ou erro inesperado</td><td>A execução termina com código 2, a trava é liberada e o operador é avisado com a causa.</td></tr></tbody></table></div></div></details>
+<details class="acc"><summary>Comandos disponíveis</summary><div><div class="table-wrap"><table class="data"><thead><tr><th>Comando</th><th>Para que serve</th></tr></thead><tbody><tr><td><code>executar</code></td><td>Rodada completa; com <code>--simular</code>, apenas mostra o que faria.</td></tr><tr><td><code>verificar-config</code></td><td>Confere a configuração sem acessar a rede.</td></tr><tr><td><code>testar-caixa</code></td><td>Confirma o acesso a cada caixa, sem ler mensagens.</td></tr><tr><td><code>autorizar-caixa</code></td><td>Conduz a autorização OAuth de uma caixa no navegador.</td></tr><tr><td><code>testar-onedrive</code></td><td>Grava, confere e apaga um arquivo de teste em cada destino.</td></tr></tbody></table></div></div></details>
+<details class="acc"><summary>Como evoluiu</summary><div><ol class="tl-list"><li style="--dot:#b5543c"><time datetime="2026-09-18">18/09</time><p><b>Primeira versão.</b> Linha de comando, trava, log, avisos com supressão e recuperação, guia de instalação.</p><p class=small><code>_reversa_sdd/addenda/001-mvp-email-nf-onedrive.md</code></p></li><li style="--dot:#b5543c"><time datetime="2026-09-21">21/09</time><p><b>Novos comandos.</b> autorizar-caixa e testar-caixa entram para apoiar o acesso por OAuth.</p><p class=small><code>_reversa_sdd/addenda/002-oauth-gmail-google-cloud.md</code></p></li><li style="--dot:#b5543c"><time datetime="2026-09-22">22/09</time><p><b>Resumo correto na interrupção.</b> Na primeira execução real, o resumo disse 0 enviados quando 79 arquivos tinham sido entregues. O limite de 20 minutos passou a constar da especificação e o resumo a contar o que foi confirmado.</p><p class=small><code>_reversa_sdd/addenda/bug-BUG-20260922-RWDA-v001.md</code></p></li><li style="--dot:#b5543c"><time datetime="2026-09-24">24/09</time><p><b>Operação contínua.</b> O agendamento a cada 30 minutos entra em operação no servidor.</p></li></ol></div></details>
+<details class="acc"><summary>Onde está no código (6 arquivos, 55 testes)</summary><div><div class="table-wrap"><table class="data"><thead><tr><th>Arquivo</th><th>O que faz</th><th class=num>Linhas</th></tr></thead><tbody><tr><td><code>execucao/ciclo.py</code></td><td>Ciclo do subcomando `executar` (spec execucao-monitoramento, RF-02 a RF-11).</td><td class=num>238</td></tr><tr><td><code>execucao/avisos.py</code></td><td>Lógica de avisos ao operador (D-16, EM RF-07 a RF-09, fluxo B).</td><td class=num>97</td></tr><tr><td><code>execucao/trava.py</code></td><td>Trava de execução e limite de duração (D-14, EM RF-03, RF-04).</td><td class=num>84</td></tr><tr><td><code>execucao/logs.py</code></td><td>Log em arquivo com rotação diária e retenção de 30 dias (D-15, EM RF-06).</td><td class=num>53</td></tr><tr><td><code>execucao/resumo.py</code></td><td>Resumo de fim de execução (EM RF-11, entidade ResumoExecucao).</td><td class=num>41</td></tr><tr><td><code>execucao/telegram.py</code></td><td>Transporte de avisos pela API de bots do Telegram (interfaces/telegram-sendmessage.md).</td><td class=num>37</td></tr></tbody></table></div></div></details>
+
+<p class="small muted">Especificação completa: <code>_reversa_sdd/sdd/execucao-monitoramento.md</code>. Os adendos listados em “Como evoluiu” prevalecem sobre o texto original da especificação.</p>
+
+        </div>
+    </main>
+
+    <aside class="reversa-doc-sidebar" aria-label="Controles" data-page="feature-execucao-monitoramento"></aside>
+
+    <footer class="reversa-doc-footer">
+        <span class="reversa-doc-footer-text">
+            Gerado por Reversa em <time datetime="2026-09-24T19:51:23+00:00">24 de setembro de 2026, 16:51</time>
+        </span>
+        <span class="reversa-doc-footer-sep" aria-hidden="true">·</span>
+        <a href="../../_reversa_sdd/sdd/execucao-monitoramento.md" class="reversa-doc-source-link">Fonte: _reversa_sdd/sdd/execucao-monitoramento.md</a>
+    </footer>
+
+    <script src="../assets/js/data.js"></script>
+    <script src="../assets/js/nav.js"></script>
+    <script src="../assets/js/sidebar.js"></script>
+    
+</body>
+</html>

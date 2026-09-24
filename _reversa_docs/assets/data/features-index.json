@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-24T19:51:23+00:00",
+  "sddRoot": "_reversa_sdd/sdd",
+  "layout": "flat (um .md por spec; adendos em _reversa_sdd/addenda)",
+  "specs": [
+    {
+      "id": "configuracao-caixas",
+      "slug": "configuracao-caixas",
+      "title": "Configuração das caixas",
+      "tldr": "Define, num único arquivo, quais caixas de e-mail o sistema acompanha, como entra em cada uma e para qual pasta do OneDrive vão os documentos de cada empresa. Acrescentar uma caixa é editar esse arquivo, sem mexer no programa.",
+      "path": "_reversa_sdd/sdd/configuracao-caixas.md",
+      "page": "features/configuracao-caixas.html",
+      "area": "configuracao",
+      "order": 1,
+      "addenda": [
+        "_reversa_sdd/addenda/001-mvp-email-nf-onedrive.md",
+        "_reversa_sdd/addenda/002-oauth-gmail-google-cloud.md",
+        "_reversa_sdd/addenda/bug-BUG-20260922-VBJD-v001.md"
+      ],
+      "files": {
+        "requirements": true,
+        "design": false,
+        "tasks": false
+      }
+    },
+    {
+      "id": "coleta-email",
+      "slug": "coleta-email",
+      "title": "Coleta de e-mail",
+      "tldr": "Entra em cada caixa somente para ler, encontra as mensagens novas, separa os anexos PDF e XML, inclusive os de encaminhamentos, e decide quais são notas fiscais ou boletos. Nada na caixa muda.",
+      "path": "_reversa_sdd/sdd/coleta-email.md",
+      "page": "features/coleta-email.html",
+      "area": "coleta",
+      "order": 2,
+      "addenda": [
+        "_reversa_sdd/addenda/001-mvp-email-nf-onedrive.md",
+        "_reversa_sdd/addenda/002-oauth-gmail-google-cloud.md",
+        "_reversa_sdd/addenda/bug-BUG-20260922-VBJD-v001.md",
+        "_reversa_sdd/addenda/004-desempenho-coleta-envio.md"
+      ],
+      "files": {
+        "requirements": true,
+        "design": false,
+        "tasks": false
+      }
+    },
+    {
+      "id": "envio-onedrive",
+      "slug": "envio-onedrive",
+      "title": "Envio ao OneDrive",
+      "tldr": "Dá a cada documento o nome que o financeiro já usava, escolhe a subpasta pelo vencimento e o envia ao OneDrive, conferindo tamanho e assinatura do arquivo antes de considerá-lo entregue. Nunca apaga nem substitui o que já está lá.",
+      "path": "_reversa_sdd/sdd/envio-onedrive.md",
+      "page": "features/envio-onedrive.html",
+      "area": "envio",
+      "order": 3,
+      "addenda": [
+        "_reversa_sdd/addenda/001-mvp-email-nf-onedrive.md",
+        "_reversa_sdd/addenda/bug-BUG-20260922-VBJD-v001.md",
+        "_reversa_sdd/addenda/003-destino-por-vencimento.md",
+        "_reversa_sdd/addenda/004-desempenho-coleta-envio.md",
+        "_reversa_sdd/addenda/005-timeout-rclone.md",
+        "_reversa_sdd/addenda/003-destino-por-vencimento-v002.md",
+        "_reversa_sdd/addenda/006-sumario-leiame-da-raiz.md"
+      ],
+      "files": {
+        "requirements": true,
+        "design": false,
+        "tasks": false
+      }
+    },
+    {
+      "id": "execucao-monitoramento",
+      "slug": "execucao-monitoramento",
+      "title": "Execução e monitoramento",
+      "tldr": "Coloca o processo para rodar sozinho a cada 30 minutos, impede que duas execuções se atropelem, registra tudo em log e avisa o operador pelo Telegram quando algo falha e quando volta a funcionar.",
+      "path": "_reversa_sdd/sdd/execucao-monitoramento.md",
+      "page": "features/execucao-monitoramento.html",
+      "area": "execucao",
+      "order": 4,
+      "addenda": [
+        "_reversa_sdd/addenda/001-mvp-email-nf-onedrive.md",
+        "_reversa_sdd/addenda/002-oauth-gmail-google-cloud.md",
+        "_reversa_sdd/addenda/bug-BUG-20260922-RWDA-v001.md"
+      ],
+      "files": {
+        "requirements": true,
+        "design": false,
+        "tasks": false
+      }
+    }
+  ]
+}

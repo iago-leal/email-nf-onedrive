@@ -1,0 +1,548 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-24T19:50:19+00:00",
+  "source": "git log + _reversa_sdd/addenda + _reversa_bugs",
+  "kinds": {
+    "planejamento": {
+      "label": "Planejamento",
+      "color": "#6b7280"
+    },
+    "entrega": {
+      "label": "Nova capacidade",
+      "color": "#2f8f6b"
+    },
+    "correcao": {
+      "label": "Correção",
+      "color": "#b5543c"
+    },
+    "melhoria": {
+      "label": "Melhoria",
+      "color": "#3f7cac"
+    },
+    "operacao": {
+      "label": "Operação",
+      "color": "#c28f2c"
+    },
+    "documento": {
+      "label": "Documentação",
+      "color": "#8e6c8a"
+    }
+  },
+  "events": [
+    {
+      "date": "2026-09-18",
+      "kind": "planejamento",
+      "kindLabel": "Planejamento",
+      "color": "#6b7280",
+      "title": "Problema e plano definidos",
+      "description": "Registro do problema (contas esquecidas porque ninguém assume arquivar NFs e boletos), das personas, do PRD e das especificações das quatro partes do sistema.",
+      "commits": [
+        {
+          "hash": "d4c9128",
+          "subject": "docs: registra brief, ideação, personas e PRD"
+        },
+        {
+          "hash": "6258df2",
+          "subject": "docs: adiciona specs SDD dos quatro componentes"
+        }
+      ],
+      "source": "_reversa_sdd/prd.md"
+    },
+    {
+      "date": "2026-09-18",
+      "kind": "entrega",
+      "kindLabel": "Nova capacidade",
+      "color": "#2f8f6b",
+      "title": "Primeira versão entregue",
+      "description": "Arquivamento automático das notas e boletos do e-mail no OneDrive, com registro do que já foi processado, avisos pelo Telegram, testes automáticos e guia de instalação.",
+      "commits": [
+        {
+          "hash": "4c9d941",
+          "subject": "feat: implementa o arquivamento de NFs do e-mail no OneDrive"
+        },
+        {
+          "hash": "cd90f1d",
+          "subject": "test: cobre coleta, envio, registro e ciclo completo"
+        },
+        {
+          "hash": "89a094a",
+          "subject": "docs: adiciona o README e o guia de instalação e operação"
+        }
+      ],
+      "source": "_reversa_sdd/addenda/001-mvp-email-nf-onedrive.md"
+    },
+    {
+      "date": "2026-09-21",
+      "kind": "entrega",
+      "kindLabel": "Nova capacidade",
+      "color": "#2f8f6b",
+      "title": "Nomes no padrão da pasta CONTAS A PAGAR",
+      "description": "Os arquivos passam a receber o nome que o financeiro já usava: empresa, fornecedor, número da nota e tipo do documento.",
+      "commits": [
+        {
+          "hash": "2db51b3",
+          "subject": "docs: registra a estrutura da pasta CONTAS A PAGAR do OneDrive"
+        },
+        {
+          "hash": "0511931",
+          "subject": "feat: adota a convenção de nomes da pasta CONTAS A PAGAR"
+        }
+      ],
+      "source": "docs/onedrive/estrutura-contas-a-pagar.md"
+    },
+    {
+      "date": "2026-09-21",
+      "kind": "entrega",
+      "kindLabel": "Nova capacidade",
+      "color": "#2f8f6b",
+      "title": "Acesso às caixas por OAuth 2.0",
+      "description": "Alternativa à senha de app: cada caixa é autorizada uma vez no navegador e a senha da conta deixa de ser guardada. O acesso continua somente leitura.",
+      "commits": [
+        {
+          "hash": "e118df5",
+          "subject": "feat: acesso às caixas do Gmail por OAuth 2.0"
+        },
+        {
+          "hash": "d146f95",
+          "subject": "test: cobre o modo OAuth na configuração, na coleta, no ciclo e no CLI"
+        },
+        {
+          "hash": "eeb74b0",
+          "subject": "docs: acrescenta ao guia e ao README o acesso por OAuth 2.0"
+        }
+      ],
+      "source": "_reversa_sdd/addenda/002-oauth-gmail-google-cloud.md"
+    },
+    {
+      "date": "2026-09-22",
+      "kind": "documento",
+      "kindLabel": "Documentação",
+      "color": "#8e6c8a",
+      "title": "Política de privacidade",
+      "description": "Publicada a política de privacidade que o Google exige para autorizar o acesso por OAuth.",
+      "commits": [
+        {
+          "hash": "e251475",
+          "subject": "docs: adiciona a política de privacidade exigida pelo Google"
+        }
+      ],
+      "source": "docs/politica-de-privacidade.md"
+    },
+    {
+      "date": "2026-09-22",
+      "kind": "operacao",
+      "kindLabel": "Operação",
+      "color": "#c28f2c",
+      "title": "Primeira execução real",
+      "description": "O sistema roda pela primeira vez sobre caixas reais. Três problemas são registrados: fornecedor com o nome da própria empresa, resumo com zero enviados após interrupção e NF sem palavra-chave retida.",
+      "commits": [
+        {
+          "hash": "93afccf",
+          "subject": "docs: registra os bugs da primeira execução real e a correção do BUG-20260922-VBJD"
+        }
+      ],
+      "source": "_reversa_sdd/traceability/bugs.md"
+    },
+    {
+      "date": "2026-09-22",
+      "kind": "correcao",
+      "kindLabel": "Correção",
+      "color": "#b5543c",
+      "title": "Fornecedor correto em encaminhamentos internos",
+      "description": "Quando um colega encaminhava a nota, o arquivo recebia o nome da própria empresa como fornecedor. Corrigido (prioridade alta).",
+      "commits": [
+        {
+          "hash": "91c1c39",
+          "subject": "fix: não usa o domínio da própria empresa como fornecedor"
+        },
+        {
+          "hash": "d1a2875",
+          "subject": "docs: fecha os dois bugs da primeira execução real"
+        }
+      ],
+      "source": "_reversa_sdd/addenda/bug-BUG-20260922-VBJD-v001.md"
+    },
+    {
+      "date": "2026-09-22",
+      "kind": "correcao",
+      "kindLabel": "Correção",
+      "color": "#b5543c",
+      "title": "Resumo correto quando a execução é interrompida",
+      "description": "Se o limite de tempo interrompia a execução, o resumo dizia que nada fora enviado. Agora conta os envios confirmados até a interrupção.",
+      "commits": [
+        {
+          "hash": "b95a42f",
+          "subject": "fix: conta no resumo os envios confirmados até a interrupção"
+        }
+      ],
+      "source": "_reversa_sdd/addenda/bug-BUG-20260922-RWDA-v001.md"
+    },
+    {
+      "date": "2026-09-23",
+      "kind": "entrega",
+      "kindLabel": "Nova capacidade",
+      "color": "#2f8f6b",
+      "title": "Pasta por vencimento",
+      "description": "Cada documento vai para a subpasta do dia e do mês do seu vencimento, na grade que o financeiro já usava, com a data lida do XML, do boleto ou do texto da nota. No lote real, 62% dos documentos tiveram o vencimento identificado; os demais ficam na raiz.",
+      "commits": [
+        {
+          "hash": "e4dcad9",
+          "subject": "feat: grava cada documento na pasta do seu vencimento"
+        }
+      ],
+      "source": "_reversa_sdd/addenda/003-destino-por-vencimento.md"
+    },
+    {
+      "date": "2026-09-23",
+      "kind": "melhoria",
+      "kindLabel": "Melhoria",
+      "color": "#3f7cac",
+      "title": "Envio em paralelo",
+      "description": "Medição mostrou 52 minutos só de envio, um arquivo por vez. Agora até 4 arquivos seguem ao mesmo tempo e mensagens já resolvidas não são baixadas de novo.",
+      "commits": [
+        {
+          "hash": "1c24fa7",
+          "subject": "perf: envia em paralelo e não baixa de novo mensagens resolvidas"
+        }
+      ],
+      "source": "_reversa_sdd/addenda/004-desempenho-coleta-envio.md"
+    },
+    {
+      "date": "2026-09-23",
+      "kind": "melhoria",
+      "kindLabel": "Melhoria",
+      "color": "#3f7cac",
+      "title": "Mais tolerância a lentidão do OneDrive",
+      "description": "O tempo máximo de cada operação com o OneDrive sobe de 120 para 300 segundos, reduzindo falhas por lentidão momentânea.",
+      "commits": [
+        {
+          "hash": "d6f69aa",
+          "subject": "fix: sobe para 300 s o limite de cada chamada ao Rclone"
+        }
+      ],
+      "source": "_reversa_sdd/addenda/005-timeout-rclone.md"
+    },
+    {
+      "date": "2026-09-23",
+      "kind": "correcao",
+      "kindLabel": "Correção",
+      "color": "#b5543c",
+      "title": "Leitura de vencimento revisada",
+      "description": "Diagnóstico de 130 documentos que ficaram na raiz levou a ler melhor a linha digitável dos boletos, o rótulo duplicata e o vencimento no próprio dia.",
+      "commits": [
+        {
+          "hash": "fd302a4",
+          "subject": "fix: lê linha digitável com dígitos colados, rótulo duplicata e vencimento do dia"
+        }
+      ],
+      "source": "_reversa_sdd/addenda/003-destino-por-vencimento-v002.md"
+    },
+    {
+      "date": "2026-09-23",
+      "kind": "entrega",
+      "kindLabel": "Nova capacidade",
+      "color": "#2f8f6b",
+      "title": "Planilha LEIAME na raiz",
+      "description": "Uma planilha no topo de cada pasta explica, em linguagem de financeiro, por que cada documento da raiz ficou sem vencimento.",
+      "commits": [
+        {
+          "hash": "7f26606",
+          "subject": "feat: sumário LEIAME dos documentos sem vencimento na raiz do destino"
+        }
+      ],
+      "source": "_reversa_sdd/addenda/006-sumario-leiame-da-raiz.md"
+    },
+    {
+      "date": "2026-09-24",
+      "kind": "operacao",
+      "kindLabel": "Operação",
+      "color": "#c28f2c",
+      "title": "Pastas por empresa e agendamento contínuo",
+      "description": "Os documentos já enviados são realocados para a pasta de destino de cada empresa, e a execução automática a cada 30 minutos entra em operação no servidor.",
+      "commits": [
+        {
+          "hash": "b0aaa23",
+          "subject": "feat: script que realoca documentos enviados para outra pasta de destino"
+        }
+      ],
+      "source": ""
+    }
+  ],
+  "commits": [
+    {
+      "hash": "2deb0f3",
+      "date": "2026-09-18",
+      "datetime": "2026-09-18T16:17:35-03:00",
+      "kind": "chore",
+      "subject": "chore: instala o framework Reversa e define o .gitignore"
+    },
+    {
+      "hash": "d4c9128",
+      "date": "2026-09-18",
+      "datetime": "2026-09-18T16:17:35-03:00",
+      "kind": "docs",
+      "subject": "docs: registra brief, ideação, personas e PRD"
+    },
+    {
+      "hash": "6258df2",
+      "date": "2026-09-18",
+      "datetime": "2026-09-18T16:17:35-03:00",
+      "kind": "docs",
+      "subject": "docs: adiciona specs SDD dos quatro componentes"
+    },
+    {
+      "hash": "4a8e8a1",
+      "date": "2026-09-18",
+      "datetime": "2026-09-18T17:48:50-03:00",
+      "kind": "chore",
+      "subject": "chore: ajusta o .gitignore e registra a configuração do Reversa"
+    },
+    {
+      "hash": "ae098a8",
+      "date": "2026-09-18",
+      "datetime": "2026-09-18T17:48:50-03:00",
+      "kind": "docs",
+      "subject": "docs: registra os artefatos forward da feature 001"
+    },
+    {
+      "hash": "4c9d941",
+      "date": "2026-09-18",
+      "datetime": "2026-09-18T17:48:50-03:00",
+      "kind": "feat",
+      "subject": "feat: implementa o arquivamento de NFs do e-mail no OneDrive"
+    },
+    {
+      "hash": "cd90f1d",
+      "date": "2026-09-18",
+      "datetime": "2026-09-18T17:48:50-03:00",
+      "kind": "test",
+      "subject": "test: cobre coleta, envio, registro e ciclo completo"
+    },
+    {
+      "hash": "89a094a",
+      "date": "2026-09-18",
+      "datetime": "2026-09-18T17:48:50-03:00",
+      "kind": "docs",
+      "subject": "docs: adiciona o README e o guia de instalação e operação"
+    },
+    {
+      "hash": "2db51b3",
+      "date": "2026-09-21",
+      "datetime": "2026-09-21T15:31:15-03:00",
+      "kind": "docs",
+      "subject": "docs: registra a estrutura da pasta CONTAS A PAGAR do OneDrive"
+    },
+    {
+      "hash": "0511931",
+      "date": "2026-09-21",
+      "datetime": "2026-09-21T15:32:02-03:00",
+      "kind": "feat",
+      "subject": "feat: adota a convenção de nomes da pasta CONTAS A PAGAR"
+    },
+    {
+      "hash": "6f617b4",
+      "date": "2026-09-21",
+      "datetime": "2026-09-21T15:32:02-03:00",
+      "kind": "docs",
+      "subject": "docs: fecha a T042 e a L-03 nos artefatos forward da feature 001"
+    },
+    {
+      "hash": "e118df5",
+      "date": "2026-09-21",
+      "datetime": "2026-09-21T17:03:41-03:00",
+      "kind": "feat",
+      "subject": "feat: acesso às caixas do Gmail por OAuth 2.0"
+    },
+    {
+      "hash": "d146f95",
+      "date": "2026-09-21",
+      "datetime": "2026-09-21T17:03:41-03:00",
+      "kind": "test",
+      "subject": "test: cobre o modo OAuth na configuração, na coleta, no ciclo e no CLI"
+    },
+    {
+      "hash": "eeb74b0",
+      "date": "2026-09-21",
+      "datetime": "2026-09-21T17:03:41-03:00",
+      "kind": "docs",
+      "subject": "docs: acrescenta ao guia e ao README o acesso por OAuth 2.0"
+    },
+    {
+      "hash": "d08563e",
+      "date": "2026-09-21",
+      "datetime": "2026-09-21T17:03:41-03:00",
+      "kind": "docs",
+      "subject": "docs: registra os artefatos forward e o adendo da feature 002"
+    },
+    {
+      "hash": "17a9554",
+      "date": "2026-09-21",
+      "datetime": "2026-09-21T17:52:24-03:00",
+      "kind": "docs",
+      "subject": "docs: ajusta o guia do OAuth ao console atual do Google Cloud"
+    },
+    {
+      "hash": "e251475",
+      "date": "2026-09-22",
+      "datetime": "2026-09-22T10:18:22-03:00",
+      "kind": "docs",
+      "subject": "docs: adiciona a política de privacidade exigida pelo Google"
+    },
+    {
+      "hash": "91b01ae",
+      "date": "2026-09-22",
+      "datetime": "2026-09-22T10:19:51-03:00",
+      "kind": "docs",
+      "subject": "docs: registra no guia o que as primeiras autorizações OAuth ensinaram"
+    },
+    {
+      "hash": "91c1c39",
+      "date": "2026-09-22",
+      "datetime": "2026-09-22T13:39:55-03:00",
+      "kind": "fix",
+      "subject": "fix: não usa o domínio da própria empresa como fornecedor"
+    },
+    {
+      "hash": "93afccf",
+      "date": "2026-09-22",
+      "datetime": "2026-09-22T13:39:55-03:00",
+      "kind": "docs",
+      "subject": "docs: registra os bugs da primeira execução real e a correção do BUG-20260922-VBJD"
+    },
+    {
+      "hash": "b95a42f",
+      "date": "2026-09-22",
+      "datetime": "2026-09-22T16:11:25-03:00",
+      "kind": "fix",
+      "subject": "fix: conta no resumo os envios confirmados até a interrupção"
+    },
+    {
+      "hash": "260d830",
+      "date": "2026-09-22",
+      "datetime": "2026-09-22T16:11:31-03:00",
+      "kind": "docs",
+      "subject": "docs: registra a correção do BUG-20260922-RWDA e o handoff do VBJD"
+    },
+    {
+      "hash": "09daa76",
+      "date": "2026-09-22",
+      "datetime": "2026-09-22T16:26:29-03:00",
+      "kind": "docs",
+      "subject": "docs: mapeia os testes das correções de bugs na rastreabilidade"
+    },
+    {
+      "hash": "d1a2875",
+      "date": "2026-09-22",
+      "datetime": "2026-09-22T17:32:04-03:00",
+      "kind": "docs",
+      "subject": "docs: fecha os dois bugs da primeira execução real"
+    },
+    {
+      "hash": "b30b585",
+      "date": "2026-09-22",
+      "datetime": "2026-09-22T17:35:55-03:00",
+      "kind": "docs",
+      "subject": "docs: handoff da sessão de 2026-09-22"
+    },
+    {
+      "hash": "e4dcad9",
+      "date": "2026-09-23",
+      "datetime": "2026-09-23T14:02:25-03:00",
+      "kind": "feat",
+      "subject": "feat: grava cada documento na pasta do seu vencimento"
+    },
+    {
+      "hash": "1c24fa7",
+      "date": "2026-09-23",
+      "datetime": "2026-09-23T14:42:30-03:00",
+      "kind": "perf",
+      "subject": "perf: envia em paralelo e não baixa de novo mensagens resolvidas"
+    },
+    {
+      "hash": "d6f69aa",
+      "date": "2026-09-23",
+      "datetime": "2026-09-23T15:40:59-03:00",
+      "kind": "fix",
+      "subject": "fix: sobe para 300 s o limite de cada chamada ao Rclone"
+    },
+    {
+      "hash": "fd302a4",
+      "date": "2026-09-23",
+      "datetime": "2026-09-23T15:59:54-03:00",
+      "kind": "fix",
+      "subject": "fix: lê linha digitável com dígitos colados, rótulo duplicata e vencimento do dia"
+    },
+    {
+      "hash": "7f26606",
+      "date": "2026-09-23",
+      "datetime": "2026-09-23T16:09:32-03:00",
+      "kind": "feat",
+      "subject": "feat: sumário LEIAME dos documentos sem vencimento na raiz do destino"
+    },
+    {
+      "hash": "3295959",
+      "date": "2026-09-23",
+      "datetime": "2026-09-23T17:04:29-03:00",
+      "kind": "docs",
+      "subject": "docs: handoff da sessão de 2026-09-23"
+    },
+    {
+      "hash": "b0aaa23",
+      "date": "2026-09-24",
+      "datetime": "2026-09-24T16:02:58-03:00",
+      "kind": "feat",
+      "subject": "feat: script que realoca documentos enviados para outra pasta de destino"
+    }
+  ],
+  "commitsPerDay": [
+    {
+      "date": "2026-09-18",
+      "chore": 2,
+      "docs": 4,
+      "feat": 1,
+      "test": 1
+    },
+    {
+      "date": "2026-09-21",
+      "docs": 5,
+      "feat": 2,
+      "test": 1
+    },
+    {
+      "date": "2026-09-22",
+      "docs": 7,
+      "fix": 2
+    },
+    {
+      "date": "2026-09-23",
+      "feat": 2,
+      "perf": 1,
+      "fix": 2,
+      "docs": 1
+    },
+    {
+      "date": "2026-09-24",
+      "feat": 1
+    }
+  ],
+  "bugs": [
+    {
+      "id": "BUG-20260922-VBJD",
+      "title": "Fornecedor recebe o nome da própria empresa em encaminhamento interno",
+      "priority": "P1",
+      "status": "resolvido"
+    },
+    {
+      "id": "BUG-20260922-RWDA",
+      "title": "Resumo informa 0 enviados quando a execução é interrompida pelo limite de tempo",
+      "priority": "P2",
+      "status": "resolvido"
+    },
+    {
+      "id": "BUG-20260922-2FVK",
+      "title": "Anexo de NF sem palavra-chave no nome é retido por engano",
+      "priority": "P2",
+      "status": "aberto"
+    }
+  ]
+}

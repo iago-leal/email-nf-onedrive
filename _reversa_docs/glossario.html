@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glossário | afla-nfes</title>
+
+    <!-- Meta-tags do Reversa para auto-discovery -->
+    <meta name="reversa-category" content="diagram">
+    <meta name="reversa-template" content="glossario">
+    <meta name="reversa-source-md" content="_reversa_sdd/prd.md">
+    <meta name="reversa-producer-agent" content="reversa-docs-storyteller">
+    <meta name="reversa-generated-at" content="2026-09-24T19:51:23+00:00">
+    <meta name="reversa-schema-version" content="1">
+
+    <link rel="icon" type="image/svg+xml" href="assets/img/seal-mini.svg">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/site.css">
+    
+</head>
+<body data-style="sober" data-page="glossario">
+
+    <header class="reversa-doc-header">
+        <a class="reversa-doc-logo" href="index.html" aria-label="Início">
+            <span class="seal" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" class="seal-mini" role="img" aria-label="Selo do projeto afla-nfes"><circle cx="32.0" cy="32.0" r="32.0" fill="#f5f3ee"/><ellipse cx="32.0" cy="32.0" rx="15.6" ry="5.7" fill="none" stroke="#3d4a5c" stroke-opacity="0.55" stroke-width="3.94" transform="rotate(124.1 32.0 32.0)"/><circle cx="41.6" cy="24.8" r="2.9" fill="#3d4a5c"/><ellipse cx="32.0" cy="32.0" rx="22.2" ry="17.1" fill="none" stroke="#3d4a5c" stroke-opacity="0.55" stroke-width="3.94" transform="rotate(170.5 32.0 32.0)"/><circle cx="35.3" cy="48.7" r="2.9" fill="#3d4a5c"/><ellipse cx="32.0" cy="32.0" rx="28.8" ry="11.8" fill="none" stroke="#7c8a99" stroke-opacity="0.55" stroke-width="3.94" transform="rotate(86.4 32.0 32.0)"/><circle cx="35.6" cy="60.3" r="2.9" fill="#3d4a5c"/><circle cx="32.0" cy="32.0" r="5.1" fill="#1e2937"/><circle cx="32.0" cy="32.0" r="2.2" fill="#a06b4a"/><circle cx="32.0" cy="32.0" r="29.53846153846154" fill="none" stroke="#1e2937" stroke-width="3.69"/></svg></span>
+            <span class="project-name">afla-nfes</span>
+        </a>
+        <nav class="reversa-doc-nav" aria-label="Seções da documentação">
+            <a href="index.html" data-page-id="index">Visão geral</a><a href="arquitetura.html" data-page-id="arquitetura">Arquitetura</a><a href="modulos.html" data-page-id="modulos">Módulos</a><a href="metricas.html" data-page-id="metricas">Métricas</a><a href="timeline.html" data-page-id="timeline">Linha do tempo</a><a href="glossario.html" data-page-id="glossario">Glossário</a><a href="deck.html" data-page-id="deck">Apresentação</a><a href="index.html#funcionalidades" data-page-id="features">Funcionalidades</a>
+        </nav>
+        <div class="reversa-doc-toolbar">
+            <button type="button" class="theme-toggle" aria-label="Alternar tema">
+                <span class="theme-toggle-label">Tema</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="reversa-doc-main" role="main">
+        <div class="reversa-doc-payload">
+            <h1 class="reversa-doc-title">Glossário</h1>
+            
+<p class="lede">Os termos que aparecem nas conversas sobre o sistema, explicados sem jargão. Use a busca ou filtre por assunto; os termos relacionados levam a outros verbetes.</p>
+<div style="display:flex;flex-direction:column;gap:12px">
+  <label for="glossary-search" class="sr-only">Buscar conceito</label>
+  <input type="search" id="glossary-search" class="search" placeholder="Buscar termo ou explicação..." autocomplete="off">
+  <div class="chips" id="glossary-cats"><button type="button" data-cat="" aria-pressed="true">Todos</button><button type="button" data-cat="Documentos fiscais" aria-pressed="false">Documentos fiscais</button><button type="button" data-cat="E-mail" aria-pressed="false">E-mail</button><button type="button" data-cat="Acesso às caixas" aria-pressed="false">Acesso às caixas</button><button type="button" data-cat="OneDrive" aria-pressed="false">OneDrive</button><button type="button" data-cat="Operação" aria-pressed="false">Operação</button></div>
+  <p class="small muted" id="glossary-count" aria-live="polite"></p>
+</div>
+<div class="cards" id="glossary-grid"></div>
+
+        </div>
+    </main>
+
+    <aside class="reversa-doc-sidebar" aria-label="Controles" data-page="glossario"></aside>
+
+    <footer class="reversa-doc-footer">
+        <span class="reversa-doc-footer-text">
+            Gerado por Reversa em <time datetime="2026-09-24T19:51:23+00:00">24 de setembro de 2026, 16:51</time>
+        </span>
+        <span class="reversa-doc-footer-sep" aria-hidden="true">·</span>
+        <a href="../_reversa_sdd/prd.md" class="reversa-doc-source-link">Fonte: _reversa_sdd/prd.md</a>
+    </footer>
+
+    <script src="assets/js/data.js"></script>
+    <script src="assets/js/nav.js"></script>
+    <script src="assets/js/sidebar.js"></script>
+    <script>
+(function () {
+  "use strict";
+  var G = (window.RV_DATA || {}).glossary;
+  var grid = document.getElementById("glossary-grid"), q = document.getElementById("glossary-search"),
+      count = document.getElementById("glossary-count"), cat = "";
+  if (!G || !G.concepts) { grid.textContent = "Dados indisponíveis."; return; }
+  var bySlug = {}; G.concepts.forEach(function (c) { bySlug[c.slug] = c; });
+  function norm(s) { return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase(); }
+  function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
+  grid.innerHTML = G.concepts.map(function (c) {
+    return "<article class='card' id='concept-" + c.slug + "' data-cat='" + esc(c.category) + "' data-text='" +
+      esc(norm(c.term + " " + c.definition)) + "'><span class='tag'>" + esc(c.category) + "</span><h3>" + esc(c.term) +
+      "</h3><p>" + esc(c.definition) + "</p>" + (c.related.length ? "<p class='small' style='margin-top:8px'>Veja também: " +
+      c.related.map(function (r) { return "<a href='#concept-" + r + "'>" + esc(bySlug[r].term) + "</a>"; }).join(", ") + "</p>" : "") +
+      "</article>";
+  }).join("");
+  function apply() {
+    var t = norm(q.value.trim()), n = 0;
+    grid.querySelectorAll(".card").forEach(function (el) {
+      var ok = (!cat || el.dataset.cat === cat) && (!t || el.dataset.text.indexOf(t) >= 0);
+      el.hidden = !ok; if (ok) n++;
+    });
+    count.textContent = n + (n === 1 ? " termo" : " termos");
+  }
+  q.addEventListener("input", apply);
+  document.querySelectorAll("#glossary-cats button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      cat = b.dataset.cat;
+      document.querySelectorAll("#glossary-cats button").forEach(function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
+      apply();
+    });
+  });
+  window.addEventListener("hashchange", function () { cat = ""; q.value = ""; apply(); });
+  apply();
+})();
+</script>
+</body>
+</html>

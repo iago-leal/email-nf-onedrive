@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arquitetura | afla-nfes</title>
+
+    <!-- Meta-tags do Reversa para auto-discovery -->
+    <meta name="reversa-category" content="diagram">
+    <meta name="reversa-template" content="arquitetura">
+    <meta name="reversa-source-md" content="README.md">
+    <meta name="reversa-producer-agent" content="reversa-docs-mapper">
+    <meta name="reversa-generated-at" content="2026-09-24T19:52:30+00:00">
+    <meta name="reversa-schema-version" content="1">
+
+    <link rel="icon" type="image/svg+xml" href="assets/img/seal-mini.svg">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/site.css">
+    <script src="assets/vendor/three.min.js"></script>
+    <script src="assets/vendor/OrbitControls.js"></script>
+</head>
+<body data-style="sober" data-page="arquitetura">
+
+    <header class="reversa-doc-header">
+        <a class="reversa-doc-logo" href="index.html" aria-label="Início">
+            <span class="seal" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" class="seal-mini" role="img" aria-label="Selo do projeto afla-nfes"><circle cx="32.0" cy="32.0" r="32.0" fill="#f5f3ee"/><ellipse cx="32.0" cy="32.0" rx="15.6" ry="5.7" fill="none" stroke="#3d4a5c" stroke-opacity="0.55" stroke-width="3.94" transform="rotate(124.1 32.0 32.0)"/><circle cx="41.6" cy="24.8" r="2.9" fill="#3d4a5c"/><ellipse cx="32.0" cy="32.0" rx="22.2" ry="17.1" fill="none" stroke="#3d4a5c" stroke-opacity="0.55" stroke-width="3.94" transform="rotate(170.5 32.0 32.0)"/><circle cx="35.3" cy="48.7" r="2.9" fill="#3d4a5c"/><ellipse cx="32.0" cy="32.0" rx="28.8" ry="11.8" fill="none" stroke="#7c8a99" stroke-opacity="0.55" stroke-width="3.94" transform="rotate(86.4 32.0 32.0)"/><circle cx="35.6" cy="60.3" r="2.9" fill="#3d4a5c"/><circle cx="32.0" cy="32.0" r="5.1" fill="#1e2937"/><circle cx="32.0" cy="32.0" r="2.2" fill="#a06b4a"/><circle cx="32.0" cy="32.0" r="29.53846153846154" fill="none" stroke="#1e2937" stroke-width="3.69"/></svg></span>
+            <span class="project-name">afla-nfes</span>
+        </a>
+        <nav class="reversa-doc-nav" aria-label="Seções da documentação">
+            <a href="index.html" data-page-id="index">Visão geral</a><a href="arquitetura.html" data-page-id="arquitetura">Arquitetura</a><a href="modulos.html" data-page-id="modulos">Módulos</a><a href="metricas.html" data-page-id="metricas">Métricas</a><a href="timeline.html" data-page-id="timeline">Linha do tempo</a><a href="glossario.html" data-page-id="glossario">Glossário</a><a href="deck.html" data-page-id="deck">Apresentação</a><a href="index.html#funcionalidades" data-page-id="features">Funcionalidades</a>
+        </nav>
+        <div class="reversa-doc-toolbar">
+            <button type="button" class="theme-toggle" aria-label="Alternar tema">
+                <span class="theme-toggle-label">Tema</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="reversa-doc-main" role="main">
+        <div class="reversa-doc-payload">
+            <h1 class="reversa-doc-title">Arquitetura</h1>
+            
+<p class="lede">O <b>afla-nfes</b> é um programa que roda sozinho a cada 30 minutos num servidor. Ele lê as caixas de e-mail do financeiro, encontra notas fiscais e boletos e os guarda na pasta de contas a pagar do OneDrive de cada empresa, com o nome certo e sem intervenção manual.</p>
+
+<section>
+  <h2>O caminho de um documento</h2>
+  <ol class="flow"><li style="--area-color:#c28f2c"><b>Ler a configuração</b>Descobre quais caixas de e-mail acompanhar e para qual pasta do OneDrive vai o documento de cada empresa.</li><li style="--area-color:#3f7cac"><b>Ler os e-mails</b>Abre cada caixa em modo somente leitura e separa os anexos PDF e XML, inclusive de mensagens encaminhadas.</li><li style="--area-color:#3f7cac"><b>Classificar</b>Decide se o anexo é nota fiscal ou boleto. O que não for reconhecido fica retido para revisão humana.</li><li style="--area-color:#5b5ea6"><b>Evitar repetição</b>Consulta o registro local: o que já foi arquivado não é enviado de novo.</li><li style="--area-color:#2f8f6b"><b>Arquivar no OneDrive</b>Dá ao arquivo o nome padrão da pasta, escolhe a subpasta pelo vencimento e envia, sem nunca apagar nem sobrescrever.</li><li style="--area-color:#b5543c"><b>Avisar e registrar</b>Grava o log do dia, atualiza o sumário LEIAME e avisa o operador pelo Telegram quando algo falha.</li></ol>
+</section>
+
+<section class="callout">
+  <h3>Três garantias de projeto</h3>
+  <ul>
+    <li><b>Os e-mails ficam intactos.</b> Nada é marcado como lido, movido, apagado ou respondido.</li>
+    <li><b>O OneDrive só recebe, nunca perde.</b> Um nome já ocupado ganha sufixo <code>_2</code>, <code>_3</code>; nenhum arquivo existente é apagado ou substituído.</li>
+    <li><b>Senhas não aparecem.</b> Credenciais são mascaradas no log, nos avisos e no terminal.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>A cidade do código</h2>
+  <p class="muted prose">Cada prédio é um arquivo do programa. Os bairros agrupam os arquivos pela etapa de que cuidam; a altura mostra o tamanho do arquivo (linhas de código) e o tom, do claro ao escuro, indica quantos caminhos de decisão ele contém. Arraste para girar, use a roda do mouse para aproximar e passe o cursor sobre um prédio para ver o que ele faz.</p>
+  <div class="stage" id="city-stage">
+    <div class="loader" id="city-loader">Montando a cidade do código...</div>
+    <div class="tooltip" id="city-tip"></div>
+  </div>
+  <ul class="legend" style="margin-top:12px"><li><span class="swatch" style="background:#c28f2c"></span>Configuração</li><li><span class="swatch" style="background:#8e6c8a"></span>Autorização (OAuth)</li><li><span class="swatch" style="background:#3f7cac"></span>Coleta de e-mail</li><li><span class="swatch" style="background:#5b5ea6"></span>Registro (banco)</li><li><span class="swatch" style="background:#2f8f6b"></span>Envio ao OneDrive</li><li><span class="swatch" style="background:#b5543c"></span>Execução e avisos</li><li><span class="swatch" style="background:#6b7280"></span>Núcleo</li></ul>
+</section>
+
+<section class="kpis">
+  <div class="kpi"><strong>30</strong><span>arquivos com código</span></div>
+  <div class="kpi"><strong>3.116</strong><span>linhas de código</span></div>
+  <div class="kpi"><strong>7</strong><span>bairros (etapas e núcleo)</span></div>
+  <div class="kpi"><strong>72</strong><span>ligações internas</span></div>
+</section>
+
+        </div>
+    </main>
+
+    <aside class="reversa-doc-sidebar" aria-label="Controles" data-page="arquitetura">
+        
+<div class="sidebar-group">
+  <h3>Ajustes da cidade</h3>
+  <label>Altura dos prédios
+    <input type="range" min="0.3" max="3" step="0.1" value="1" data-param="heightScale" data-default="1">
+  </label>
+  <label>Intensidade da luz
+    <input type="range" min="0.2" max="2" step="0.1" value="1" data-param="light" data-default="1">
+  </label>
+  <label class="check"><input type="checkbox" data-param="rotate" data-default="true" checked> Girar sozinha</label>
+</div>
+<p class="small muted">Os ajustes ficam guardados neste navegador.</p>
+
+    </aside>
+
+    <footer class="reversa-doc-footer">
+        <span class="reversa-doc-footer-text">
+            Gerado por Reversa em <time datetime="2026-09-24T19:52:30+00:00">24 de setembro de 2026, 16:52</time>
+        </span>
+        <span class="reversa-doc-footer-sep" aria-hidden="true">·</span>
+        <a href="../README.md" class="reversa-doc-source-link">Fonte: README.md</a>
+    </footer>
+
+    <script src="assets/js/data.js"></script>
+    <script src="assets/js/nav.js"></script>
+    <script src="assets/js/sidebar.js"></script>
+    <script>
+(function () {
+  "use strict";
+  var AREAS = [{"key": "configuracao", "label": "Configuração", "color": "#c28f2c"}, {"key": "autorizacao", "label": "Autorização (OAuth)", "color": "#8e6c8a"}, {"key": "coleta", "label": "Coleta de e-mail", "color": "#3f7cac"}, {"key": "registro", "label": "Registro (banco)", "color": "#5b5ea6"}, {"key": "envio", "label": "Envio ao OneDrive", "color": "#2f8f6b"}, {"key": "execucao", "label": "Execução e avisos", "color": "#b5543c"}, {"key": ".", "label": "Núcleo", "color": "#6b7280"}];
+  var stage = document.getElementById("city-stage");
+  var loader = document.getElementById("city-loader");
+  var tip = document.getElementById("city-tip");
+  if (!window.THREE || !window.RV_DATA || !window.RV_DATA.modules || !window.RV_DATA.modules.modules) {
+    loader.textContent = "Biblioteca 3D ou dados indisponíveis. Abra novamente após o Publisher gerar assets/js/data.js.";
+    return;
+  }
+  var mods = window.RV_DATA.modules.modules.filter(function (m) { return m.loc > 0; });
+  var colorOf = {}; AREAS.forEach(function (a) { colorOf[a.key] = a.color; });
+  var maxC = Math.max.apply(null, mods.map(function (m) { return m.complexity; }));
+
+  var W = stage.clientWidth, H = stage.clientHeight;
+  var renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+  renderer.setPixelRatio(window.devicePixelRatio || 1);
+  renderer.setSize(W, H);
+  stage.appendChild(renderer.domElement);
+  var scene = new THREE.Scene();
+  scene.background = new THREE.Color(getComputedStyle(document.body).getPropertyValue("--reversa-surface").trim() || "#ffffff");
+  var camera = new THREE.PerspectiveCamera(45, W / H, 0.1, 2000);
+  camera.position.set(60, 70, 90);
+  var controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.autoRotate = true;
+  controls.autoRotateSpeed = 0.6;
+  var hemi = new THREE.HemisphereLight(0xffffff, 0x8a8577, 0.7);
+  var dir = new THREE.DirectionalLight(0xffffff, 0.8);
+  dir.position.set(40, 80, 30);
+  scene.add(hemi, dir);
+
+  // Bairros em grade 4 x 2, prédios em grade dentro de cada bairro
+  var GAP = 4, CELL = 5, buildings = [];
+  var cols = 4, district = 0, offsets = [];
+  var groups = AREAS.map(function (a) {
+    return { area: a, items: mods.filter(function (m) { return m.area === a.key; }).sort(function (x, y) { return y.loc - x.loc; }) };
+  }).filter(function (g) { return g.items.length; });
+  var sizes = groups.map(function (g) { return Math.ceil(Math.sqrt(g.items.length)); });
+  var dSize = Math.max.apply(null, sizes) * CELL + 2;
+  groups.forEach(function (g, gi) {
+    var gx = (gi % cols) * (dSize + GAP), gz = Math.floor(gi / cols) * (dSize + GAP);
+    var ground = new THREE.Mesh(new THREE.BoxGeometry(dSize, 0.4, dSize),
+      new THREE.MeshLambertMaterial({ color: new THREE.Color(g.area.color).lerp(new THREE.Color(0xffffff), 0.72) }));
+    ground.position.set(gx + dSize / 2, -0.2, gz + dSize / 2);
+    scene.add(ground);
+    var side = sizes[gi];
+    g.items.forEach(function (m, i) {
+      var h = Math.max(0.6, m.loc / 6);
+      var t = 0.25 + 0.75 * (m.complexity / maxC);
+      var col = new THREE.Color(0xf2f0ea).lerp(new THREE.Color(g.area.color), t);
+      var foot = 2.4 + Math.min(1.4, m.functions / 10);
+      var mesh = new THREE.Mesh(new THREE.BoxGeometry(foot, 1, foot), new THREE.MeshLambertMaterial({ color: col }));
+      mesh.userData = { m: m, h: h, base: col.clone() };
+      mesh.scale.y = h;
+      mesh.position.set(gx + 1 + CELL / 2 + (i % side) * CELL, h / 2, gz + 1 + CELL / 2 + Math.floor(i / side) * CELL);
+      scene.add(mesh);
+      buildings.push(mesh);
+    });
+  });
+  var cx = (Math.min(cols, groups.length) * (dSize + GAP) - GAP) / 2;
+  var cz = (Math.ceil(groups.length / cols) * (dSize + GAP) - GAP) / 2;
+  controls.target.set(cx, 6, cz);
+  camera.position.set(cx + 55, 60, cz + 70);
+  loader.remove();
+
+  function setHeight(k) {
+    buildings.forEach(function (b) { b.scale.y = b.userData.h * k; b.position.y = b.userData.h * k / 2; });
+  }
+  document.addEventListener("reversa:param-change", function (e) {
+    var d = e.detail || {};
+    if (d.param === "heightScale") setHeight(+d.value);
+    if (d.param === "light") { dir.intensity = 0.8 * d.value; hemi.intensity = 0.7 * d.value; }
+    if (d.param === "rotate") controls.autoRotate = !!d.value;
+  });
+  document.querySelectorAll(".reversa-doc-sidebar [data-param]").forEach(function (c) {
+    var v = c.type === "checkbox" ? c.checked : +c.value;
+    document.dispatchEvent(new CustomEvent("reversa:param-change", { detail: { param: c.dataset.param, value: v } }));
+  });
+
+  var ray = new THREE.Raycaster(), mouse = new THREE.Vector2(), hovered = null;
+  renderer.domElement.addEventListener("mousemove", function (ev) {
+    var r = renderer.domElement.getBoundingClientRect();
+    mouse.x = ((ev.clientX - r.left) / r.width) * 2 - 1;
+    mouse.y = -((ev.clientY - r.top) / r.height) * 2 + 1;
+    ray.setFromCamera(mouse, camera);
+    var hit = ray.intersectObjects(buildings)[0];
+    if (hovered && (!hit || hit.object !== hovered)) { hovered.material.color.copy(hovered.userData.base); hovered = null; }
+    if (hit) {
+      hovered = hit.object;
+      hovered.material.color.set(0x1e2937);
+      var m = hovered.userData.m;
+      var area = AREAS.filter(function (a) { return a.key === m.area; })[0];
+      tip.innerHTML = "<b>" + m.name + ".py</b>" + (area ? area.label : "") + " &middot; " + m.loc + " linhas" +
+        (m.doc ? "<br>" + m.doc.replace(/</g, "&lt;") : "");
+      tip.style.left = Math.min(ev.clientX - r.left + 14, r.width - 330) + "px";
+      tip.style.top = (ev.clientY - r.top + 14) + "px";
+      tip.style.opacity = 1;
+    } else tip.style.opacity = 0;
+  });
+  renderer.domElement.addEventListener("mouseleave", function () { tip.style.opacity = 0; });
+  window.addEventListener("resize", function () {
+    W = stage.clientWidth; H = stage.clientHeight;
+    renderer.setSize(W, H); camera.aspect = W / H; camera.updateProjectionMatrix();
+  });
+  (function loop() { requestAnimationFrame(loop); controls.update(); renderer.render(scene, camera); })();
+})();
+</script>
+</body>
+</html>

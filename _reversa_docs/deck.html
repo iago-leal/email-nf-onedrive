@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apresentação | afla-nfes</title>
+
+    <!-- Meta-tags do Reversa para auto-discovery -->
+    <meta name="reversa-category" content="diagram">
+    <meta name="reversa-template" content="deck">
+    <meta name="reversa-source-md" content="">
+    <meta name="reversa-producer-agent" content="reversa-docs-storyteller">
+    <meta name="reversa-generated-at" content="2026-09-24T19:51:23+00:00">
+    <meta name="reversa-schema-version" content="1">
+
+    <link rel="icon" type="image/svg+xml" href="assets/img/seal-mini.svg">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/site.css">
+    
+</head>
+<body data-style="sober" data-page="deck">
+
+    <header class="reversa-doc-header">
+        <a class="reversa-doc-logo" href="index.html" aria-label="Início">
+            <span class="seal" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" class="seal-mini" role="img" aria-label="Selo do projeto afla-nfes"><circle cx="32.0" cy="32.0" r="32.0" fill="#f5f3ee"/><ellipse cx="32.0" cy="32.0" rx="15.6" ry="5.7" fill="none" stroke="#3d4a5c" stroke-opacity="0.55" stroke-width="3.94" transform="rotate(124.1 32.0 32.0)"/><circle cx="41.6" cy="24.8" r="2.9" fill="#3d4a5c"/><ellipse cx="32.0" cy="32.0" rx="22.2" ry="17.1" fill="none" stroke="#3d4a5c" stroke-opacity="0.55" stroke-width="3.94" transform="rotate(170.5 32.0 32.0)"/><circle cx="35.3" cy="48.7" r="2.9" fill="#3d4a5c"/><ellipse cx="32.0" cy="32.0" rx="28.8" ry="11.8" fill="none" stroke="#7c8a99" stroke-opacity="0.55" stroke-width="3.94" transform="rotate(86.4 32.0 32.0)"/><circle cx="35.6" cy="60.3" r="2.9" fill="#3d4a5c"/><circle cx="32.0" cy="32.0" r="5.1" fill="#1e2937"/><circle cx="32.0" cy="32.0" r="2.2" fill="#a06b4a"/><circle cx="32.0" cy="32.0" r="29.53846153846154" fill="none" stroke="#1e2937" stroke-width="3.69"/></svg></span>
+            <span class="project-name">afla-nfes</span>
+        </a>
+        <nav class="reversa-doc-nav" aria-label="Seções da documentação">
+            <a href="index.html" data-page-id="index">Visão geral</a><a href="arquitetura.html" data-page-id="arquitetura">Arquitetura</a><a href="modulos.html" data-page-id="modulos">Módulos</a><a href="metricas.html" data-page-id="metricas">Métricas</a><a href="timeline.html" data-page-id="timeline">Linha do tempo</a><a href="glossario.html" data-page-id="glossario">Glossário</a><a href="deck.html" data-page-id="deck">Apresentação</a><a href="index.html#funcionalidades" data-page-id="features">Funcionalidades</a>
+        </nav>
+        <div class="reversa-doc-toolbar">
+            <button type="button" class="theme-toggle" aria-label="Alternar tema">
+                <span class="theme-toggle-label">Tema</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="reversa-doc-main" role="main">
+        <div class="reversa-doc-payload">
+            <h1 class="reversa-doc-title">Apresentação</h1>
+            
+<p class="lede">Apresentação curta do sistema para quem não acompanhou o projeto. Use as setas do teclado ou os botões; a tecla F alterna a tela cheia.</p>
+<section class="deck" id="deck" tabindex="-1">
+  <ol class="deck-slides" id="deck-slides"><li class="deck-slide" data-slide="capa"><div class="seal-slot" id="deck-seal"></div><p class="eyebrow">afla-nfes</p><h2>Notas e boletos do e-mail direto para o OneDrive</h2><p>Arquivamento automático das contas a pagar, a cada 30 minutos, sem ação manual.</p></li><li class="deck-slide" data-slide="problema"><p class=eyebrow>O problema</p><h2>Todos viam o e-mail, ninguém salvava a nota</h2><ul><li>Quatro pessoas leem a mesma caixa do financeiro.</li><li>Cada uma presume que outra já arquivou o documento.</li><li>Contas são esquecidas, com risco de multa e juros por atraso.</li></ul></li><li class="deck-slide" data-slide="solucao"><p class=eyebrow>A solução</p><h2>Um processo que roda sozinho</h2><ol><li>Lê as caixas do financeiro sem alterar nada.</li><li>Separa notas fiscais e boletos dos demais anexos.</li><li>Dá o nome que a equipe já usava e escolhe a pasta pelo vencimento.</li><li>Envia ao OneDrive e confere que chegou íntegro.</li><li>Avisa o operador se algo falhar.</li></ol></li><li class="deck-slide" data-slide="garantias"><p class=eyebrow>Garantias</p><h2>O que o sistema nunca faz</h2><ul><li>Nunca altera as caixas de e-mail: nada é marcado como lido, movido ou apagado.</li><li>Nunca apaga nem substitui arquivos no OneDrive.</li><li>Nunca expõe senhas em log, avisos ou tela.</li><li>Nunca envia o mesmo documento duas vezes.</li></ul></li><li class="deck-slide" data-slide="arquitetura"><p class=eyebrow>Arquitetura</p><h2>Seis etapas, um maestro</h2><p>Configuração, coleta, registro, envio e avisos são partes separadas, coordenadas por um ciclo central.</p><p><a href="arquitetura.html">Ver a arquitetura e a cidade do código</a> · <a href="modulos.html">Ver o mapa de módulos</a></p></li><li class="deck-slide" data-slide="numeros"><p class=eyebrow>Em números</p><h2>Pequeno, focado e testado</h2><div class="kpis"><div class="kpi"><strong>3.116</strong><span>linhas de programa</span></div><div class="kpi"><strong>342</strong><span>testes automáticos</span></div><div class="kpi"><strong>62%</strong><span>documentos com vencimento identificado no lote real</span></div><div class="kpi"><strong>4</strong><span>envios simultâneos ao OneDrive</span></div></div><p><a href="metricas.html">Ver as métricas</a></p></li><li class="deck-slide" data-slide="timeline"><p class=eyebrow>Linha do tempo</p><h2>Do plano à operação em uma semana</h2><ul><li><b>23/09</b> · Envio em paralelo</li><li><b>23/09</b> · Mais tolerância a lentidão do OneDrive</li><li><b>23/09</b> · Leitura de vencimento revisada</li><li><b>23/09</b> · Planilha LEIAME na raiz</li><li><b>24/09</b> · Pastas por empresa e agendamento contínuo</li></ul><p><a href="timeline.html">Ver a linha do tempo completa</a></p></li><li class="deck-slide" data-slide="features"><p class=eyebrow>Funcionalidades</p><h2>Quatro partes, quatro páginas</h2><ul><li><a href="features/configuracao-caixas.html">Configuração das caixas</a>: Define, num único arquivo, quais caixas de e-mail o sistema acompanha, como entra em cada uma e para qual pasta do OneDrive vão os documentos de cada empresa.</li><li><a href="features/coleta-email.html">Coleta de e-mail</a>: Entra em cada caixa somente para ler, encontra as mensagens novas, separa os anexos PDF e XML, inclusive os de encaminhamentos, e decide quais são notas fiscais ou boletos.</li><li><a href="features/envio-onedrive.html">Envio ao OneDrive</a>: Dá a cada documento o nome que o financeiro já usava, escolhe a subpasta pelo vencimento e o envia ao OneDrive, conferindo tamanho e assinatura do arquivo antes de considerá-lo entregue.</li><li><a href="features/execucao-monitoramento.html">Execução e monitoramento</a>: Coloca o processo para rodar sozinho a cada 30 minutos, impede que duas execuções se atropelem, registra tudo em log e avisa o operador pelo Telegram quando algo falha e quando volta a funcionar.</li></ul></li><li class="deck-slide" data-slide="aberto"><p class=eyebrow>Em aberto</p><h2>O que ainda pede atenção</h2><ul><li>Uma nota sem palavra-chave no nome ou no assunto pode ser retida por engano (problema registrado, prioridade média).</li><li>Documentos sem vencimento legível, como notas de serviço, ficam na raiz, explicados na planilha LEIAME.</li><li>Notas disponíveis só por link de portal não são baixadas; aparecem no log para conferência.</li><li>Subpastas especiais, como contratos e fatura de cartão, seguem manuais.</li></ul></li><li class="deck-slide" data-slide="fim"><p class=eyebrow>Próximos passos</p><h2>Para saber mais</h2><ul><li><a href="glossario.html">Glossário</a>: os termos explicados sem jargão.</li><li><a href="features/envio-onedrive.html">Envio ao OneDrive</a>: nomes, pastas e vencimentos.</li><li><a href="index.html">Voltar à visão geral</a></li></ul></li></ol>
+  <nav class="deck-nav" aria-label="Navegação do deck">
+    <button type="button" data-action="prev" aria-label="Slide anterior">&larr;</button>
+    <span class="deck-counter" id="deck-counter">1 / 10</span>
+    <button type="button" data-action="next" aria-label="Próximo slide">&rarr;</button>
+    <button type="button" data-action="fullscreen" aria-label="Tela cheia">Tela cheia</button>
+  </nav>
+</section>
+
+        </div>
+    </main>
+
+    <aside class="reversa-doc-sidebar" aria-label="Controles" data-page="deck"></aside>
+
+    <footer class="reversa-doc-footer">
+        <span class="reversa-doc-footer-text">
+            Gerado por Reversa em <time datetime="2026-09-24T19:51:23+00:00">24 de setembro de 2026, 16:51</time>
+        </span>
+    </footer>
+
+    <script src="assets/js/data.js"></script>
+    <script src="assets/js/nav.js"></script>
+    <script src="assets/js/sidebar.js"></script>
+    <script>
+(function () {
+  "use strict";
+  var deck = document.getElementById("deck"), slides = deck.querySelectorAll(".deck-slide"),
+      counter = document.getElementById("deck-counter"), i = 0;
+  var seal = document.getElementById("deck-seal");
+  if (seal && window.RV_DATA && window.RV_DATA.sealSvg) seal.innerHTML = window.RV_DATA.sealSvg;
+  var start = parseInt((location.hash.match(/slide-(\d+)/) || [])[1], 10);
+  if (start >= 1 && start <= slides.length) i = start - 1;
+  function go(n) {
+    i = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach(function (s, j) { s.classList.toggle("is-active", j === i); });
+    counter.textContent = (i + 1) + " / " + slides.length;
+    history.replaceState(null, "", "#slide-" + (i + 1));
+  }
+  function fs() {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else if (deck.requestFullscreen) deck.requestFullscreen();
+  }
+  deck.querySelector("[data-action=prev]").addEventListener("click", function () { go(i - 1); });
+  deck.querySelector("[data-action=next]").addEventListener("click", function () { go(i + 1); });
+  deck.querySelector("[data-action=fullscreen]").addEventListener("click", fs);
+  document.addEventListener("keydown", function (e) {
+    if (e.target.matches("input, textarea, select")) return;
+    if (e.key === "ArrowRight" || e.key === "PageDown" || e.key === " ") { e.preventDefault(); go(i + 1); }
+    else if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); go(i - 1); }
+    else if (e.key === "f" || e.key === "F") fs();
+    else if (e.key === "Home") go(0);
+    else if (e.key === "End") go(slides.length - 1);
+  });
+  window.addEventListener("hashchange", function () {
+    var n = parseInt((location.hash.match(/slide-(\d+)/) || [])[1], 10);
+    if (n >= 1 && n <= slides.length && n - 1 !== i) go(n - 1);
+  });
+  go(i);
+})();
+</script>
+</body>
+</html>

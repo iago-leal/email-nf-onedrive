@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Métricas | afla-nfes</title>
+
+    <!-- Meta-tags do Reversa para auto-discovery -->
+    <meta name="reversa-category" content="diagram">
+    <meta name="reversa-template" content="metricas">
+    <meta name="reversa-source-md" content="">
+    <meta name="reversa-producer-agent" content="reversa-docs-analyst">
+    <meta name="reversa-generated-at" content="2026-09-24T19:50:18+00:00">
+    <meta name="reversa-schema-version" content="1">
+
+    <link rel="icon" type="image/svg+xml" href="assets/img/seal-mini.svg">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/site.css">
+    <script src="assets/vendor/highcharts.js"></script>
+    <script src="assets/vendor/highcharts-accessibility.js"></script>
+    <script src="assets/vendor/highcharts-exporting.js"></script>
+    <script src="assets/vendor/highcharts-treemap.js"></script>
+</head>
+<body data-style="sober" data-page="metricas">
+
+    <header class="reversa-doc-header">
+        <a class="reversa-doc-logo" href="index.html" aria-label="Início">
+            <span class="seal" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" class="seal-mini" role="img" aria-label="Selo do projeto afla-nfes"><circle cx="32.0" cy="32.0" r="32.0" fill="#f5f3ee"/><ellipse cx="32.0" cy="32.0" rx="15.6" ry="5.7" fill="none" stroke="#3d4a5c" stroke-opacity="0.55" stroke-width="3.94" transform="rotate(124.1 32.0 32.0)"/><circle cx="41.6" cy="24.8" r="2.9" fill="#3d4a5c"/><ellipse cx="32.0" cy="32.0" rx="22.2" ry="17.1" fill="none" stroke="#3d4a5c" stroke-opacity="0.55" stroke-width="3.94" transform="rotate(170.5 32.0 32.0)"/><circle cx="35.3" cy="48.7" r="2.9" fill="#3d4a5c"/><ellipse cx="32.0" cy="32.0" rx="28.8" ry="11.8" fill="none" stroke="#7c8a99" stroke-opacity="0.55" stroke-width="3.94" transform="rotate(86.4 32.0 32.0)"/><circle cx="35.6" cy="60.3" r="2.9" fill="#3d4a5c"/><circle cx="32.0" cy="32.0" r="5.1" fill="#1e2937"/><circle cx="32.0" cy="32.0" r="2.2" fill="#a06b4a"/><circle cx="32.0" cy="32.0" r="29.53846153846154" fill="none" stroke="#1e2937" stroke-width="3.69"/></svg></span>
+            <span class="project-name">afla-nfes</span>
+        </a>
+        <nav class="reversa-doc-nav" aria-label="Seções da documentação">
+            <a href="index.html" data-page-id="index">Visão geral</a><a href="arquitetura.html" data-page-id="arquitetura">Arquitetura</a><a href="modulos.html" data-page-id="modulos">Módulos</a><a href="metricas.html" data-page-id="metricas">Métricas</a><a href="timeline.html" data-page-id="timeline">Linha do tempo</a><a href="glossario.html" data-page-id="glossario">Glossário</a><a href="deck.html" data-page-id="deck">Apresentação</a><a href="index.html#funcionalidades" data-page-id="features">Funcionalidades</a>
+        </nav>
+        <div class="reversa-doc-toolbar">
+            <button type="button" class="theme-toggle" aria-label="Alternar tema">
+                <span class="theme-toggle-label">Tema</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="reversa-doc-main" role="main">
+        <div class="reversa-doc-payload">
+            <h1 class="reversa-doc-title">Métricas</h1>
+            
+<p class="lede">Um retrato do tamanho, da organização e da proteção do programa. Os números ajudam a responder três perguntas: o sistema é grande? Onde está o esforço? Ele é testado?</p>
+
+<section class="kpis">
+  <div class="kpi"><strong>3.116</strong><span>linhas de código do programa</span></div>
+  <div class="kpi"><strong>30</strong><span>arquivos com código</span></div>
+  <div class="kpi"><strong>342</strong><span>testes automáticos</span></div>
+  <div class="kpi"><strong>3.339</strong><span>linhas de teste, mais que o próprio programa</span></div>
+  <div class="kpi"><strong>0</strong><span>dependências circulares</span></div>
+</section>
+
+<section class="dashboard">
+  <article class="chart-card wide">
+    <h2>Onde está o código</h2>
+    <p>Cada retângulo é um arquivo; a área é proporcional ao número de linhas. As cores separam as etapas do processo.</p>
+    <div class="chart" id="chart-treemap"></div>
+  </article>
+  <article class="chart-card">
+    <h2>Código e testes por etapa</h2>
+    <p>Barras de código (linhas) ao lado da quantidade de testes que verificam cada etapa.</p>
+    <div class="chart" id="chart-areas"></div>
+  </article>
+  <article class="chart-card">
+    <h2>Arquivos com mais decisões</h2>
+    <p>Quanto mais caminhos de decisão (se isto, então aquilo), mais cuidado o arquivo exige ao ser alterado.</p>
+    <div class="chart" id="chart-complexity"></div>
+  </article>
+  <article class="chart-card wide">
+    <h2>Tamanho dos arquivos</h2>
+    <p>A maioria dos arquivos é pequena, o que facilita a leitura e a manutenção.</p>
+    <div class="chart" id="chart-histogram" style="height:260px"></div>
+  </article>
+  <article class="chart-card wide">
+    <h2>Quem depende de quem</h2>
+    <p>Cada célula conta quantas vezes a etapa da linha usa a etapa da coluna; quanto mais escura, mais forte a ligação. A linha da execução mostra o maestro que puxa todas as demais.</p>
+    <div class="table-wrap" id="dep-matrix"></div>
+  </article>
+</section>
+
+<section class="callout">
+  <h3>Como ler estes números</h3>
+  <ul>
+    <li><b>Tamanho modesto.</b> Cerca de três mil linhas é um programa pequeno e focado, compatível com uma ferramenta de um único propósito.</li>
+    <li><b>Esforço concentrado onde há risco.</b> As regras de vencimento e de nome dos arquivos estão entre as partes com mais decisões, porque lidam com a variedade de formatos de boletos e notas de cada fornecedor.</li>
+    <li><b>Bem protegido.</b> Há mais linhas de teste do que de programa. Os testes usam apenas dados fictícios e nenhum acessa a internet.</li>
+  </ul>
+</section>
+
+        </div>
+    </main>
+
+    <aside class="reversa-doc-sidebar" aria-label="Controles" data-page="metricas"></aside>
+
+    <footer class="reversa-doc-footer">
+        <span class="reversa-doc-footer-text">
+            Gerado por Reversa em <time datetime="2026-09-24T19:50:18+00:00">24 de setembro de 2026, 16:50</time>
+        </span>
+    </footer>
+
+    <script src="assets/js/data.js"></script>
+    <script src="assets/js/nav.js"></script>
+    <script src="assets/js/sidebar.js"></script>
+    <script>
+(function () {
+  "use strict";
+  var M = (window.RV_DATA || {}).metrics;
+  if (!window.Highcharts || !M || !M.totals) {
+    document.querySelectorAll(".chart").forEach(function (c) { c.textContent = "Highcharts ou dados indisponíveis."; });
+    return;
+  }
+
+  var css = getComputedStyle(document.body);
+  var FG = css.getPropertyValue("--reversa-fg").trim() || "#1e2937";
+  var MUTED = css.getPropertyValue("--reversa-fg-muted").trim() || "#4d5a6b";
+  var GRID = css.getPropertyValue("--reversa-border").trim() || "#d6d2c8";
+  Highcharts.setOptions({
+    lang: { decimalPoint: ",", thousandsSep: ".", contextButtonTitle: "Exportar", downloadPNG: "Baixar PNG", downloadSVG: "Baixar SVG", viewFullscreen: "Tela cheia", exitFullscreen: "Sair da tela cheia", printChart: "Imprimir" },
+    chart: { backgroundColor: "transparent", style: { fontFamily: "inherit" } },
+    title: { text: null }, credits: { enabled: false },
+    xAxis: { labels: { style: { color: MUTED } }, lineColor: GRID, tickColor: GRID },
+    yAxis: { labels: { style: { color: MUTED } }, gridLineColor: GRID, title: { style: { color: MUTED } } },
+    legend: { itemStyle: { color: FG, fontWeight: "normal" } },
+    exporting: { buttons: { contextButton: { menuItems: ["viewFullscreen", "downloadPNG", "downloadSVG"] } } }
+  });
+
+  var COLOR = {}, LABEL = {};
+  M.area_summary.forEach(function (a) { COLOR[a.area] = a.color; LABEL[a.area] = a.label; });
+
+  var tm = M.area_summary.map(function (a) { return { id: a.area, name: a.label, color: a.color }; });
+  M.treemap_loc_by_folder.forEach(function (f) {
+    tm.push({ parent: f.area, name: f.name === "__init__" ? f.folder.split("/").pop() : f.name, value: f.loc });
+  });
+  Highcharts.chart("chart-treemap", {
+    series: [{ type: "treemap", layoutAlgorithm: "squarified", alternateStartingDirection: true, data: tm,
+      levels: [{ level: 1, borderWidth: 3, borderColor: "#ffffff", dataLabels: { enabled: true, align: "left", verticalAlign: "top",
+        style: { fontSize: "13px", fontWeight: "600", textOutline: "none", color: "#ffffff" } } },
+        { level: 2, borderWidth: 1, borderColor: "#ffffff", colorVariation: { key: "brightness", to: 0.35 },
+          dataLabels: { style: { fontSize: "11px", fontWeight: "normal", textOutline: "none", color: "#ffffff" } } }] }],
+    tooltip: { pointFormat: "<b>{point.name}</b>: {point.value} linhas" }
+  });
+
+  Highcharts.chart("chart-areas", {
+    chart: { type: "bar" },
+    xAxis: { categories: M.area_summary.map(function (a) { return a.label; }) },
+    yAxis: [{ title: { text: "Linhas de código" } }, { title: { text: "Testes" }, opposite: true }],
+    series: [
+      { name: "Linhas de código", color: "#3d4a5c", data: M.area_summary.map(function (a) { return { y: a.loc, color: a.color }; }), yAxis: 0 },
+      { name: "Testes", data: M.area_summary.map(function (a) { return a.tests; }), color: "#9aa3ad", yAxis: 1 }
+    ],
+    plotOptions: { series: { groupPadding: 0.12 } }
+  });
+
+  Highcharts.chart("chart-complexity", {
+    chart: { type: "bar" },
+    xAxis: { categories: M.top_complexity.map(function (c) { return c.name; }) },
+    yAxis: { title: { text: "Caminhos de decisão" } },
+    legend: { enabled: false },
+    series: [{ name: "Caminhos de decisão", data: M.top_complexity.map(function (c) {
+      return { y: c.complexity, color: COLOR[c.area], custom: { area: LABEL[c.area], loc: c.loc } }; }) }],
+    tooltip: { pointFormat: "{point.custom.area}<br>{point.y} caminhos em {point.custom.loc} linhas" }
+  });
+
+  var b = M.loc_histogram.bins;
+  Highcharts.chart("chart-histogram", {
+    chart: { type: "column" },
+    xAxis: { categories: M.loc_histogram.counts.map(function (_, i) { return (b[i] + 1) + " a " + b[i + 1]; }), title: { text: "Linhas por arquivo" } },
+    yAxis: { title: { text: "Arquivos" }, allowDecimals: false },
+    legend: { enabled: false },
+    series: [{ name: "Arquivos", data: M.loc_histogram.counts, color: "#3d4a5c" }],
+    plotOptions: { column: { pointPadding: 0.05, groupPadding: 0.05 } }
+  });
+
+  var names = M.dependency_sankey.nodes.map(function (n) { return n.name; }), val = {}, mx = 1;
+  M.dependency_sankey.links.forEach(function (l) { val[l.source + "|" + l.target] = l.value; mx = Math.max(mx, l.value); });
+  var h = "<table class='data dep-matrix'><thead><tr><th>usa &rarr;</th>" + names.map(function (n) { return "<th class='num'>" + n.split(" ")[0] + "</th>"; }).join("") + "</tr></thead><tbody>";
+  M.dependency_sankey.nodes.forEach(function (a) {
+    h += "<tr><th><span class='swatch' style='background:" + a.color + "'></span> " + a.name + "</th>";
+    names.forEach(function (b) {
+      var v = val[a.name + "|" + b] || 0;
+      h += a.name === b ? "<td class='num muted'>&middot;</td>" : "<td class='num' title='" + a.name + " usa " + b + ": " + v + "' style='background:rgba(61,74,92," + (v ? 0.12 + 0.75 * v / mx : 0) + ");color:" + (v / mx > 0.5 ? "#fff" : "inherit") + "'>" + (v || "") + "</td>";
+    });
+    h += "</tr>";
+  });
+  document.getElementById("dep-matrix").innerHTML = h + "</tbody></table>";
+})();
+</script>
+</body>
+</html>

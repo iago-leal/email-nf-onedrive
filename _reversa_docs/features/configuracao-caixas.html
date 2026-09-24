@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuração das caixas | afla-nfes</title>
+
+    <!-- Meta-tags do Reversa para auto-discovery -->
+    <meta name="reversa-category" content="diagram">
+    <meta name="reversa-template" content="feature">
+    <meta name="reversa-source-md" content="_reversa_sdd/sdd/configuracao-caixas.md">
+    <meta name="reversa-producer-agent" content="reversa-docs-storyteller">
+    <meta name="reversa-generated-at" content="2026-09-24T19:51:23+00:00">
+    <meta name="reversa-schema-version" content="1">
+
+    <link rel="icon" type="image/svg+xml" href="../assets/img/seal-mini.svg">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/site.css">
+    
+</head>
+<body data-style="sober" data-page="feature-configuracao-caixas">
+
+    <header class="reversa-doc-header">
+        <a class="reversa-doc-logo" href="../index.html" aria-label="Início">
+            <span class="seal" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" class="seal-mini" role="img" aria-label="Selo do projeto afla-nfes"><circle cx="32.0" cy="32.0" r="32.0" fill="#f5f3ee"/><ellipse cx="32.0" cy="32.0" rx="15.6" ry="5.7" fill="none" stroke="#3d4a5c" stroke-opacity="0.55" stroke-width="3.94" transform="rotate(124.1 32.0 32.0)"/><circle cx="41.6" cy="24.8" r="2.9" fill="#3d4a5c"/><ellipse cx="32.0" cy="32.0" rx="22.2" ry="17.1" fill="none" stroke="#3d4a5c" stroke-opacity="0.55" stroke-width="3.94" transform="rotate(170.5 32.0 32.0)"/><circle cx="35.3" cy="48.7" r="2.9" fill="#3d4a5c"/><ellipse cx="32.0" cy="32.0" rx="28.8" ry="11.8" fill="none" stroke="#7c8a99" stroke-opacity="0.55" stroke-width="3.94" transform="rotate(86.4 32.0 32.0)"/><circle cx="35.6" cy="60.3" r="2.9" fill="#3d4a5c"/><circle cx="32.0" cy="32.0" r="5.1" fill="#1e2937"/><circle cx="32.0" cy="32.0" r="2.2" fill="#a06b4a"/><circle cx="32.0" cy="32.0" r="29.53846153846154" fill="none" stroke="#1e2937" stroke-width="3.69"/></svg></span>
+            <span class="project-name">afla-nfes</span>
+        </a>
+        <nav class="reversa-doc-nav" aria-label="Seções da documentação">
+            <a href="../index.html" data-page-id="index">Visão geral</a><a href="../arquitetura.html" data-page-id="arquitetura">Arquitetura</a><a href="../modulos.html" data-page-id="modulos">Módulos</a><a href="../metricas.html" data-page-id="metricas">Métricas</a><a href="../timeline.html" data-page-id="timeline">Linha do tempo</a><a href="../glossario.html" data-page-id="glossario">Glossário</a><a href="../deck.html" data-page-id="deck">Apresentação</a><a href="../index.html#funcionalidades" data-page-id="features">Funcionalidades</a>
+        </nav>
+        <div class="reversa-doc-toolbar">
+            <button type="button" class="theme-toggle" aria-label="Alternar tema">
+                <span class="theme-toggle-label">Tema</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="reversa-doc-main" role="main">
+        <div class="reversa-doc-payload">
+            <h1 class="reversa-doc-title">Configuração das caixas</h1>
+            
+<section class="feature-tldr">
+  <h2>Em poucas palavras</h2>
+  <p>Define, num único arquivo, quais caixas de e-mail o sistema acompanha, como entra em cada uma e para qual pasta do OneDrive vão os documentos de cada empresa. Acrescentar uma caixa é editar esse arquivo, sem mexer no programa.</p>
+</section>
+<section class="kpis"><div class="kpi"><strong>0</strong><span>linhas de código alteradas para incluir uma caixa</span></div><div class="kpi"><strong>44</strong><span>testes só da leitura da configuração</span></div></section>
+<p class="prose muted"><b>Por que existe.</b> O pedido original falava de uma caixa, mas já anunciava outras empresas do grupo. Sem um contrato de configuração, cada caixa nova exigiria alterar o código.</p>
+<details class="acc" open><summary>Regras que importam</summary><div><ul><li><b>Caixas numeradas.</b> Cada caixa é declarada como EMAIL1, EMAIL2 e assim por diante; a numeração não precisa ser contínua.</li><li><b>Uma pasta de destino por empresa.</b> Há um destino geral e, se preciso, um destino e um nome de empresa próprios para cada caixa.</li><li><b>Dois modos de acesso.</b> Cada caixa entra por senha de app ou por OAuth 2.0, à escolha do operador.</li><li><b>Data inicial obrigatória.</b> Uma caixa nova só considera mensagens a partir da data informada, para não despejar anos de anexos na pasta de contas a pagar.</li><li><b>Erros detectados antes de acessar a rede.</b> Um problema geral (destino ausente, data inválida) interrompe a execução; um problema de uma só caixa desativa apenas ela, e as demais seguem.</li><li><b>Segredos protegidos.</b> Senhas e tokens nunca aparecem em log, aviso ou tela, e o sistema alerta se o arquivo de configuração estiver legível por outros usuários.</li><li><b>Conferência sem risco.</b> O comando verificar-config lista as caixas, os destinos e o estado das autorizações com as senhas mascaradas, sem acessar a rede.</li></ul></div></details>
+<details class="acc"><summary>Quando algo dá errado</summary><div><div class="table-wrap"><table class="data"><thead><tr><th>Situação</th><th>O que acontece</th></tr></thead><tbody><tr><td>Caixa sem senha ou sem autorização</td><td>Só essa caixa é desativada; o aviso ao operador cita qual variável falta.</td></tr><tr><td>Duas caixas iguais</td><td>A de número maior é desativada como duplicada.</td></tr><tr><td>Data inicial em formato errado</td><td>A execução não começa; a mensagem indica o formato esperado (AAAA-MM-DD).</td></tr><tr><td>Destino do OneDrive ausente</td><td>A execução não começa, para não enviar a lugar errado.</td></tr><tr><td>Telegram configurado pela metade</td><td>A execução segue, mas o log registra que as falhas não serão avisadas.</td></tr></tbody></table></div></div></details>
+
+<details class="acc"><summary>Como evoluiu</summary><div><ol class="tl-list"><li style="--dot:#c28f2c"><time datetime="2026-09-18">18/09</time><p><b>Primeira versão.</b> Caixas numeradas, destino geral e por caixa, validação e comando verificar-config.</p><p class=small><code>_reversa_sdd/addenda/001-mvp-email-nf-onedrive.md</code></p></li><li style="--dot:#c28f2c"><time datetime="2026-09-21">21/09</time><p><b>Acesso por OAuth 2.0.</b> Cada caixa passa a escolher entre senha de app e OAuth; entram as variáveis do cliente OAuth e da pasta de autorizações.</p><p class=small><code>_reversa_sdd/addenda/002-oauth-gmail-google-cloud.md</code></p></li><li style="--dot:#c28f2c"><time datetime="2026-09-22">22/09</time><p><b>Domínios internos.</b> Os domínios das próprias caixas passam a identificar as empresas do grupo, que nunca são tratadas como fornecedor.</p><p class=small><code>_reversa_sdd/addenda/bug-BUG-20260922-VBJD-v001.md</code></p></li><li style="--dot:#c28f2c"><time datetime="2026-09-24">24/09</time><p><b>Destino e nome por empresa.</b> Cada empresa passa a ter a sua pasta de destino, e os documentos já enviados são realocados.</p></li></ol></div></details>
+<details class="acc"><summary>Onde está no código (2 arquivos, 54 testes)</summary><div><div class="table-wrap"><table class="data"><thead><tr><th>Arquivo</th><th>O que faz</th><th class=num>Linhas</th></tr></thead><tbody><tr><td><code>configuracao/carregar.py</code></td><td>Leitura e validação do .env (spec configuracao-caixas, D-03).</td><td class=num>154</td></tr><tr><td><code>configuracao/modelo.py</code></td><td>Modelo da configuração lida do .env (spec configuracao-caixas, seção 9).</td><td class=num>49</td></tr></tbody></table></div></div></details>
+
+<p class="small muted">Especificação completa: <code>_reversa_sdd/sdd/configuracao-caixas.md</code>. Os adendos listados em “Como evoluiu” prevalecem sobre o texto original da especificação.</p>
+
+        </div>
+    </main>
+
+    <aside class="reversa-doc-sidebar" aria-label="Controles" data-page="feature-configuracao-caixas"></aside>
+
+    <footer class="reversa-doc-footer">
+        <span class="reversa-doc-footer-text">
+            Gerado por Reversa em <time datetime="2026-09-24T19:51:23+00:00">24 de setembro de 2026, 16:51</time>
+        </span>
+        <span class="reversa-doc-footer-sep" aria-hidden="true">·</span>
+        <a href="../../_reversa_sdd/sdd/configuracao-caixas.md" class="reversa-doc-source-link">Fonte: _reversa_sdd/sdd/configuracao-caixas.md</a>
+    </footer>
+
+    <script src="../assets/js/data.js"></script>
+    <script src="../assets/js/nav.js"></script>
+    <script src="../assets/js/sidebar.js"></script>
+    
+</body>
+</html>

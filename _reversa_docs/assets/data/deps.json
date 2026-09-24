@@ -1,0 +1,477 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-24T19:52:30.277582+00:00",
+  "nodes": [
+    {
+      "id": "src/email_nf_onedrive/__init__.py"
+    },
+    {
+      "id": "src/email_nf_onedrive/__main__.py"
+    },
+    {
+      "id": "src/email_nf_onedrive/autorizacao/__init__.py"
+    },
+    {
+      "id": "src/email_nf_onedrive/autorizacao/arquivo.py"
+    },
+    {
+      "id": "src/email_nf_onedrive/autorizacao/credencial.py"
+    },
+    {
+      "id": "src/email_nf_onedrive/autorizacao/fluxo.py"
+    },
+    {
+      "id": "src/email_nf_onedrive/autorizacao/servico.py"
+    },
+    {
+      "id": "src/email_nf_onedrive/cli.py"
+    },
+    {
+      "id": "src/email_nf_onedrive/coleta/__init__.py"
+    },
+    {
+      "id": "src/email_nf_onedrive/coleta/classificacao.py"
+    },
+    {
+      "id": "src/email_nf_onedrive/coleta/coleta.py"
+    },
+    {
+      "id": "src/email_nf_onedrive/coleta/imap.py"
+    },
+    {
+      "id": "src/email_nf_onedrive/coleta/janela.py"
+    },
+    {
+      "id": "src/email_nf_onedrive/coleta/mime.py"
+    },
+    {
+      "id": "src/email_nf_onedrive/coleta/utf7.py"
+    },
+    {
+      "id": "src/email_nf_onedrive/configuracao/__init__.py"
+    },
+    {
+      "id": "src/email_nf_onedrive/configuracao/carregar.py"
+    },
+    {
+      "id": "src/email_nf_onedrive/configuracao/modelo.py"
+    },
+    {
+      "id": "src/email_nf_onedrive/envio/__init__.py"
+    },
+    {
+      "id": "src/email_nf_onedrive/envio/envio.py"
+    },
+    {
+      "id": "src/email_nf_onedrive/envio/leiame.py"
+    },
+    {
+      "id": "src/email_nf_onedrive/envio/nomeacao.py"
+    },
+    {
+      "id": "src/email_nf_onedrive/envio/rclone.py"
+    },
+    {
+      "id": "src/email_nf_onedrive/envio/teste_onedrive.py"
+    },
+    {
+      "id": "src/email_nf_onedrive/envio/vencimento.py"
+    },
+    {
+      "id": "src/email_nf_onedrive/execucao/__init__.py"
+    },
+    {
+      "id": "src/email_nf_onedrive/execucao/avisos.py"
+    },
+    {
+      "id": "src/email_nf_onedrive/execucao/ciclo.py"
+    },
+    {
+      "id": "src/email_nf_onedrive/execucao/logs.py"
+    },
+    {
+      "id": "src/email_nf_onedrive/execucao/resumo.py"
+    },
+    {
+      "id": "src/email_nf_onedrive/execucao/telegram.py"
+    },
+    {
+      "id": "src/email_nf_onedrive/execucao/trava.py"
+    },
+    {
+      "id": "src/email_nf_onedrive/registro/__init__.py"
+    },
+    {
+      "id": "src/email_nf_onedrive/registro/banco.py"
+    },
+    {
+      "id": "src/email_nf_onedrive/segredos.py"
+    },
+    {
+      "id": "src/email_nf_onedrive/registro/esquema.sql"
+    }
+  ],
+  "edges": [
+    {
+      "source": "src/email_nf_onedrive/__main__.py",
+      "target": "src/email_nf_onedrive/cli.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/autorizacao/arquivo.py",
+      "target": "src/email_nf_onedrive/segredos.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/autorizacao/credencial.py",
+      "target": "src/email_nf_onedrive/autorizacao/arquivo.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/autorizacao/credencial.py",
+      "target": "src/email_nf_onedrive/autorizacao/servico.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/autorizacao/credencial.py",
+      "target": "src/email_nf_onedrive/configuracao/modelo.py",
+      "weight": 2
+    },
+    {
+      "source": "src/email_nf_onedrive/autorizacao/fluxo.py",
+      "target": "src/email_nf_onedrive/autorizacao/arquivo.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/autorizacao/fluxo.py",
+      "target": "src/email_nf_onedrive/autorizacao/servico.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/autorizacao/fluxo.py",
+      "target": "src/email_nf_onedrive/configuracao/modelo.py",
+      "weight": 2
+    },
+    {
+      "source": "src/email_nf_onedrive/autorizacao/fluxo.py",
+      "target": "src/email_nf_onedrive/segredos.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/autorizacao/servico.py",
+      "target": "src/email_nf_onedrive/configuracao/modelo.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/autorizacao/servico.py",
+      "target": "src/email_nf_onedrive/segredos.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/cli.py",
+      "target": "src/email_nf_onedrive/__init__.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/cli.py",
+      "target": "src/email_nf_onedrive/autorizacao/arquivo.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/cli.py",
+      "target": "src/email_nf_onedrive/autorizacao/credencial.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/cli.py",
+      "target": "src/email_nf_onedrive/autorizacao/fluxo.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/cli.py",
+      "target": "src/email_nf_onedrive/coleta/coleta.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/cli.py",
+      "target": "src/email_nf_onedrive/coleta/imap.py",
+      "weight": 4
+    },
+    {
+      "source": "src/email_nf_onedrive/cli.py",
+      "target": "src/email_nf_onedrive/configuracao/carregar.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/cli.py",
+      "target": "src/email_nf_onedrive/configuracao/modelo.py",
+      "weight": 4
+    },
+    {
+      "source": "src/email_nf_onedrive/cli.py",
+      "target": "src/email_nf_onedrive/envio/teste_onedrive.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/cli.py",
+      "target": "src/email_nf_onedrive/execucao/ciclo.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/cli.py",
+      "target": "src/email_nf_onedrive/segredos.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/coleta/coleta.py",
+      "target": "src/email_nf_onedrive/autorizacao/credencial.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/coleta/coleta.py",
+      "target": "src/email_nf_onedrive/coleta/classificacao.py",
+      "weight": 3
+    },
+    {
+      "source": "src/email_nf_onedrive/coleta/coleta.py",
+      "target": "src/email_nf_onedrive/coleta/imap.py",
+      "weight": 5
+    },
+    {
+      "source": "src/email_nf_onedrive/coleta/coleta.py",
+      "target": "src/email_nf_onedrive/coleta/janela.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/coleta/coleta.py",
+      "target": "src/email_nf_onedrive/coleta/mime.py",
+      "weight": 3
+    },
+    {
+      "source": "src/email_nf_onedrive/coleta/coleta.py",
+      "target": "src/email_nf_onedrive/configuracao/modelo.py",
+      "weight": 2
+    },
+    {
+      "source": "src/email_nf_onedrive/coleta/coleta.py",
+      "target": "src/email_nf_onedrive/envio/nomeacao.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/coleta/coleta.py",
+      "target": "src/email_nf_onedrive/envio/vencimento.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/coleta/coleta.py",
+      "target": "src/email_nf_onedrive/registro/banco.py",
+      "weight": 2
+    },
+    {
+      "source": "src/email_nf_onedrive/coleta/imap.py",
+      "target": "src/email_nf_onedrive/coleta/janela.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/coleta/imap.py",
+      "target": "src/email_nf_onedrive/coleta/utf7.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/coleta/imap.py",
+      "target": "src/email_nf_onedrive/segredos.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/configuracao/carregar.py",
+      "target": "src/email_nf_onedrive/autorizacao/arquivo.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/configuracao/carregar.py",
+      "target": "src/email_nf_onedrive/configuracao/modelo.py",
+      "weight": 8
+    },
+    {
+      "source": "src/email_nf_onedrive/configuracao/carregar.py",
+      "target": "src/email_nf_onedrive/envio/nomeacao.py",
+      "weight": 2
+    },
+    {
+      "source": "src/email_nf_onedrive/configuracao/carregar.py",
+      "target": "src/email_nf_onedrive/segredos.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/envio/envio.py",
+      "target": "src/email_nf_onedrive/coleta/classificacao.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/envio/envio.py",
+      "target": "src/email_nf_onedrive/coleta/coleta.py",
+      "weight": 2
+    },
+    {
+      "source": "src/email_nf_onedrive/envio/envio.py",
+      "target": "src/email_nf_onedrive/envio/nomeacao.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/envio/envio.py",
+      "target": "src/email_nf_onedrive/envio/rclone.py",
+      "weight": 6
+    },
+    {
+      "source": "src/email_nf_onedrive/envio/envio.py",
+      "target": "src/email_nf_onedrive/envio/vencimento.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/envio/envio.py",
+      "target": "src/email_nf_onedrive/registro/banco.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/envio/leiame.py",
+      "target": "src/email_nf_onedrive/coleta/coleta.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/envio/leiame.py",
+      "target": "src/email_nf_onedrive/envio/rclone.py",
+      "weight": 3
+    },
+    {
+      "source": "src/email_nf_onedrive/envio/leiame.py",
+      "target": "src/email_nf_onedrive/envio/vencimento.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/envio/leiame.py",
+      "target": "src/email_nf_onedrive/registro/banco.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/envio/nomeacao.py",
+      "target": "src/email_nf_onedrive/coleta/classificacao.py",
+      "weight": 2
+    },
+    {
+      "source": "src/email_nf_onedrive/envio/rclone.py",
+      "target": "src/email_nf_onedrive/segredos.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/envio/teste_onedrive.py",
+      "target": "src/email_nf_onedrive/envio/rclone.py",
+      "weight": 2
+    },
+    {
+      "source": "src/email_nf_onedrive/envio/vencimento.py",
+      "target": "src/email_nf_onedrive/coleta/classificacao.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/execucao/avisos.py",
+      "target": "src/email_nf_onedrive/execucao/logs.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/execucao/avisos.py",
+      "target": "src/email_nf_onedrive/registro/banco.py",
+      "weight": 2
+    },
+    {
+      "source": "src/email_nf_onedrive/execucao/avisos.py",
+      "target": "src/email_nf_onedrive/segredos.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/execucao/ciclo.py",
+      "target": "src/email_nf_onedrive/autorizacao/credencial.py",
+      "weight": 2
+    },
+    {
+      "source": "src/email_nf_onedrive/execucao/ciclo.py",
+      "target": "src/email_nf_onedrive/autorizacao/servico.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/execucao/ciclo.py",
+      "target": "src/email_nf_onedrive/coleta/coleta.py",
+      "weight": 4
+    },
+    {
+      "source": "src/email_nf_onedrive/execucao/ciclo.py",
+      "target": "src/email_nf_onedrive/configuracao/carregar.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/execucao/ciclo.py",
+      "target": "src/email_nf_onedrive/configuracao/modelo.py",
+      "weight": 3
+    },
+    {
+      "source": "src/email_nf_onedrive/execucao/ciclo.py",
+      "target": "src/email_nf_onedrive/envio/envio.py",
+      "weight": 3
+    },
+    {
+      "source": "src/email_nf_onedrive/execucao/ciclo.py",
+      "target": "src/email_nf_onedrive/envio/leiame.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/execucao/ciclo.py",
+      "target": "src/email_nf_onedrive/envio/rclone.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/execucao/ciclo.py",
+      "target": "src/email_nf_onedrive/execucao/avisos.py",
+      "weight": 3
+    },
+    {
+      "source": "src/email_nf_onedrive/execucao/ciclo.py",
+      "target": "src/email_nf_onedrive/execucao/logs.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/execucao/ciclo.py",
+      "target": "src/email_nf_onedrive/execucao/resumo.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/execucao/ciclo.py",
+      "target": "src/email_nf_onedrive/execucao/telegram.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/execucao/ciclo.py",
+      "target": "src/email_nf_onedrive/execucao/trava.py",
+      "weight": 5
+    },
+    {
+      "source": "src/email_nf_onedrive/execucao/ciclo.py",
+      "target": "src/email_nf_onedrive/registro/banco.py",
+      "weight": 2
+    },
+    {
+      "source": "src/email_nf_onedrive/execucao/ciclo.py",
+      "target": "src/email_nf_onedrive/segredos.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/execucao/logs.py",
+      "target": "src/email_nf_onedrive/segredos.py",
+      "weight": 1
+    },
+    {
+      "source": "src/email_nf_onedrive/execucao/telegram.py",
+      "target": "src/email_nf_onedrive/segredos.py",
+      "weight": 1
+    }
+  ],
+  "cycles": []
+}

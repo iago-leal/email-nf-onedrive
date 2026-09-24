@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linha do tempo | afla-nfes</title>
+
+    <!-- Meta-tags do Reversa para auto-discovery -->
+    <meta name="reversa-category" content="diagram">
+    <meta name="reversa-template" content="timeline">
+    <meta name="reversa-source-md" content="">
+    <meta name="reversa-producer-agent" content="reversa-docs-analyst">
+    <meta name="reversa-generated-at" content="2026-09-24T19:50:19+00:00">
+    <meta name="reversa-schema-version" content="1">
+
+    <link rel="icon" type="image/svg+xml" href="assets/img/seal-mini.svg">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/site.css">
+    <script src="assets/vendor/highcharts.js"></script>
+    <script src="assets/vendor/highcharts-accessibility.js"></script>
+    <script src="assets/vendor/highcharts-exporting.js"></script>
+</head>
+<body data-style="sober" data-page="timeline">
+
+    <header class="reversa-doc-header">
+        <a class="reversa-doc-logo" href="index.html" aria-label="Início">
+            <span class="seal" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" class="seal-mini" role="img" aria-label="Selo do projeto afla-nfes"><circle cx="32.0" cy="32.0" r="32.0" fill="#f5f3ee"/><ellipse cx="32.0" cy="32.0" rx="15.6" ry="5.7" fill="none" stroke="#3d4a5c" stroke-opacity="0.55" stroke-width="3.94" transform="rotate(124.1 32.0 32.0)"/><circle cx="41.6" cy="24.8" r="2.9" fill="#3d4a5c"/><ellipse cx="32.0" cy="32.0" rx="22.2" ry="17.1" fill="none" stroke="#3d4a5c" stroke-opacity="0.55" stroke-width="3.94" transform="rotate(170.5 32.0 32.0)"/><circle cx="35.3" cy="48.7" r="2.9" fill="#3d4a5c"/><ellipse cx="32.0" cy="32.0" rx="28.8" ry="11.8" fill="none" stroke="#7c8a99" stroke-opacity="0.55" stroke-width="3.94" transform="rotate(86.4 32.0 32.0)"/><circle cx="35.6" cy="60.3" r="2.9" fill="#3d4a5c"/><circle cx="32.0" cy="32.0" r="5.1" fill="#1e2937"/><circle cx="32.0" cy="32.0" r="2.2" fill="#a06b4a"/><circle cx="32.0" cy="32.0" r="29.53846153846154" fill="none" stroke="#1e2937" stroke-width="3.69"/></svg></span>
+            <span class="project-name">afla-nfes</span>
+        </a>
+        <nav class="reversa-doc-nav" aria-label="Seções da documentação">
+            <a href="index.html" data-page-id="index">Visão geral</a><a href="arquitetura.html" data-page-id="arquitetura">Arquitetura</a><a href="modulos.html" data-page-id="modulos">Módulos</a><a href="metricas.html" data-page-id="metricas">Métricas</a><a href="timeline.html" data-page-id="timeline">Linha do tempo</a><a href="glossario.html" data-page-id="glossario">Glossário</a><a href="deck.html" data-page-id="deck">Apresentação</a><a href="index.html#funcionalidades" data-page-id="features">Funcionalidades</a>
+        </nav>
+        <div class="reversa-doc-toolbar">
+            <button type="button" class="theme-toggle" aria-label="Alternar tema">
+                <span class="theme-toggle-label">Tema</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="reversa-doc-main" role="main">
+        <div class="reversa-doc-payload">
+            <h1 class="reversa-doc-title">Linha do tempo</h1>
+            
+<p class="lede">Do problema à operação contínua em uma semana. A linha do tempo reúne os marcos do projeto a partir do histórico de versões, dos adendos às especificações e dos problemas registrados.</p>
+
+<section class="kpis">
+  <div class="kpi"><strong>7</strong><span>dias do plano à operação</span></div>
+  <div class="kpi"><strong>32</strong><span>registros no histórico</span></div>
+  <div class="kpi"><strong>5</strong><span>novas capacidades</span></div>
+  <div class="kpi"><strong>2 de 3</strong><span>problemas resolvidos</span></div>
+</section>
+
+<ul class="legend"><li><span class="swatch" style="background:#6b7280"></span>Planejamento</li><li><span class="swatch" style="background:#2f8f6b"></span>Nova capacidade</li><li><span class="swatch" style="background:#b5543c"></span>Correção</li><li><span class="swatch" style="background:#3f7cac"></span>Melhoria</li><li><span class="swatch" style="background:#c28f2c"></span>Operação</li><li><span class="swatch" style="background:#8e6c8a"></span>Documentação</li></ul>
+
+<section class="tl-layout">
+  <div>
+    <ol class="tl-list" id="tl-list"></ol>
+  </div>
+  <aside class="card tl-details" aria-live="polite">
+    <h2 style="font-size:16px">Detalhes do marco</h2>
+    <div id="event-details"><p class="muted small">Clique em um marco para ver o que mudou e os registros correspondentes.</p></div>
+  </aside>
+</section>
+
+<section class="chart-card">
+  <h2>Ritmo de trabalho</h2>
+  <p>Registros no histórico por dia, separados pela natureza da mudança.</p>
+  <div class="chart" id="chart-rhythm" style="height:300px"></div>
+</section>
+
+<section>
+  <h2>Problemas registrados</h2>
+  <div class="table-wrap"><table class="data">
+    <thead><tr><th>Identificador</th><th>Descrição</th><th>Prioridade</th><th>Situação</th></tr></thead>
+    <tbody><tr><td><code>BUG-20260922-VBJD</code></td><td>Fornecedor recebe o nome da própria empresa em encaminhamento interno</td><td>P1</td><td><span class="reversa-pill is-low">resolvido</span></td></tr><tr><td><code>BUG-20260922-RWDA</code></td><td>Resumo informa 0 enviados quando a execução é interrompida pelo limite de tempo</td><td>P2</td><td><span class="reversa-pill is-low">resolvido</span></td></tr><tr><td><code>BUG-20260922-2FVK</code></td><td>Anexo de NF sem palavra-chave no nome é retido por engano</td><td>P2</td><td><span class="reversa-pill is-medium">aberto</span></td></tr></tbody>
+  </table></div>
+</section>
+
+        </div>
+    </main>
+
+    <aside class="reversa-doc-sidebar" aria-label="Controles" data-page="timeline"></aside>
+
+    <footer class="reversa-doc-footer">
+        <span class="reversa-doc-footer-text">
+            Gerado por Reversa em <time datetime="2026-09-24T19:50:19+00:00">24 de setembro de 2026, 16:50</time>
+        </span>
+    </footer>
+
+    <script src="assets/js/data.js"></script>
+    <script src="assets/js/nav.js"></script>
+    <script src="assets/js/sidebar.js"></script>
+    <script>
+(function () {
+  "use strict";
+  var T = (window.RV_DATA || {}).timeline;
+  var list = document.getElementById("tl-list"), box = document.getElementById("event-details");
+  if (!T || !T.events) { list.innerHTML = "<li>Dados indisponíveis.</li>"; return; }
+  var MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+  function fmt(d) { var p = d.split("-"); return +p[2] + " " + MESES[+p[1] - 1]; }
+  function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
+  function show(i) {
+    var e = T.events[i];
+    box.innerHTML = "<p class='small muted'>" + fmt(e.date) + " &middot; " + e.kindLabel + "</p><h3>" + esc(e.title) + "</h3><p>" +
+      esc(e.description) + "</p>" + (e.commits.length ? "<p class='small muted' style='margin-bottom:4px'>Registros no histórico</p><ul class='small'>" +
+      e.commits.map(function (c) { return "<li><code>" + c.hash + "</code> " + esc(c.subject) + "</li>"; }).join("") + "</ul>" : "") +
+      (e.source ? "<p class='small'>Fonte: <code>" + esc(e.source) + "</code></p>" : "");
+    list.querySelectorAll("button").forEach(function (b, j) { b.setAttribute("aria-pressed", j === i ? "true" : "false"); });
+  }
+  T.events.forEach(function (e, i) {
+    var li = document.createElement("li");
+    li.style.setProperty("--dot", e.color);
+    li.innerHTML = "<button type='button'><time datetime='" + e.date + "'>" + fmt(e.date) + "</time><span class='kind' style='color:" + e.color + "'>" +
+      e.kindLabel + "</span><p><b>" + esc(e.title) + "</b></p></button>";
+    li.querySelector("button").addEventListener("click", function () { show(i); });
+    list.appendChild(li);
+  });
+  show(T.events.length - 1);
+
+  if (!window.Highcharts) return;
+
+  var css = getComputedStyle(document.body);
+  var FG = css.getPropertyValue("--reversa-fg").trim() || "#1e2937";
+  var MUTED = css.getPropertyValue("--reversa-fg-muted").trim() || "#4d5a6b";
+  var GRID = css.getPropertyValue("--reversa-border").trim() || "#d6d2c8";
+  Highcharts.setOptions({
+    lang: { decimalPoint: ",", thousandsSep: ".", contextButtonTitle: "Exportar", downloadPNG: "Baixar PNG", downloadSVG: "Baixar SVG", viewFullscreen: "Tela cheia", exitFullscreen: "Sair da tela cheia", printChart: "Imprimir" },
+    chart: { backgroundColor: "transparent", style: { fontFamily: "inherit" } },
+    title: { text: null }, credits: { enabled: false },
+    xAxis: { labels: { style: { color: MUTED } }, lineColor: GRID, tickColor: GRID },
+    yAxis: { labels: { style: { color: MUTED } }, gridLineColor: GRID, title: { style: { color: MUTED } } },
+    legend: { itemStyle: { color: FG, fontWeight: "normal" } },
+    exporting: { buttons: { contextButton: { menuItems: ["viewFullscreen", "downloadPNG", "downloadSVG"] } } }
+  });
+
+  var KINDS = { feat: ["Funcionalidade", "#2f8f6b"], fix: ["Correção", "#b5543c"], perf: ["Desempenho", "#3f7cac"],
+    test: ["Testes", "#5b5ea6"], docs: ["Documentação", "#8e6c8a"], chore: ["Manutenção", "#9aa3ad"] };
+  var days = T.commitsPerDay.map(function (d) { return d.date; });
+  Highcharts.chart("chart-rhythm", {
+    chart: { type: "column" },
+    xAxis: { categories: days.map(fmt) },
+    yAxis: { title: { text: "Registros" }, allowDecimals: false, stackLabels: { enabled: true, style: { color: MUTED, textOutline: "none" } } },
+    plotOptions: { column: { stacking: "normal", borderWidth: 0 } },
+    series: Object.keys(KINDS).map(function (k) {
+      return { name: KINDS[k][0], color: KINDS[k][1], data: T.commitsPerDay.map(function (d) { return d[k] || 0; }) };
+    })
+  });
+})();
+</script>
+</body>
+</html>

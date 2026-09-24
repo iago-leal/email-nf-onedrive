@@ -1,0 +1,611 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-24T19:50:18+00:00",
+  "totals": {
+    "modules": 30,
+    "loc": 3116,
+    "edges": 72,
+    "cycles": 0,
+    "tests": 342,
+    "testLoc": 3339
+  },
+  "treemap_loc_by_folder": [
+    {
+      "folder": "src/email_nf_onedrive",
+      "area": ".",
+      "areaLabel": "Núcleo",
+      "id": "src/email_nf_onedrive/__init__.py",
+      "name": "__init__",
+      "loc": 2
+    },
+    {
+      "folder": "src/email_nf_onedrive",
+      "area": ".",
+      "areaLabel": "Núcleo",
+      "id": "src/email_nf_onedrive/__main__.py",
+      "name": "__main__",
+      "loc": 3
+    },
+    {
+      "folder": "src/email_nf_onedrive/autorizacao",
+      "area": "autorizacao",
+      "areaLabel": "Autorização (OAuth)",
+      "id": "src/email_nf_onedrive/autorizacao/arquivo.py",
+      "name": "arquivo",
+      "loc": 99
+    },
+    {
+      "folder": "src/email_nf_onedrive/autorizacao",
+      "area": "autorizacao",
+      "areaLabel": "Autorização (OAuth)",
+      "id": "src/email_nf_onedrive/autorizacao/credencial.py",
+      "name": "credencial",
+      "loc": 66
+    },
+    {
+      "folder": "src/email_nf_onedrive/autorizacao",
+      "area": "autorizacao",
+      "areaLabel": "Autorização (OAuth)",
+      "id": "src/email_nf_onedrive/autorizacao/fluxo.py",
+      "name": "fluxo",
+      "loc": 183
+    },
+    {
+      "folder": "src/email_nf_onedrive/autorizacao",
+      "area": "autorizacao",
+      "areaLabel": "Autorização (OAuth)",
+      "id": "src/email_nf_onedrive/autorizacao/servico.py",
+      "name": "servico",
+      "loc": 108
+    },
+    {
+      "folder": "src/email_nf_onedrive",
+      "area": ".",
+      "areaLabel": "Núcleo",
+      "id": "src/email_nf_onedrive/cli.py",
+      "name": "cli",
+      "loc": 175
+    },
+    {
+      "folder": "src/email_nf_onedrive/coleta",
+      "area": "coleta",
+      "areaLabel": "Coleta de e-mail",
+      "id": "src/email_nf_onedrive/coleta/classificacao.py",
+      "name": "classificacao",
+      "loc": 51
+    },
+    {
+      "folder": "src/email_nf_onedrive/coleta",
+      "area": "coleta",
+      "areaLabel": "Coleta de e-mail",
+      "id": "src/email_nf_onedrive/coleta/coleta.py",
+      "name": "coleta",
+      "loc": 219
+    },
+    {
+      "folder": "src/email_nf_onedrive/coleta",
+      "area": "coleta",
+      "areaLabel": "Coleta de e-mail",
+      "id": "src/email_nf_onedrive/coleta/imap.py",
+      "name": "imap",
+      "loc": 129
+    },
+    {
+      "folder": "src/email_nf_onedrive/coleta",
+      "area": "coleta",
+      "areaLabel": "Coleta de e-mail",
+      "id": "src/email_nf_onedrive/coleta/janela.py",
+      "name": "janela",
+      "loc": 21
+    },
+    {
+      "folder": "src/email_nf_onedrive/coleta",
+      "area": "coleta",
+      "areaLabel": "Coleta de e-mail",
+      "id": "src/email_nf_onedrive/coleta/mime.py",
+      "name": "mime",
+      "loc": 115
+    },
+    {
+      "folder": "src/email_nf_onedrive/coleta",
+      "area": "coleta",
+      "areaLabel": "Coleta de e-mail",
+      "id": "src/email_nf_onedrive/coleta/utf7.py",
+      "name": "utf7",
+      "loc": 43
+    },
+    {
+      "folder": "src/email_nf_onedrive/configuracao",
+      "area": "configuracao",
+      "areaLabel": "Configuração",
+      "id": "src/email_nf_onedrive/configuracao/carregar.py",
+      "name": "carregar",
+      "loc": 154
+    },
+    {
+      "folder": "src/email_nf_onedrive/configuracao",
+      "area": "configuracao",
+      "areaLabel": "Configuração",
+      "id": "src/email_nf_onedrive/configuracao/modelo.py",
+      "name": "modelo",
+      "loc": 49
+    },
+    {
+      "folder": "src/email_nf_onedrive/envio",
+      "area": "envio",
+      "areaLabel": "Envio ao OneDrive",
+      "id": "src/email_nf_onedrive/envio/envio.py",
+      "name": "envio",
+      "loc": 206
+    },
+    {
+      "folder": "src/email_nf_onedrive/envio",
+      "area": "envio",
+      "areaLabel": "Envio ao OneDrive",
+      "id": "src/email_nf_onedrive/envio/leiame.py",
+      "name": "leiame",
+      "loc": 125
+    },
+    {
+      "folder": "src/email_nf_onedrive/envio",
+      "area": "envio",
+      "areaLabel": "Envio ao OneDrive",
+      "id": "src/email_nf_onedrive/envio/nomeacao.py",
+      "name": "nomeacao",
+      "loc": 145
+    },
+    {
+      "folder": "src/email_nf_onedrive/envio",
+      "area": "envio",
+      "areaLabel": "Envio ao OneDrive",
+      "id": "src/email_nf_onedrive/envio/rclone.py",
+      "name": "rclone",
+      "loc": 116
+    },
+    {
+      "folder": "src/email_nf_onedrive/envio",
+      "area": "envio",
+      "areaLabel": "Envio ao OneDrive",
+      "id": "src/email_nf_onedrive/envio/teste_onedrive.py",
+      "name": "teste_onedrive",
+      "loc": 28
+    },
+    {
+      "folder": "src/email_nf_onedrive/envio",
+      "area": "envio",
+      "areaLabel": "Envio ao OneDrive",
+      "id": "src/email_nf_onedrive/envio/vencimento.py",
+      "name": "vencimento",
+      "loc": 188
+    },
+    {
+      "folder": "src/email_nf_onedrive/execucao",
+      "area": "execucao",
+      "areaLabel": "Execução e avisos",
+      "id": "src/email_nf_onedrive/execucao/avisos.py",
+      "name": "avisos",
+      "loc": 97
+    },
+    {
+      "folder": "src/email_nf_onedrive/execucao",
+      "area": "execucao",
+      "areaLabel": "Execução e avisos",
+      "id": "src/email_nf_onedrive/execucao/ciclo.py",
+      "name": "ciclo",
+      "loc": 238
+    },
+    {
+      "folder": "src/email_nf_onedrive/execucao",
+      "area": "execucao",
+      "areaLabel": "Execução e avisos",
+      "id": "src/email_nf_onedrive/execucao/logs.py",
+      "name": "logs",
+      "loc": 53
+    },
+    {
+      "folder": "src/email_nf_onedrive/execucao",
+      "area": "execucao",
+      "areaLabel": "Execução e avisos",
+      "id": "src/email_nf_onedrive/execucao/resumo.py",
+      "name": "resumo",
+      "loc": 41
+    },
+    {
+      "folder": "src/email_nf_onedrive/execucao",
+      "area": "execucao",
+      "areaLabel": "Execução e avisos",
+      "id": "src/email_nf_onedrive/execucao/telegram.py",
+      "name": "telegram",
+      "loc": 37
+    },
+    {
+      "folder": "src/email_nf_onedrive/execucao",
+      "area": "execucao",
+      "areaLabel": "Execução e avisos",
+      "id": "src/email_nf_onedrive/execucao/trava.py",
+      "name": "trava",
+      "loc": 84
+    },
+    {
+      "folder": "src/email_nf_onedrive/registro",
+      "area": "registro",
+      "areaLabel": "Registro (banco)",
+      "id": "src/email_nf_onedrive/registro/banco.py",
+      "name": "banco",
+      "loc": 261
+    },
+    {
+      "folder": "src/email_nf_onedrive",
+      "area": ".",
+      "areaLabel": "Núcleo",
+      "id": "src/email_nf_onedrive/segredos.py",
+      "name": "segredos",
+      "loc": 31
+    },
+    {
+      "folder": "src/email_nf_onedrive/registro",
+      "area": "registro",
+      "areaLabel": "Registro (banco)",
+      "id": "src/email_nf_onedrive/registro/esquema.sql",
+      "name": "esquema",
+      "loc": 49
+    }
+  ],
+  "top_complexity": [
+    {
+      "id": "src/email_nf_onedrive/envio/vencimento.py",
+      "name": "vencimento",
+      "area": "envio",
+      "complexity": 55,
+      "loc": 188
+    },
+    {
+      "id": "src/email_nf_onedrive/cli.py",
+      "name": "cli",
+      "area": ".",
+      "complexity": 54,
+      "loc": 175
+    },
+    {
+      "id": "src/email_nf_onedrive/execucao/ciclo.py",
+      "name": "ciclo",
+      "area": "execucao",
+      "complexity": 52,
+      "loc": 238
+    },
+    {
+      "id": "src/email_nf_onedrive/configuracao/carregar.py",
+      "name": "carregar",
+      "area": "configuracao",
+      "complexity": 46,
+      "loc": 154
+    },
+    {
+      "id": "src/email_nf_onedrive/envio/nomeacao.py",
+      "name": "nomeacao",
+      "area": "envio",
+      "complexity": 41,
+      "loc": 145
+    },
+    {
+      "id": "src/email_nf_onedrive/envio/envio.py",
+      "name": "envio",
+      "area": "envio",
+      "complexity": 39,
+      "loc": 206
+    },
+    {
+      "id": "src/email_nf_onedrive/coleta/coleta.py",
+      "name": "coleta",
+      "area": "coleta",
+      "complexity": 36,
+      "loc": 219
+    },
+    {
+      "id": "src/email_nf_onedrive/coleta/imap.py",
+      "name": "imap",
+      "area": "coleta",
+      "complexity": 31,
+      "loc": 129
+    },
+    {
+      "id": "src/email_nf_onedrive/autorizacao/fluxo.py",
+      "name": "fluxo",
+      "area": "autorizacao",
+      "complexity": 28,
+      "loc": 183
+    },
+    {
+      "id": "src/email_nf_onedrive/coleta/mime.py",
+      "name": "mime",
+      "area": "coleta",
+      "complexity": 28,
+      "loc": 115
+    },
+    {
+      "id": "src/email_nf_onedrive/registro/banco.py",
+      "name": "banco",
+      "area": "registro",
+      "complexity": 27,
+      "loc": 261
+    },
+    {
+      "id": "src/email_nf_onedrive/autorizacao/servico.py",
+      "name": "servico",
+      "area": "autorizacao",
+      "complexity": 24,
+      "loc": 108
+    },
+    {
+      "id": "src/email_nf_onedrive/autorizacao/arquivo.py",
+      "name": "arquivo",
+      "area": "autorizacao",
+      "complexity": 23,
+      "loc": 99
+    },
+    {
+      "id": "src/email_nf_onedrive/execucao/avisos.py",
+      "name": "avisos",
+      "area": "execucao",
+      "complexity": 22,
+      "loc": 97
+    },
+    {
+      "id": "src/email_nf_onedrive/envio/leiame.py",
+      "name": "leiame",
+      "area": "envio",
+      "complexity": 20,
+      "loc": 125
+    }
+  ],
+  "loc_histogram": {
+    "bins": [
+      0,
+      25,
+      50,
+      100,
+      150,
+      200,
+      300
+    ],
+    "counts": [
+      3,
+      7,
+      6,
+      6,
+      4,
+      4
+    ]
+  },
+  "dependency_sankey": {
+    "nodes": [
+      {
+        "id": "configuracao",
+        "name": "Configuração",
+        "color": "#c28f2c"
+      },
+      {
+        "id": "autorizacao",
+        "name": "Autorização (OAuth)",
+        "color": "#8e6c8a"
+      },
+      {
+        "id": "coleta",
+        "name": "Coleta de e-mail",
+        "color": "#3f7cac"
+      },
+      {
+        "id": "registro",
+        "name": "Registro (banco)",
+        "color": "#5b5ea6"
+      },
+      {
+        "id": "envio",
+        "name": "Envio ao OneDrive",
+        "color": "#2f8f6b"
+      },
+      {
+        "id": "execucao",
+        "name": "Execução e avisos",
+        "color": "#b5543c"
+      },
+      {
+        "id": ".",
+        "name": "Núcleo",
+        "color": "#6b7280"
+      }
+    ],
+    "links": [
+      {
+        "source": "Núcleo",
+        "target": "Autorização (OAuth)",
+        "value": 3
+      },
+      {
+        "source": "Núcleo",
+        "target": "Coleta de e-mail",
+        "value": 5
+      },
+      {
+        "source": "Núcleo",
+        "target": "Configuração",
+        "value": 5
+      },
+      {
+        "source": "Núcleo",
+        "target": "Envio ao OneDrive",
+        "value": 1
+      },
+      {
+        "source": "Núcleo",
+        "target": "Execução e avisos",
+        "value": 1
+      },
+      {
+        "source": "Autorização (OAuth)",
+        "target": "Núcleo",
+        "value": 3
+      },
+      {
+        "source": "Autorização (OAuth)",
+        "target": "Configuração",
+        "value": 5
+      },
+      {
+        "source": "Coleta de e-mail",
+        "target": "Núcleo",
+        "value": 1
+      },
+      {
+        "source": "Coleta de e-mail",
+        "target": "Autorização (OAuth)",
+        "value": 1
+      },
+      {
+        "source": "Coleta de e-mail",
+        "target": "Configuração",
+        "value": 2
+      },
+      {
+        "source": "Coleta de e-mail",
+        "target": "Envio ao OneDrive",
+        "value": 2
+      },
+      {
+        "source": "Coleta de e-mail",
+        "target": "Registro (banco)",
+        "value": 2
+      },
+      {
+        "source": "Configuração",
+        "target": "Núcleo",
+        "value": 1
+      },
+      {
+        "source": "Configuração",
+        "target": "Autorização (OAuth)",
+        "value": 1
+      },
+      {
+        "source": "Configuração",
+        "target": "Envio ao OneDrive",
+        "value": 2
+      },
+      {
+        "source": "Envio ao OneDrive",
+        "target": "Núcleo",
+        "value": 1
+      },
+      {
+        "source": "Envio ao OneDrive",
+        "target": "Coleta de e-mail",
+        "value": 7
+      },
+      {
+        "source": "Envio ao OneDrive",
+        "target": "Registro (banco)",
+        "value": 2
+      },
+      {
+        "source": "Execução e avisos",
+        "target": "Núcleo",
+        "value": 4
+      },
+      {
+        "source": "Execução e avisos",
+        "target": "Autorização (OAuth)",
+        "value": 3
+      },
+      {
+        "source": "Execução e avisos",
+        "target": "Coleta de e-mail",
+        "value": 4
+      },
+      {
+        "source": "Execução e avisos",
+        "target": "Configuração",
+        "value": 4
+      },
+      {
+        "source": "Execução e avisos",
+        "target": "Envio ao OneDrive",
+        "value": 5
+      },
+      {
+        "source": "Execução e avisos",
+        "target": "Registro (banco)",
+        "value": 4
+      }
+    ]
+  },
+  "language_distribution": [
+    {
+      "language": "python",
+      "modules": 29,
+      "loc": 3067
+    },
+    {
+      "language": "sql",
+      "modules": 1,
+      "loc": 49
+    }
+  ],
+  "area_summary": [
+    {
+      "area": "configuracao",
+      "label": "Configuração",
+      "color": "#c28f2c",
+      "loc": 203,
+      "modules": 2,
+      "tests": 54
+    },
+    {
+      "area": "autorizacao",
+      "label": "Autorização (OAuth)",
+      "color": "#8e6c8a",
+      "loc": 456,
+      "modules": 4,
+      "tests": 63
+    },
+    {
+      "area": "coleta",
+      "label": "Coleta de e-mail",
+      "color": "#3f7cac",
+      "loc": 578,
+      "modules": 6,
+      "tests": 53
+    },
+    {
+      "area": "registro",
+      "label": "Registro (banco)",
+      "color": "#5b5ea6",
+      "loc": 310,
+      "modules": 2,
+      "tests": 21
+    },
+    {
+      "area": "envio",
+      "label": "Envio ao OneDrive",
+      "color": "#2f8f6b",
+      "loc": 808,
+      "modules": 6,
+      "tests": 89
+    },
+    {
+      "area": "execucao",
+      "label": "Execução e avisos",
+      "color": "#b5543c",
+      "loc": 550,
+      "modules": 6,
+      "tests": 55
+    },
+    {
+      "area": ".",
+      "label": "Núcleo",
+      "color": "#6b7280",
+      "loc": 211,
+      "modules": 4,
+      "tests": 7
+    }
+  ]
+}
