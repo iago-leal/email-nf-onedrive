@@ -52,6 +52,16 @@ python3 -m venv .venv
 
 Para atualizar depois: `cd app && git pull && cd .. && .venv/bin/pip install ./app`. O agendamento não precisa mudar.
 
+**Ubuntu 22.04.** O `python3` desse sistema é o 3.10, abaixo do mínimo, e o `python3.11` dos repositórios oficiais é uma versão de teste (rc1). Nesse caso, instale o Python 3.12 pelo `uv`, já como `email-nf`, e crie o ambiente com ele no lugar do `python3 -m venv .venv` acima:
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | env UV_NO_MODIFY_PATH=1 sh
+~/.local/bin/uv python install 3.12
+$(~/.local/bin/uv python find 3.12) -m venv .venv
+```
+
+O resto do guia não muda: o ambiente criado assim tem `pip` e funciona como o de qualquer outra instalação.
+
 ## 5. Senha de app do Google (uma por caixa)
 
 A ferramenta entra no Gmail com uma **senha de app**, não com a senha da conta.
@@ -432,3 +442,16 @@ O projeto nasce na conta do operador e pode mudar de dono sem reautorizar nenhum
 **Projeto dentro de uma organização.** Se o projeto nasceu numa conta do Google Workspace (seção 16.1), ele pertence à organização do domínio do operador, e a troca de proprietário não o tira de lá. Há duas saídas. Na primeira, o cliente recebe o papel de proprietário e o projeto continua na organização do operador; a política de compartilhamento restrito ao domínio, se estiver ativa, impede o convite a uma conta de fora, e o administrador precisa abrir exceção. Na segunda, o projeto é movido para a organização do cliente, o que exige permissão de administrador de projetos nas duas organizações. Se nenhuma das duas for viável, resta a alternativa do fim desta seção.
 
 O ID e a chave secreta do cliente OAuth não mudam, e as autorizações seguem válidas. Confira com `testar-caixa` na VPS. Se a transferência por convite não estiver disponível para o projeto, a alternativa é o cliente criar um projeto novo (16.1) e as caixas serem autorizadas de novo (16.3 e 16.4).
+
+## 17. Troca de VPS
+
+A ferramenta não depende da máquina: o estado inteiro cabe em cinco itens, todos sob `/opt/email-nf-onedrive` (`.env`, `autorizacoes/`, `.config/rclone/rclone.conf`, `var/registro.sqlite3` e, se quiser o histórico, `var/log/`). As autorizações do Google e o token do OneDrive continuam valendo quando copiados, sem novo consentimento dos titulares.
+
+A ordem importa, porque duas máquinas rodando ao mesmo tempo, cada uma com o próprio registro, mandariam a mesma nota duas vezes, a segunda com sufixo `_2`:
+
+1. Na VPS nova, siga as seções 3 e 4 e rode a suíte de testes num ambiente à parte, para provar o Python e o Rclone novos.
+2. Na antiga, comente a linha do `crontab` do `email-nf` e espere `var/execucao.lock` sumir.
+3. Copie os cinco itens de uma VPS para a outra por SSH, sem passar por disco intermediário, com dono `email-nf`, diretórios 700 e arquivos 600, e confira a impressão digital (`sha256sum`) nas duas pontas.
+4. Na nova, rode a seção 9 inteira e, por fim, a seção 10.
+
+Mantenha a antiga parada e intacta por alguns dias, como volta atrás, e então apague lá o `.env`, as autorizações, o `rclone.conf` e o registro.
